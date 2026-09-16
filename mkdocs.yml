@@ -55,4 +55,5 @@ extra_css:
 nav:
   - Inicio: index.md
   - UP01. Primeros documentos con Writer:
-      - 1. Relación Curricular: up01/01-index.md
+      - 1. Introducción: up01/01-index.md
+      - 2. Sesión 1: up01/02-archivos-y-carpetas.md
