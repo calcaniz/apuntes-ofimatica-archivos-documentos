@@ -56,4 +56,7 @@ nav:
   - Inicio: index.md
   - UP01. Primeros documentos con Writer:
       - 1. Introducción: up01/01-index.md
-      - 2. Sesión 1: up01/02-archivos-y-carpetas.md
+      - 2. Sesión 1: up01/02-sesion-1.md
+      - 3. Sesión 2: up01/03-sesion-2.md
+      - 4. Sesión 3: up01/04-sesion-3.md
+      - 5. Sesión 4: up01/05-sesion-4.md

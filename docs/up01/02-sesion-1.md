@@ -146,7 +146,7 @@ No debemos incluir en el documento del evento información como:
 !!! warning "Recuerda"
     **Las contraseñas son secretas. No debemos comunicarlas a compañeros, amistades ni personas desconocidas.**
 
-    # 8. Copias de seguridad
+# 8. Copias de seguridad
 
 Una **copia de seguridad** es una copia un archivo que conservamos para poder recuperarlo si el original se pierde, se borra o se estropea.
 
@@ -178,7 +178,7 @@ Por ejemplo:
 
 La versión 2 puede contener nuevas ideas o modificaciones, mientras que la versión anterior se conserva.
 
-| **Copia de seguridad** | **Nueva versión** |
+| **Copia de seguridad** { .table-full-container .table-cl-secundario .table-bg-principal } | **Nueva versión** { .table-full-container .table-cl-secundario .table-bg-principal } |
 |---|---|
 | Se crea para recuperar el archivo si ocurre un problema | Se crea para conservar diferentes etapas del trabajo | 
 | Normalmente contiene la misma información que el original | Contiene cambios o información nueva. |
