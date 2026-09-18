@@ -2,8 +2,6 @@
 title: UP01 · Primeros documentos con Writer · S01.03
 ---
 
-# 4. Sesión 3
-
 ## 4.1. ¿Qué es un procesador de textos?
 
 Un procesador de textos es un programa que permite:
@@ -30,6 +28,8 @@ Cuando abrimos Writer encontramos:
 
 Para comenzar a escribir, hacemos clic sobre la página y utilizaremos el teclado.
 
+!!! salto-pagina-pdf ""
+
 ## 4.3. Escribir correctamente
 
 Cuando escribimos debemos recordar estas normas:
@@ -42,10 +42,9 @@ Cuando escribimos debemos recordar estas normas:
 * Utilizaremos `Intro`solamente para comenzar un párrafo nuevo.
 * No pulsaremos `Intro` al llegar al final de una línea (Writer cambia de línea automáticamente)
 
-!!! example "Ejemplo correcto"
+!!! example "Ejemplo correcto vs Incorrecto"
     El sábado se celebrará una carrera de coches. Los participantes deberán respetar las normas de seguridad.
 
-!!! example "Ejemplo incorrecto"
     El sábado se celebrará una carrera de coches .Los participantes deberán respetar las normas de seguridad.
 
 ## 4.4. Teclas que utilizaremos
@@ -60,6 +59,8 @@ Cuando escribimos debemos recordar estas normas:
 | `Flechas` | Mueven el cursor por el documento |
 
 Para escribir una letra mayúscula, mantenemos pulsada la tecla `Mayús` mientras escribirmos la letra.
+
+!!! salto-pagina-pdf ""
 
 ## 4.5. Corregir un error
 

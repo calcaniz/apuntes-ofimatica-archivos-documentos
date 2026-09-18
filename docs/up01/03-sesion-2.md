@@ -2,8 +2,6 @@
 title: UP01 · Primeros documentos con Writer · S01.03
 ---
 
-# 3. Sesión 2
-
 ## 3.1. Archivos y carpetas
 
 Como vimos en la sesión anterior, un **archivo** contiene información guardada en el ordenador.
@@ -44,6 +42,8 @@ Un buen nombre puede indicar:
 * El contenido del archivo.
 * El nombre de la persona que lo ha creado.
 
+!!! salto-pagina-pdf ""
+
 Debemos evitar nombres como:
 
 * `nuevo.odt`
@@ -77,6 +77,8 @@ La extensión nos permite reconocer el tipo de archivo y el programa con el que 
 | `.pdf` | Documento preparado para consultar o imprimir | Visor de PDF |
 
 No debemos cambiar o borrar la extensión sin una indicación del profesor. Si la cambiamos incorrectamente, es posible que el archivo deje de abrirse.
+
+!!! salto-pagina-pdf ""
 
 ## 3.4. La ubicación de un archivo
 
@@ -120,6 +122,8 @@ Cuando movemos un archivo:
 
 Por ejemplo, podemos mover un documento desde `Descargas` hasta `Documentos_Writer`
 
+!!! salto-pagina-pdf ""
+
 ### Copiar
 
 Copiar significa crear otro archivo igual.
@@ -153,6 +157,8 @@ Antes de eliminar debemos comprobar:
 Si queremos organizar un archivo, normalmente lo **movemos**
 
 Si queremos protegerlo frente a una pérdida, normalmente lo **copiamos**
+
+!!! salto-pagina-pdf ""
 
 ## 3.7. Buscar un archivo
 
@@ -195,6 +201,8 @@ Para hacer una copia de seguridad:
 5. Comprobamos que la copia se puede abrir.
 
 La copia de seguridad no debe sustituir al archivo original. Debemos conservar los dos archivos.
+
+!!! salto-pagina-pdf ""
 
 ## 3.9. Seguridad y confidencialidad
 

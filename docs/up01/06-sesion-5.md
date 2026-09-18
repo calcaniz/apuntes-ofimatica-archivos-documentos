@@ -2,10 +2,6 @@
 title: Formato básico de texto en Writer
 ---
 
-# Formato básico de texto en Writer
-
-## ¿Qué vamos a aprender?
-
 En esta sesión aprenderemos a cambiar el aspecto de un texto utilizando las herramientas básicas de formato de Writer.
 
 ![5.0](../assets/up01/5.0.png)
@@ -23,11 +19,9 @@ Trabajaremos con:
 
 > **Objetivo:** conseguir que un documento sea más claro, ordenado y fácil de leer.
 
-## ¿Qué criterios vamos a trabajar?
+!!! salto-pagina-pdf ""
 
-- **CE03-a:** identificar y utilizar las funciones básicas del procesador de textos.
-
-## 1. ¿Qué es el formato de un texto?
+## 6.1. ¿Qué es el formato de un texto?
 
 El formato es el conjunto de cambios que realizamos sobre el aspecto de un texto.
 
@@ -49,11 +43,14 @@ Aplicar formato no cambia lo que dice el texto. Únicamente modifica su aparienc
 
 Las palabras son parecidas, pero el segundo texto destaca mucho más.
 
-## 2. Seleccionar antes de cambiar
+!!! salto-pagina-pdf ""
+
+## 6.2. Seleccionar antes de cambiar
 
 Para aplicar un formato a una palabra o a una frase, primero debemos seleccionarla.
 
 ![5.1](../assets/up01/5.1.png)
+
 
 ### ¿Cómo seleccionamos un texto?
 
@@ -72,6 +69,7 @@ El texto seleccionado aparecerá marcado con un color diferente.
 
 > **Recuerda:** si no seleccionamos el texto, el cambio se aplicará a lo que escribamos a continuación.
 
+
 ### Seleccionar una palabra rápidamente
 
 También podemos seleccionar una palabra haciendo doble clic sobre ella.
@@ -80,7 +78,9 @@ Este procedimiento es útil cuando solo queremos cambiar el formato de una palab
 
 ![5.3](../assets/up01/5.3.png)
 
-## 3. El tipo de letra
+!!! salto-pagina-pdf ""
+
+## 6.3. El tipo de letra
 
 El tipo de letra también recibe el nombre de **fuente**.
 
@@ -108,7 +108,7 @@ Para cambiar el tipo de letra:
 
 > **Consejo:** utiliza letras sencillas y fáciles de leer. No es conveniente utilizar muchos tipos de letra diferentes en un mismo documento.
 
-## 4. El tamaño de la letra
+## 6.4. El tamaño de la letra
 
 El tamaño indica si una letra se verá más grande o más pequeña.
 
@@ -145,7 +145,7 @@ Para cambiar el tamaño:
 
 Utilizar diferentes tamaños nos ayuda a reconocer qué partes del documento son más importantes.
 
-## 5. La negrita
+## 6.5. La negrita
 
 La **negrita** hace que las letras aparezcan más gruesas.
 
@@ -174,7 +174,9 @@ Para eliminar la negrita, seleccionamos nuevamente el texto y volvemos a pulsar 
 
 > **Importante:** si todo el texto está en negrita, ninguna parte destacará sobre las demás.
 
-## 6. La cursiva
+!!! salto-pagina-pdf ""
+
+## 6.6. La cursiva
 
 La *cursiva* hace que las letras aparezcan ligeramente inclinadas.
 
@@ -201,7 +203,9 @@ Para aplicar cursiva:
 
 La cursiva debe utilizarse en fragmentos cortos. Un párrafo completo en cursiva puede resultar difícil de leer.
 
-## 7. El subrayado
+!!! salto-pagina-pdf ""
+
+## 6.7. El subrayado
 
 El <u>subrayado</u> coloca una línea debajo del texto.
 
@@ -228,7 +232,7 @@ Para aplicar el subrayado:
 
 > **Consejo:** no debemos subrayar párrafos completos. El subrayado funciona mejor en palabras o frases cortas.
 
-## 8. Combinar diferentes formatos
+## 6.8. Combinar diferentes formatos
 
 Una palabra puede tener más de un formato al mismo tiempo.
 
@@ -238,6 +242,8 @@ Por ejemplo:
 - ***Negrita y cursiva.***
 - **<u>Negrita y subrayado.</u>**
 - ***<u>Negrita, cursiva y subrayado.</u>***
+
+!!! salto-pagina-pdf ""
 
 Para combinar formatos:
 
@@ -259,7 +265,7 @@ Esta frase combina:
 
 No debemos combinar todos los formatos continuamente. Solo lo haremos cuando queramos destacar algo especialmente importante.
 
-## 9. Activar el formato antes de escribir
+## 6.9. Activar el formato antes de escribir
 
 También podemos activar un formato antes de comenzar a escribir.
 
@@ -273,7 +279,9 @@ Si olvidamos desactivar el botón, todo lo que escribamos después continuará a
 
 > **Comprueba siempre los botones de la barra de herramientas antes de seguir escribiendo.**
 
-## 10. Corregir un cambio
+!!! salto-pagina-pdf ""
+
+## 6.10. Corregir un cambio
 
 Si aplicamos un formato incorrecto, podemos corregirlo.
 
@@ -299,7 +307,7 @@ Esta opción es muy útil cuando:
 - Cambiamos accidentalmente el tamaño.
 - Movemos o modificamos un texto.
 
-## 11. ¿Cómo debe quedar un documento claro?
+## 6.11. ¿Cómo debe quedar un documento claro?
 
 Un documento resulta más fácil de leer cuando mantiene un formato sencillo y ordenado.
 
@@ -313,7 +321,9 @@ Debemos intentar:
 - Mantener el mismo formato en elementos que cumplen la misma función.
 - Revisar el documento antes de terminar.
 
-## 12. Errores habituales
+!!! salto-pagina-pdf ""
+
+## 6.12. Errores habituales
 
 ### No seleccionar el texto
 
