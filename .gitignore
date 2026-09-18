@@ -1,2 +1,5 @@
+.venv/
+site/
+
 instruccionesLocales.md
 mkdocs-up01.yml
