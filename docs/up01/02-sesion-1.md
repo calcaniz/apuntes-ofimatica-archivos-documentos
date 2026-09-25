@@ -2,7 +2,6 @@
 title: UP01 · Primeros documentos con Writer · S01.03
 ---
 
-# 2. Sesión 1
 ## 2.1. Archivos y carpetas
 
 Un **archivo** contiene información guardada en el ordenador. Puede ser un documento de texto, una hoja de cálculo, una presentación,, una imagen o un PDF.
@@ -22,7 +21,6 @@ Podemos pensar en las carpetas como los archivadores de una oficina:
 * Los separadores serían las subcarpetas.
 * Los documentos guardados serían los archivos.
 
-
 ## 2.2. Nombres de archivos significativos
 
 El nombre de un archivo debe permitirnos saber qué contiene sin necesidad de abrirlo.
@@ -35,6 +33,8 @@ Mejor llamarlo
 
 `01_Datos_evento_Carlos.odt`
 
+!!! salto-pagina-pdf ""
+
 Para poner un buen nombre a un archivo debemos:
 
 * Utilizar palabras relacionadas con su contenido.
@@ -44,7 +44,7 @@ Para poner un buen nombre a un archivo debemos:
 * Utilizar números para indicar el orden de los documentos.
 * Evitar caracteres extraños en los nombres
 
-POdemos separar las palabras mediante guiones bajos:
+Podemos separar las palabras mediante guiones bajos:
 
 `01_Datos_evento_Carlos.odt`
 
@@ -58,6 +58,8 @@ La parte final del nombre se llama **extensión**. La extensión indica el tipo 
 | `.ods` | Hoja de cálculo | LibreOffice Calc |
 | `.odp` | Presentación | LibreOffice Impress |
 | `.pdf` | Documento preparado para consultar o imprimir | Visor de PDF |
+
+!!! salto-pagina-pdf ""
 
 ## 2.4. Guardar y guardar como
 
@@ -131,6 +133,8 @@ Para conservar la integridad debemos:
 * Comprobar que el documento que se abre correctamente.
 * Conservar una copia de los archivos importantes.
 
+!!! salto-pagina-pdf ""
+
 ### 2.6.3. Confidencialidad
 
 La **confidencialidad** significa que determinada información solamente puede ser consultada por las personas autorizadas.
@@ -146,7 +150,7 @@ No debemos incluir en el documento del evento información como:
 !!! warning "Recuerda"
     **Las contraseñas son secretas. No debemos comunicarlas a compañeros, amistades ni personas desconocidas.**
 
-# 8. Copias de seguridad
+## 2.8. Copias de seguridad
 
 Una **copia de seguridad** es una copia un archivo que conservamos para poder recuperarlo si el original se pierde, se borra o se estropea.
 
@@ -167,7 +171,9 @@ Una copia de seguridad real debería guardarse también en una ubicación difere
 
 Si el original y la copia están en el mismo dispositivo, podrían perderse los dos al mismo tiempo.
 
-## 2.8. Versiones de un documento
+!!! salto-pagina-pdf ""
+
+## 2.9. Versiones de un documento
 
 Una **versión** es una nueva etapa del documento en la que hemos realizado cambios.
 
