@@ -146,6 +146,6 @@ Si cerramos Writer sin guardar, podemos perder los últimos cambios realizados.
 
 > **Escribir → Revisar → Corregir → Guardar**
 
-En la **S01.05** practicaremos principalmente la escritura, el cursor, las mayúsculas, los espacios y la separación de párrafos.
+En la **S01.05, S01.07, S01.08** practicaremos principalmente la escritura, el cursor, las mayúsculas, los espacios y la separación de párrafos.
 
 En la **S01.06** practicaremos la corrección de palabras, las teclas `Retroceso` y `Suprimir`, la opción **Deshacer** y el guardado de los últimos cambios.
