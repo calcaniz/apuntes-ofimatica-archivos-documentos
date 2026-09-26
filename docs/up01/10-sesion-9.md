@@ -1,257 +1,239 @@
 ---
-title: Configuración básica de la página
+title: Crear tablas en Writer
 ---
 
-# Configuración básica de la página
+# Crear tablas en Writer
 
-## ¿Qué vamos a hacer hoy?
+Una **tabla** permite organizar la información en filas y columnas.
 
-Hoy aprenderemos a preparar la página de un documento antes de empezar a trabajar con él.
+Podemos utilizar una tabla para mostrar:
 
-Aprenderemos a:
-
-- Comprobar el tamaño de la página.
-- Cambiar la orientación de la página.
-- Modificar los márgenes.
-- Elegir la configuración más adecuada para cada documento.
-- Guardar el documento con el nombre indicado.
-
-Después aplicaremos estos cambios al documento de nuestro evento.
-
-## ¿Qué debemos recordar?
-
-Antes de empezar, debemos recordar que:
-
-- Writer sirve para crear y modificar documentos de texto.
-- El cursor indica dónde aparecerá el siguiente carácter.
-- Los documentos de Writer utilizan normalmente la extensión `.odt`.
-- Debemos guardar cada documento en la carpeta indicada.
-- El nombre del archivo debe indicar claramente qué contiene.
-
-> **Ejemplo de nombre poco claro:** `documento1.odt`  
-> **Ejemplo de nombre claro:** `Cartel_KDD49_Valencia.odt`
-
-## ¿Qué criterio vamos a trabajar?
-
-**CE03-d:** Se han configurado las páginas del documento de acuerdo con las indicaciones propuestas.
-
-En esta actividad trabajaremos principalmente:
-
-- El tamaño de la página.
-- La orientación.
-- Los márgenes.
-
----
-
-## 1. La página del documento
-
-Cuando creamos un documento en Writer, escribimos sobre una página.
-
-Antes de trabajar, podemos decidir cómo queremos que sea esa página:
-
-- Su tamaño.
-- Su orientación.
-- El espacio que quedará alrededor del texto.
-
-Esta configuración dependerá del documento que queramos preparar.
-
-Por ejemplo, un cartel y una carta pueden necesitar configuraciones diferentes.
-
----
-
-## 2. El tamaño de la página
-
-El tamaño indica las dimensiones que tendrá la página cuando se visualice o se imprima.
-
-El tamaño más utilizado es el **A4**.
-
-Una página A4 mide:
-
-- **21 centímetros de ancho.**
-- **29,7 centímetros de alto.**
-
-Normalmente utilizaremos el tamaño A4 para:
-
-- Cartas.
-- Trabajos de clase.
-- Fichas.
-- Informes.
-- Programas de actividades.
-
-> Antes de imprimir un documento, debemos comprobar que el tamaño de la página sea correcto.
-
-### Cambiar el tamaño en Writer
-
-1. Abre el menú **Format**.
-2. Selecciona **Estil de pàgina**.
-
-    ![Formato Página](../assets/up01/7.1.png)
-
-3. Busca la pestaña **Pàgina**.
-4. En la sección **Format del paper**
-5. Selecciona **A4**.
-
-    ![Formato Página](../assets/up01/7.2.png)
-
-6. Pulsa **D'acord**.
-
----
-
-## 3. La orientación de la página
-
-La orientación indica la posición en la que utilizaremos la página.
-
-Existen dos orientaciones principales.
-
-### Orientación vertical
-
-La página es más alta que ancha.
-
-Se utiliza habitualmente para:
-
-- Cartas.
-- Informes.
-- Fichas.
-- Trabajos escritos.
-- Portadas.
-
-### Orientación horizontal
-
-La página es más ancha que alta.
-
-También se llama orientación **apaisada**.
-
-Se utiliza habitualmente para:
-
-- Carteles.
 - Horarios.
-- Calendarios.
-- Tablas grandes.
-- Programas de eventos.
-
-| Vertical { .table-full-container .table-cl-secundario .table-bg-principal }| Horizontal { .table-full-container .table-cl-secundario .table-bg-principal }|
-|:---:|:---:|
-| La página es más alta | La página es más ancha |
-| Adecuada para textos | Adecuada para carteles y horarios |
-
-### Cambiar la orientación en Writer
-
-1. Abre el menú **Format**.
-2. Selecciona **Estil de pàgina**.
-
-    ![Formato Página](../assets/up01/7.1.png)
-
-3. Busca la pestaña **Pàgina**.
-
-    ![Formato Página](../assets/up01/7.2.png)
-
-4. En la sección **Orientació**, selecciona **Vertical** u **Horitzontal**.
-5. Pulsa **D'acord**.
-
-> La orientación correcta dependerá del documento que queramos crear.
+- Participantes.
+- Clasificaciones.
+- Precios.
+- Resultados.
+- Actividades de un evento.
 
 ---
 
-## 4. Los márgenes
+## 1. Partes de una tabla
 
-Los márgenes son los espacios en blanco que quedan entre el contenido y los bordes de la página.
+Una tabla está formada por **filas**, **columnas** y **celdas**.
 
-Una página tiene cuatro márgenes:
+| Participante { .table-full-container .table-cl-secundario .table-bg-principal}  | Actividad { .table-cl-secundario .table-bg-principal }| Hora { .table-main-column .table-cl-secundario .table-bg-principal} |
+|---|---|---|
+| Equipo Azul | Primera prueba | 17:00 |
+| Equipo Rojo | Segunda prueba | 17:30 |
 
-- Margen superior.
-- Margen inferior.
-- Margen izquierdo.
-- Margen derecho.
+### Fila
 
-Los márgenes evitan que el texto quede demasiado cerca del borde.
+Es un conjunto de celdas colocadas horizontalmente.
 
-También ayudan a que el documento sea:
+En el ejemplo, cada participante ocupa una fila.
 
-- Más claro.
-- Más ordenado.
-- Más fácil de leer.
-- Más fácil de imprimir.
+### Columna
 
-### Cambiar los márgenes en Writer
+Es un conjunto de celdas colocadas verticalmente.
 
-1. Abre el menú **Format**.
-2. Selecciona **Estil de pàgina**.
+En el ejemplo tenemos tres columnas:
 
-    ![Formato Página](../assets/up01/7.1.png)
+1. Participante.
+2. Actividad.
+3. Hora.
 
-3. Busca la pestaña **Pàgina**.
+### Celda
 
-    ![Formato Página](../assets/up01/7.2.png)
+Es cada uno de los espacios de la tabla.
 
-4. Busca la sección **Marges** y escribe la medida indicada.
-5. Pulsa **D'acord**
+En una celda podemos escribir texto, números o fechas.
 
-Por ejemplo, podemos utilizar un margen de **2 centímetros** en los cuatro lados.
-
-> No debemos utilizar espacios o la tecla Intro para crear márgenes. Los márgenes se configuran desde las opciones de la página.
+> Antes de crear una tabla debemos pensar cuántas filas y columnas necesitamos.
 
 ---
 
-## 5. ¿Qué configuración debemos elegir?
+## 2. Insertar una tabla
 
-La configuración depende del documento que estemos preparando.
+Para crear una tabla en LibreOffice Writer:
 
-| Documento { .table-full-container .table-cl-secundario .table-bg-principal} | Tamaño  { .table-cl-secundario .table-bg-principal} | Orientación { .table-full-container .table-cl-secundario .table-bg-principal}|
-|---|:---:|:---:|
-| Carta | A4 | Vertical |
-| Trabajo de clase | A4 | Vertical |
-| Cartel de un evento | A4 | Vertical u horizontal |
-| Horario | A4 | Horizontal |
-| Programa de actividades | A4 | Horizontal |
+1. Coloca el cursor en el lugar donde quieres crearla.
+2. Pulsa **Tabla**.
+3. Selecciona **Insertar tabla**.
+    
+    ![9.1](../assets/up01/9.1.png)
 
-No existe una única configuración válida para todos los documentos.
+4. Indica el número de columnas.
+5. Indica el número de filas.
+    
+    ![9.2](../assets/up01/9.2.png)
 
-Debemos seguir siempre las instrucciones recibidas.
+6. Pulsa **Aceptar**.
+
+    ![9.3](../assets/up01/9.3.png)
+
+También podemos utilizar el botón **Insertar tabla** de la barra de herramientas.
+
+![9.4](../assets/up01/9.4.png)
 
 ---
 
-## 6. Guardar el documento
+## 3. Escribir dentro de una tabla
 
-Después de modificar la configuración de la página, debemos guardar los cambios.
+Para escribir dentro de una celda:
 
-Podemos utilizar:
+1. Haz clic en la celda.
+2. Escribe el contenido.
+3. Pulsa la tecla **Tabulador** para pasar a la siguiente celda.
 
-**Fitxer → Desa**
+Cuando llegues a la última celda, la tecla **Tabulador** puede crear una nueva fila.
 
-También podemos utilizar la combinación:
+> Para pasar de una celda a otra utilizamos el **Tabulador**, no la barra espaciadora.
+
+---
+
+## 4. Seleccionar una celda
+
+Antes de cambiar el aspecto de una celda, debemos seleccionarla.
+
+Podemos seleccionar:
+
+- Una sola celda.
+- Una fila completa.
+- Una columna completa.
+- Toda la tabla.
+
+Para hacerlo:
+
+1. Haz clic dentro de la tabla.
+2. Abre el menú **Tabla**.
+3. Pulsa **Seleccionar**.
+4. Elige **Celda**, **Fila**, **Columna** o **Tabla**.
+
+---
+
+## 5. Añadir una fila
+
+Si necesitamos escribir más información, podemos añadir una fila.
+
+1. Haz clic dentro de la tabla.
+2. Abre el menú **Tabla**.
+3. Selecciona **Insertar**.
+4. Pulsa **Filas**.
+
+También podemos situarnos en la última celda y pulsar **Tabulador**.
+
+---
+
+## 6. Eliminar una fila
+
+Si una fila no es necesaria:
+
+1. Haz clic en una celda de esa fila.
+2. Abre el menú **Tabla**.
+3. Selecciona **Eliminar**.
+4. Pulsa **Filas**.
+
+> Antes de eliminar una fila, comprueba que has seleccionado la correcta.
+
+---
+
+## 7. Cambiar el ancho de una columna
+
+Podemos hacer que una columna sea más ancha o más estrecha.
+
+1. Coloca el ratón sobre la línea que separa dos columnas.
+2. Espera a que cambie la forma del puntero.
+3. Mantén pulsado el botón izquierdo.
+4. Arrastra la línea.
+
+Las columnas deben tener espacio suficiente para que el contenido se pueda leer.
+
+---
+
+## 8. Dar formato al texto de una tabla
+
+El texto situado dentro de una tabla se puede modificar igual que cualquier otro texto.
+
+Podemos aplicar:
+
+- **Negrita**.
+- *Cursiva*.
+- Subrayado.
+- Tamaño de letra.
+- Alineación izquierda.
+- Alineación centrada.
+- Alineación derecha.
+
+Normalmente, la primera fila contiene los títulos de las columnas.
+
+Por eso podemos colocarla:
+
+- En **negrita**.
+- Centrada.
+- Con un color de fondo diferente.
+
+---
+
+## 9. Centrar el contenido
+
+Para centrar el contenido de una o varias celdas:
+
+1. Selecciona las celdas.
+2. Pulsa el botón **Centrar**.
+
+No debemos utilizar espacios para centrar el contenido.
+
+---
+
+## 10. Guardar el documento
+
+Cuando termines:
+
+1. Pulsa **Archivo → Guardar**.
+2. Comprueba el nombre del documento.
+3. Comprueba que está dentro de tu carpeta.
+4. Verifica que termina en **`.odt`**.
+
+También puedes guardar pulsando:
 
 **Ctrl + S**
 
-Si queremos conservar el documento original y crear otro diferente, utilizaremos:
+---
 
-**Fitxer → Anomena i desa**
+## Errores que debemos evitar
 
-Después elegiremos:
+- Crear demasiadas filas o columnas.
+- Utilizar espacios para separar la información.
+- Escribir fuera de la celda correspondiente.
+- Dejar columnas demasiado estrechas.
+- Eliminar una fila sin comprobar cuál está seleccionada.
+- Crear varias tablas cuando podemos utilizar una sola.
+- Olvidar guardar el documento.
 
-1. La carpeta indicada.
-2. Un nombre significativo.
-3. El formato `.odt`.
+---
+
+## Antes de terminar, comprueba
+
+- [ ] La tabla tiene las filas solicitadas.
+- [ ] La tabla tiene las columnas solicitadas.
+- [ ] He escrito cada dato en su celda.
+- [ ] La primera fila está en negrita.
+- [ ] El contenido se puede leer correctamente.
+- [ ] No he utilizado espacios para organizar los datos.
+- [ ] He guardado el documento en formato `.odt`.
+- [ ] El documento está dentro de mi carpeta.
 
 ---
 
 ## Resumen
 
-Antes de trabajar con un documento debemos comprobar:
+Para trabajar con una tabla debemos:
 
-- El tamaño de la página.
-- La orientación.
-- Los márgenes.
-- La carpeta donde se guardará.
-- El nombre del archivo.
+1. Pensar cuántas filas y columnas necesitamos.
+2. Insertar la tabla.
+3. Escribir cada dato en su celda.
+4. Utilizar el tabulador para avanzar.
+5. Aplicar un formato sencillo.
+6. Guardar el documento.
 
-> Una página bien configurada permite crear un documento más claro, ordenado y fácil de imprimir.
-
-## Antes de empezar la actividad
-
-Comprueba que puedes responder estas preguntas:
-
-1. ¿Cuál es el tamaño de página más utilizado?
-2. ¿Qué diferencia existe entre orientación vertical y horizontal?
-3. ¿Qué son los márgenes?
-4. ¿Dónde podemos cambiar la configuración de la página?
-5. ¿Qué opción utilizamos para crear una copia con otro nombre?
+> Una tabla debe ayudar a encontrar y comparar la información rápidamente.

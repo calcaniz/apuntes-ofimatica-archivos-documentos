@@ -55,7 +55,6 @@ extra_css:
 nav:
   - Inicio: index.md
   - UP01. Primeros documentos con Writer:
-<<<<<<< HEAD
       - 1. Introducción (10/09/2026): up01/01-index.md
       - 2. Sesión 1 (11/09/2026): up01/02-sesion-1.md
       - 3. Sesión 2 (16/09/2026): up01/03-sesion-2.md
@@ -67,11 +66,3 @@ nav:
       - 9. Sesión 8 (30/09/2026): up01/09-sesion-8.md
       - 10. Sesión 9 (01/10/2026): up01/10-sesion-9.md
       - 11. Sesión 10 (02/10/2026): up01/11-sesion-10.md
-=======
-      - 1. Introducción: up01/01-index.md
-      - 2. Sesión 1 (10/09/2026): up01/02-sesion-1.md
-      - 3. Sesión 2 (11/09/2026): up01/03-sesion-2.md
-      - 4. Sesión 3 (16/09/2026): up01/04-sesion-3.md
-      - 5. Sesión 4 (17/09/2026): up01/05-sesion-4.md
-      - 6. Sesión 5 (18/09/2026): up01/06-sesion-5.md
->>>>>>> 351940c3b82ddb0deec36ee3516b6c50df4bdfcb
