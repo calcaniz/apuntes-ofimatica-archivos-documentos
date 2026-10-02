@@ -1,12 +1,4 @@
 ---
-<<<<<<< HEAD
-title: Repaso + Kahoot
----
-
-# Repaso + Kahoot
-
-Esta sesión la hemos dedicado a terminar actividades pendientes y repasar para el examen de la Sesión 6.
-=======
 title: Formato básico de texto en Writer
 ---
 
@@ -364,4 +356,3 @@ Para aplicar formato correctamente debemos seguir siempre este orden:
 5. Corregir los posibles errores.
 
 > **Idea principal:** el formato sirve para organizar la información y destacar lo importante, no para llenar el documento de efectos.
->>>>>>> 351940c3b82ddb0deec36ee3516b6c50df4bdfcb

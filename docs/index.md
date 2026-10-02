@@ -48,7 +48,7 @@ A lo largo del curso aprenderemos a:
 |---|---|:---:|:---:|
 | **Inicio** | Acogida y evaluación inicial | — | 1 h |
 | **[UP01](up01/01-index.md)** | Primeros documentos con Writer | RA1 | 24 h |
-| **UP02** | Documentos útiles y profesionales con Writer | RA1 | 30 h |
+| **[UP02](up02/01-index.md)** | Documentos útiles y profesionales con Writer | RA1 | 30 h |
 | **UP03** | Impresión, escaneado y reproducción de documentos | RA4 | 24 h |
 | **UP04** | Primeros pasos con Calc | RA2 | 24 h |
 | **UP05** | Presupuestos, listas y gráficos con Calc | RA2 | 30 h |
