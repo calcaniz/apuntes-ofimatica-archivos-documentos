@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inspección de seguridad</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:900px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-wrap:wrap;gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:700px){.dos{grid-template-columns:1fr}}
+.cont{font-size:18px;margin:8px 0}
+.chips{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.chip{font:inherit;font-size:18px;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;color:var(--texto);text-align:left}
+.chip.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.chip.vis{border-color:var(--ok);background:var(--okbg);cursor:default}
+.def{font:inherit;font-size:17px;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:8px 12px;cursor:pointer;color:var(--texto);text-align:left}
+.def.sel{border-color:var(--secundario);background:var(--claro)}
+.escena{background:#f4f1ec;border:2px solid var(--borde);border-radius:14px;padding:6px}
+.escena svg{width:100%;height:auto;display:block}
+.zona{fill:transparent;cursor:pointer}
+.zona:hover{fill:rgba(255,153,68,.18)}
+.zona.sel{stroke:#ff8a00;stroke-width:4}
+.zona.pista{stroke:#c62828;stroke-width:4;stroke-dasharray:7 5;fill:rgba(198,40,40,.08)}
+.zona.hecho{cursor:default}
+.orden{list-style:none;margin:0 0 10px;padding:0}
+.orden li{padding:8px 12px;border-radius:10px;margin-bottom:6px;background:var(--okbg);border:2px solid var(--ok);font-size:18px}
+.objeto{border:3px solid var(--secundario);background:var(--claro);border-radius:14px;padding:18px;text-align:center;font-size:24px;font-weight:700;margin:8px 0 12px}
+.objeto small{display:block;font-size:16px;font-weight:400;color:var(--gris)}
+.contenedores{display:flex;flex-direction:column;gap:8px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.pregunta .opciones{flex-direction:column}
+.pregunta .op{width:100%}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🦺 Inspección de seguridad</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0306-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S03.06_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var RIESGOS=[
+ ["electrico","Riesgo eléctrico","Usar un cable roto o tocar un enchufe con las manos mojadas."],
+ ["termico","Riesgo térmico (calor)","Tocar las partes internas calientes de una impresora láser o fotocopiadora."],
+ ["atrapamiento","Atrapamiento","Meter las manos en rodillos, bandejas o mecanismos en movimiento."],
+ ["irritantes","Sustancias irritantes","Derramar tinta o entrar en contacto con el polvo de tóner."],
+ ["luminosa","Radiación luminosa","Mirar directamente la luz del escáner mientras funciona."],
+ ["caidas","Caídas y golpes","Dejar cables o cajas de papel en una zona de paso."]
+];
+function riesgo(id){return RIESGOS.filter(function(c){return c[0]===id;})[0];}
+var ORDEN_C=["luminosa","electrico","caidas","atrapamiento","irritantes","termico"];
+var ORDEN_D=["caidas","irritantes","termico","luminosa","electrico","atrapamiento"];
+function relComprobar(){
+  var r=S.rel; if(!r.name||!r.part)return;
+  if(r.name===r.part){
+    var x=riesgo(r.name); intento("rel_"+r.name,true);
+    r.done[r.name]=true; r.msg="✔ <b>"+elogio(semilla(r.name))+"</b> "+x[1]+": "+x[2]; r.ok=true; r.name=null; r.part=null;
+  }else{
+    intento("rel_"+r.name,false); r.msg="¡Casi! Ese ejemplo no es de ese riesgo. ¡Prueba otra vez, tú puedes!"; r.ok=false; r.part=null; error("relaciona");
+  }
+}
+/* peligros de la escena: id, nombre, centro (x,y), zona (x,y,w,h), opciones */
+var PELIGROS=[
+ {id:"liquido",nombre:"Botella de agua junto a la fotocopiadora",cx:380,cy:152,z:[360,126,42,56],
+  ops:["Dejarla: está bien tapada","Retirarla: ningún líquido cerca de los equipos eléctricos","Moverla al otro lado de la máquina"],corr:1,
+  exp:"Un líquido derramado sobre un equipo eléctrico puede provocar un cortocircuito o una descarga."},
+ {id:"cable",nombre:"Cable con los hilos al descubierto",cx:104,cy:186,z:[72,158,64,56],
+  ops:["No usar el equipo y comunicar la incidencia","Taparlo con cinta y seguir usándolo","Tirar del cable para ver si funciona"],corr:0,
+  exp:"Un cable dañado puede dar una descarga eléctrica: no se usa, y se avisa."},
+ {id:"suelo",nombre:"Cables cruzando la zona de paso",cx:372,cy:292,z:[112,250,324,56],
+  ops:["Recogerlos y apartarlos de la zona de paso","Dejarlos: la gente ya sabe que están","Taparlos con unos folios"],corr:0,
+  exp:"Los cables por el suelo provocan tropiezos y caídas."},
+ {id:"caja",nombre:"Caja de papel muy pesada en el suelo",cx:484,cy:268,z:[436,230,92,72],
+  ops:["Levantarla yo solo, rápido","Arrastrarla de golpe","Pedir ayuda para moverla"],corr:2,
+  exp:"Cargar peso de forma incorrecta causa lesiones musculares: se pide ayuda."},
+ {id:"toner",nombre:"Tóner derramado en el suelo",cx:250,cy:266,z:[200,246,100,40],
+  ops:["Soplar el polvo","Barrerlo con fuerza","No soplarlo ni tocarlo: avisar y seguir el procedimiento"],corr:2,
+  exp:"El polvo de tóner puede irritar: no se levanta polvo y se avisa a la persona responsable."},
+ {id:"humo",nombre:"Sale humo de la impresora",cx:340,cy:62,z:[296,30,86,62],
+  ops:["Seguir imprimiendo","Detener el equipo, alejarme y avisar enseguida","Abrir la tapa para mirar dentro"],corr:1,
+  exp:"El humo o un olor raro son peligrosos: se detiene el equipo, te alejas y avisas."}
+];
+var ATASCO=[
+ ["Detener el trabajo","Esto va primero: detén el trabajo.","Primero se para el equipo para no empeorar el atasco."],
+ ["Leer el mensaje de la pantalla","Antes de abrir nada hay que detener el trabajo y leer el mensaje.","El mensaje te dice dónde está el atasco."],
+ ["Abrir solo las tapas señaladas","Primero lee el mensaje: él te dice qué tapas abrir.","Algunas partes están calientes: solo se abre lo señalado."],
+ ["Retirar el papel despacio, en la dirección indicada","Antes hay que abrir las tapas señaladas.","Si tiras con fuerza, el papel se rompe y quedan trozos dentro."],
+ ["Cerrar bien las tapas","Primero hay que retirar todo el papel.","Con las tapas bien cerradas, la máquina vuelve a funcionar."],
+ ["Hacer una copia de prueba","La prueba va al final, cuando ya está todo cerrado.","La prueba comprueba que el equipo ya funciona bien."]
+];
+var ORDEN_A=[3,0,5,2,4,1];
+var RESIDUOS=[
+ ["Folleto de papel",0,"El papel de impresión, los folletos y las revistas van al contenedor de papel. Antes, quita grapas y clips."],
+ ["Tique de compra (papel térmico)",2,"El papel térmico de los tiques no se recicla con el papel normal."],
+ ["Cartucho de tóner vacío",1,"Los cartuchos son residuos especiales: se entregan en un punto de recogida."],
+ ["Caja de cartón limpia",0,"El cartón limpio es papel: se dobla para que ocupe menos."],
+ ["Etiquetas adhesivas",2,"El adhesivo hace que no se pueda reciclar como papel."],
+ ["Cable viejo",1,"Los cables son residuos electrónicos: punto limpio o de recogida."],
+ ["Papel manchado de grasa",2,"Si está manchado de grasa, pintura u otros productos, no se recicla como papel."],
+ ["Hoja de impresión usada",0,"Las hojas de impresión usadas se reciclan en el contenedor de papel."]
+];
+var CONT=["📘 Contenedor de papel (azul)","♻️ Punto limpio o de recogida","🗑️ Contenedor de restos"];
+var AH=[
+ ["¿Cómo gastas menos papel?",["Imprimiendo siempre por una cara","Revisando la vista previa e imprimiendo solo lo necesario","Haciendo copias de más por si acaso"],1,"La vista previa, la doble cara y las copias justas ahorran mucho papel."],
+ ["¿Cómo gastas menos tinta o tóner?",["Usando modo borrador en las pruebas y blanco y negro si no hace falta color","Imprimiendo todo en color y en alta calidad","Repitiendo el trabajo varias veces"],0,"El modo borrador y el blanco y negro gastan menos consumible."],
+ ["¿Cómo ahorras energía?",["Dejando todos los equipos encendidos","Encendiendo todas las máquinas a la vez","Activando el ahorro de energía y apagando al terminar"],2,"Un equipo apagado o en ahorro de energía consume mucho menos."]
+];
+
+/* estado en memoria */
+var S={
+  rel:{name:null,part:null,done:{},msg:"",ok:false},
+  insp:{fixed:{},sel:null,ans:{},pista:null},
+  a:{orden:[],msg:"",ok:false},
+  rec:{i:0,msg:"",ok:false,fallos:0},
+  ah:{}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+function opB(act,data,txt,sel){
+  var at="";for(var k in data)at+=' data-'+k+'="'+esc(data[k])+'"';
+  return '<button class="op'+(sel?" sel":"")+'" data-act="'+act+'"'+at+'>'+txt+'</button>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+function hazIdx(id){for(var i=0;i<PELIGROS.length;i++)if(PELIGROS[i].id===id)return i;return -1;}
+
+/* ===== escena del taller ===== */
+function escena(o){
+  var f=o.fixed||{};
+  function tenue(id,txt){return f[id]?'<g opacity=".18">'+txt+'</g>':txt;}
+  var s='<svg viewBox="0 0 560 330" role="img" aria-label="Taller de reprografía">';
+  s+='<rect x="0" y="0" width="560" height="230" fill="#f3eee6"/><rect x="0" y="230" width="560" height="100" fill="#d8cdbb"/><line x1="0" y1="230" x2="560" y2="230" stroke="#b9ad9b" stroke-width="3"/>';
+  s+='<rect x="430" y="34" width="100" height="82" fill="#d3ebf8" stroke="#8aa5b5" stroke-width="3"/><line x1="480" y1="34" x2="480" y2="116" stroke="#8aa5b5" stroke-width="3"/>';
+  s+='<rect x="34" y="176" width="24" height="32" rx="3" fill="#fff" stroke="#888" stroke-width="2"/><circle cx="43" cy="188" r="2.5" fill="#444"/><circle cx="49" cy="188" r="2.5" fill="#444"/><circle cx="46" cy="198" r="2.5" fill="#444"/>';
+  s+='<rect x="100" y="180" width="320" height="12" fill="#8b6b4a"/><rect x="110" y="192" width="10" height="58" fill="#7a5c3d"/><rect x="400" y="192" width="10" height="58" fill="#7a5c3d"/>';
+  s+='<rect x="150" y="100" width="200" height="80" rx="6" fill="#e9e3d9" stroke="#8a8278" stroke-width="3"/><rect x="150" y="84" width="200" height="18" rx="4" fill="#d6cec1" stroke="#8a8278" stroke-width="3"/>';
+  s+='<rect x="288" y="118" width="50" height="24" rx="3" fill="#3b3b3b"/><rect x="170" y="154" width="80" height="14" rx="3" fill="#cfc7b8" stroke="#8a8278" stroke-width="2"/>';
+  /* cable que va al enchufe: se ve ordenado si está resuelto */
+  s+='<path d="M150 162 C 110 164, 90 204, 58 194" stroke="#333" stroke-width="4" fill="none"/>';
+  if(!f.cable)s+='<polyline points="92,178 98,186 94,190 102,196" fill="none" stroke="#d4a017" stroke-width="3"/><polyline points="96,172 102,180 98,186" fill="none" stroke="#c0392b" stroke-width="3"/><text x="110" y="178" font-size="20">⚡</text>';
+  /* botella */
+  s+=tenue("liquido",'<rect x="372" y="140" width="16" height="38" rx="3" fill="#6ec1e4" stroke="#2b6fa3" stroke-width="2"/><rect x="375" y="132" width="10" height="9" rx="2" fill="#2b6fa3"/>');
+  /* cables por el suelo */
+  s+=tenue("suelo",'<path d="M120 252 C 200 304, 300 252, 430 292" stroke="#444" stroke-width="5" fill="none"/><path d="M130 250 C 220 300, 330 262, 400 296" stroke="#777" stroke-width="4" fill="none"/>');
+  /* caja */
+  s+=tenue("caja",'<rect x="442" y="236" width="82" height="64" fill="#c8a06b" stroke="#8a6a3a" stroke-width="3"/><text x="483" y="274" text-anchor="middle" font-size="16" font-weight="700" font-family="sans-serif" fill="#5a3f1a">20 kg</text>');
+  /* tóner */
+  s+=tenue("toner",'<ellipse cx="250" cy="268" rx="38" ry="11" fill="#222"/><rect x="278" y="256" width="30" height="14" rx="3" fill="#555" transform="rotate(-18 292 263)"/>');
+  /* humo */
+  s+=tenue("humo",'<circle cx="322" cy="68" r="15" fill="#9a9a9a"/><circle cx="342" cy="56" r="19" fill="#8c8c8c"/><circle cx="364" cy="66" r="14" fill="#9a9a9a"/><circle cx="346" cy="40" r="11" fill="#adadad"/>');
+  /* zonas pulsables y marcas */
+  PELIGROS.forEach(function(h){
+    var cls="zona"+(f[h.id]?" hecho":"")+(o.sel===h.id?" sel":"")+(o.pista===h.id&&!f[h.id]?" pista":"");
+    s+='<rect class="'+cls+'" data-h="'+h.id+'" x="'+h.z[0]+'" y="'+h.z[1]+'" width="'+h.z[2]+'" height="'+h.z[3]+'" rx="8"><title>Zona del taller</title></rect>';
+    if(f[h.id])s+='<circle cx="'+h.cx+'" cy="'+h.cy+'" r="14" fill="#2e7d32" stroke="#fff" stroke-width="3" pointer-events="none"/><text x="'+h.cx+'" y="'+(h.cy+6)+'" text-anchor="middle" font-size="18" fill="#fff" font-weight="700" pointer-events="none">✓</text>';
+  });
+  return '<div class="escena">'+s+'</svg></div>';
+}
+
+/* ===== PRÁCTICA ===== */
+var PRACTICA=[
+ {t:"1. Une cada riesgo con su ejemplo",
+  ayuda:"<b>1.</b> Pulsa un riesgo. <b>2.</b> Pulsa su ejemplo. Si aciertas, se queda en verde.",
+  html:function(){
+    var r=S.rel, n=Object.keys(r.done).length;
+    var h='<p class="cont"><b>Llevas '+n+' de 6</b></p><div class="dos"><div><p class="cont"><b>Riesgos</b></p><div class="chips">';
+    ORDEN_C.forEach(function(id){
+      h+=r.done[id]?'<span class="chip vis">✔ '+riesgo(id)[1]+'</span>':'<button class="chip'+(r.name===id?" sel":"")+'" data-act="rel-name" data-p="'+id+'">'+riesgo(id)[1]+'</button>';
+    });
+    h+='</div></div><div><p class="cont"><b>Ejemplos</b></p><div class="chips">';
+    ORDEN_D.forEach(function(id){
+      h+=r.done[id]?'<span class="chip vis">✔ '+esc(riesgo(id)[2])+'</span>':'<button class="def'+(r.part===id?" sel":"")+'" data-act="rel-def" data-p="'+id+'">'+esc(riesgo(id)[2])+'</button>';
+    });
+    h+='</div></div></div>'+msg(r.msg,r.ok);
+    if(n===6)h+=msg("🎉 ¡Muy bien! Ya conoces los 6 riesgos principales. Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){return Object.keys(S.rel.done).length===6;}},
+
+ {t:"2. Inspecciona el taller",
+  ayuda:"Hay <b>6 peligros</b> en el taller. <b>Pulsa en el dibujo</b> lo que te parezca peligroso y decide qué hacer.",
+  html:function(){
+    var I=S.insp, n=Object.keys(I.fixed).length, h='<p class="cont"><b>Peligros resueltos: '+n+' de 6</b></p>';
+    h+=escena({fixed:I.fixed,sel:I.sel,pista:I.pista});
+    if(n<6)h+='<p><button class="btn" data-act="pista">💡 Ayúdame a encontrar uno</button></p>';
+    if(I.sel){var k=hazIdx(I.sel),hz=PELIGROS[k];h+=pregunta("pi",k,"⚠️ "+hz.nombre+". ¿Qué haces?",hz.ops,hz.corr,I.ans[k],null,hz.exp);}
+    if(n===6)h+=msg("🎉 <b>¡Taller seguro!</b> Has encontrado y resuelto los 6 peligros. Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){return Object.keys(S.insp.fixed).length===6;}},
+
+ {t:"3. Un atasco de papel",
+  ayuda:"El papel se ha atascado. Pulsa los pasos <b>en el orden correcto</b>.",
+  html:function(){
+    var a=S.a, h='<div class="msg info">⚠️ <b>Cuidado:</b> algunas partes internas están muy calientes. Nunca fuerces nada.</div>';
+    if(a.orden.length)h+='<ol class="orden" style="margin-top:12px">'+a.orden.map(function(i){return '<li>✔ '+esc(ATASCO[i][0])+'</li>';}).join("")+'</ol>';
+    if(a.orden.length<6){
+      h+='<p class="cont"><b>¿Qué haces ahora?</b></p><div class="chips">'+ORDEN_A.filter(function(i){return a.orden.indexOf(i)<0;}).map(function(i){
+        return '<button class="chip" data-act="ord" data-i="'+i+'">'+esc(ATASCO[i][0])+'</button>';}).join("")+'</div>';
+    }
+    h+=msg(a.msg,a.ok);
+    if(a.orden.length===6)h+=msg("🎉 <b>¡Atasco resuelto sin riesgos!</b> Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){return S.a.orden.length===6;}},
+
+ {t:"4. Cada residuo, a su contenedor",
+  ayuda:"Mira el objeto y pulsa <b>el contenedor correcto</b>.",
+  html:function(){
+    var r=S.rec, h='<p class="cont"><b>Llevas '+r.i+' de '+RESIDUOS.length+'</b></p>';
+    if(r.i<RESIDUOS.length){
+      h+='<div class="objeto">'+esc(RESIDUOS[r.i][0])+'<small>¿Dónde va?</small></div><div class="contenedores">'+CONT.map(function(t,j){return '<button class="op" data-act="rec" data-v="'+j+'">'+t+'</button>';}).join("")+'</div>';
+    }
+    h+=msg(r.msg,r.ok);
+    if(r.i>=RESIDUOS.length)h+=msg("🎉 <b>¡Todo reciclado!</b> Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){return S.rec.i>=RESIDUOS.length;}},
+
+ {t:"5. Ahorra y cuida el planeta",
+  ayuda:"Tres preguntas sobre cómo ahorrar. Cada acción cuenta para el <b>ODS 12</b> (consumo responsable) y el <b>ODS 13</b> (acción por el clima).",
+  html:function(){
+    var h=AH.map(function(q,i){return pregunta("pq",i,q[0],q[1],q[2],S.ah[i],null,q[3]);}).join("");
+    if(ahOk()){
+      var u=cargar(), f=nombrePDF(u.alumno,"Practica");
+      h+='<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas. Ahora descarga tu PDF de la práctica.</div>'+
+        '<p style="margin:14px 0 6px"><label for="inNombre"><b>Tu nombre y apellidos:</b></label></p>'+
+        '<input type="text" id="inNombre" value="'+esc(u.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">'+
+        '<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.06_Practica_Nombre_Apellido.pdf")+'</div>'+
+        '<p><button class="btn pri grande" id="btnDescarga" data-act="descargar-p"'+(f?"":" disabled")+'>⬇️ Descargar PDF de la práctica</button></p>'+
+        '<div class="msg info">Después pasa a la <b>ficha</b> (Parte 2).</div>';
+    }
+    return h;
+  },
+  ok:function(){return ahOk();},ultimo:true}
+];
+function ahOk(){return AH.every(function(q,i){return S.ah[i]!==undefined&&+S.ah[i]===q[2];});}
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,extra,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],null,q[3]);}).join("");};}
+function okSec(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["¿Dónde colocas un equipo de reprografía?",["En una superficie plana y estable, con espacio y ventilación","Al borde de la mesa, para ahorrar sitio","Pegado a la ventana, al sol"],0,"Un equipo estable, ventilado y sin sol directo se avería menos y es más seguro."],
+        ["¿Dónde dejas una botella de agua?",["Encima de la fotocopiadora","Lejos de los equipos eléctricos","Pegada al enchufe"],1,"Un líquido derramado sobre un equipo eléctrico puede causar un cortocircuito o una descarga."],
+        ["Para desconectar un equipo, ¿qué haces?",["Tiro del cable","Tiro del conector, no del cable","Corto el cable"],1,"Tirar del cable lo daña. Se desconecta tirando del conector."],
+        ["¿Cuántos equipos conectas a una misma toma?",["Todos los que quepan","Los justos, sin sobrecargarla","Da igual"],1,"Demasiados equipos en una toma pueden sobrecalentarla."]];
+var F2=[["Una caja de papel pesa mucho. ¿Qué haces?",["La levanto rápido yo solo","La arrastro de golpe","Pido ayuda para moverla"],2,"Cargar peso mal causa lesiones musculares."],
+        ["Se ha derramado tóner. ¿Qué haces?",["Soplo para quitarlo","No lo soplo, aviso y sigo el procedimiento","Lo limpio con agua caliente"],1,"Soplarlo levanta polvo irritante; se avisa y se sigue el procedimiento."],
+        ["¿Qué haces con un cartucho de tóner?",["Lo abro para ver qué lleva","Lo golpeo para sacar el último polvo","No lo abro ni lo golpeo"],2,"Los cartuchos no se abren ni se golpean."],
+        ["¿Dónde guardas los cartuchos?",["En un lugar seco y seguro","Cerca de una estufa","Al sol en la ventana"],0,"El tóner no debe acercarse al calor ni a la humedad."],
+        ["¿Qué papel NO puedes meter en la bandeja?",["Papel liso y seco","Papel doblado, mojado o con grapas","Papel A4 nuevo"],1,"El papel doblado, mojado o con grapas provoca atascos y daños."]];
+var F3=[["¿Puedes mirar directamente la luz del escáner mientras funciona?",["Sí, un momento","No, mantén la tapa cerrada","Solo si es poca luz"],1,"La luz intensa molesta a la vista: se mantiene la tapa cerrada."],
+        ["Vas a escanear un libro. ¿Fuerzas la tapa?",["Sí, hasta que cierre","No, nunca fuerzo la tapa","Me siento encima"],1,"Forzar la tapa o el cristal puede romperlos."],
+        ["Vas a limpiar un equipo. ¿Qué haces primero?",["Echo líquido directamente","Termino los trabajos, lo apago y espero a que se enfríe","Lo desmonto"],1,"Se apaga y se deja enfriar antes de limpiar."],
+        ["¿Cómo lo limpias?",["Con un paño suave, ligeramente húmedo","Con mucha agua","Con un cuchillo"],0,"Nunca se aplica líquido directamente sobre la máquina."]];
+var F4=[["El cable de un equipo está dañado.",["Lo uso con cuidado","No uso el equipo y comunico la incidencia","Lo arreglo con celo"],1,"Un cable dañado puede dar una descarga: no se usa."],
+        ["Sale humo o huele a quemado.",["Detengo el equipo, me alejo y aviso","Sigo imprimiendo","Abro la tapa a mirar"],0,"El humo es una señal grave: se para, se aleja y se avisa."],
+        ["Oyes un ruido extraño.",["Subo la música","Detengo el trabajo y no sigo usando la máquina","Sigo copiando"],1,"Un ruido raro avisa de un fallo: se para y se comunica."],
+        ["Se ha roto una pieza.",["La arreglo yo","La toco para ver qué es","No la toco y comunico la incidencia"],2,"Las piezas rotas las gestiona la persona responsable."],
+        ["Se ha acabado el tóner.",["Lo cambio yo sin preguntar","Aviso: solo se cambia con autorización","Abro la máquina a ver"],1,"El consumible solo se sustituye con autorización."]];
+var F5=[["¿Qué ODS se relaciona con el consumo responsable?",["ODS 12: producción y consumo responsables","ODS 1: fin de la pobreza","ODS 4: educación de calidad"],0,"Usar bien el papel y los consumibles es consumo responsable."],
+        ["¿Dónde se entrega un cartucho de tóner usado?",["En la papelera normal","En un punto de recogida o punto limpio","En el contenedor de papel"],1,"Los cartuchos son residuos especiales."],
+        ["¿Qué haces al terminar la jornada con los equipos?",["Los dejo encendidos","Los apago o los dejo en ahorro de energía","Los dejo con papel atascado"],1,"Apagar o ahorrar energía reduce el consumo."],
+        ["¿Qué papel NO va al contenedor de papel?",["Folletos","Papel térmico de los tiques","Cartón limpio"],1,"El papel térmico no se recicla con el papel normal."]];
+
+var FICHA=[
+ {t:"1. Instalación y cables",ayuda:"Cómo colocar los equipos y usar los cables con seguridad.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Papel, tinta y tóner",ayuda:"Cinco preguntas sobre cómo manipular los materiales.",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. Escáner, fotocopiadora y limpieza",ayuda:"Uso seguro y limpieza de los equipos.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. Si hay una avería",ayuda:"¿Qué haces en cada situación?",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Cuidamos el medioambiente",ayuda:"Reciclaje, ahorro y consumo responsable.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno,"Resultado"), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Reconocer los riesgos de los equipos de reprografía.</li><li>Detectar peligros y saber cómo actuar.</li><li>Resolver un atasco sin riesgos.</li><li>Reciclar y ahorrar papel, tinta y energía.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.06_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado la práctica de la inspección. Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> sube a Aules el <b>PDF de resultado</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){
+  var n=PASOS.length;
+  if(paso===n-1)return "¡Último paso!";
+  if(paso===0)return "¡Vamos allá!";
+  return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";
+}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas":"🦺 Inspección de seguridad";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function finPractica(){
+  upd(function(o){o.practica={ok:true,t:ahora(),rel:Object.keys(S.rel.done),peligros:Object.keys(S.insp.fixed)};});
+}
+function alClic(e0){
+  var z=e0.target.closest&&e0.target.closest(".zona");
+  if(z){
+    if(MODO!=="practica"||paso!==1)return;
+    var id=z.getAttribute("data-h"); S.insp.sel=id; if(S.insp.pista===id)S.insp.pista=null; render(); return;
+  }
+  var b=e0.target.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act"), a=S.a, r=S.rec, I=S.insp;
+  if(act==="rel-name"){var rr=S.rel;rr.name=b.getAttribute("data-p");rr.msg=rr.part?"":"👆 Ahora pulsa su ejemplo.";rr.ok=false;relComprobar();}
+  else if(act==="rel-def"){var r2=S.rel;r2.part=b.getAttribute("data-p");r2.msg=r2.name?"":"👆 Ahora pulsa el riesgo.";r2.ok=false;relComprobar();}
+  else if(act==="pista"){
+    var libres=PELIGROS.filter(function(h){return !I.fixed[h.id]&&h.id!==I.sel;});
+    if(libres.length)I.pista=libres[0].id;
+  }
+  else if(act==="ord"){
+    var i=+b.getAttribute("data-i");
+    if(i===a.orden.length){a.orden.push(i);a.ok=true;a.msg="✔ <b>"+elogio(i)+"</b> "+ATASCO[i][2];intento("ord"+i,true);}
+    else{a.ok=false;a.msg="✖ <b>Todavía no.</b> "+ATASCO[i][1];intento("ord"+i,false);error("ordena");}
+  }
+  else if(act==="rec"){
+    var v=+b.getAttribute("data-v"), it=RESIDUOS[r.i];
+    if(v===it[1]){r.ok=true;r.msg="✔ <b>"+elogio(r.i)+"</b> "+it[2];intento("rec"+r.i,true);r.i++;}
+    else{r.ok=false;r.msg=animo(r.fallos++)+" Piensa de qué material es.";intento("rec"+r.i,false);error("recicla");}
+  }
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),ii=b.getAttribute("data-i"),vv=+b.getAttribute("data-v");
+    if(sec==="pi"){
+      var hz=PELIGROS[+ii];
+      if(vv!==hz.corr)error("inspecciona");
+      intento("pi"+ii,vv===hz.corr);I.ans[ii]=vv;
+      if(vv===hz.corr)I.fixed[hz.id]=true;
+    }else if(sec==="pq"){
+      if(vv!==AH[ii][2])error("ahorro");
+      intento("pq"+ii,vv===AH[ii][2]);S.ah[ii]=vv;
+      if(ahOk())finPractica();
+    }else{
+      var lst={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5}[sec];
+      if(vv!==lst[ii][2])error(sec);
+      intento(sec+ii,vv===lst[ii][2]);
+      upd(function(u){(u.ficha[sec]=u.ficha[sec]||{})[ii]=vv;});
+    }
+  }
+  else if(act==="descargar"){descargaPDF("Resultado");return;}
+  else if(act==="descargar-p"){descargaPDF("Practica");return;}
+  render();
+}
+function alEscribir(ev){
+  if(ev.target.id!=="inNombre")return;
+  var v=ev.target.value;upd(function(o){o.alumno=v;});
+  var tp=MODO==="ficha"?"Resultado":"Practica";var f=nombrePDF(v,tp);$("nomPdf").textContent=f||"S03.06_"+tp+"_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","✔":"[x]","✖":"[ ]","−":"-","⚠️":""};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informePractica(o){
+  var L=[],canon=[],pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.06 · Práctica de la inspección de seguridad",15,true);
+  t("Parte 1 · Seguridad, salud y medioambiente",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);
+  t(pr.ok?"Práctica COMPLETADA el "+pr.t:"Práctica NO COMPLETADA",11,true);t("");
+  t("1. Riesgos que he unido con su ejemplo",12,true);
+  var rel=pr.rel||[];
+  RIESGOS.forEach(function(c){t("- "+c[1]+(rel.indexOf(c[0])>=0?" [x]":" [ ]")+": "+c[2],10,false,2,true);});
+  t("");
+  t("2. Peligros encontrados y resueltos en el taller",12,true);
+  var pe=pr.peligros||[];
+  PELIGROS.forEach(function(h){t("- "+h.nombre+(pe.indexOf(h.id)>=0?" [x] -> "+h.ops[h.corr]:" [ ]"),10,false,2,true);});
+  t("");
+  t("3. Atasco de papel: pasos en el orden correcto",12,true);
+  ATASCO.forEach(function(p,i){t((i+1)+". "+p[0],11,false,2,true);});
+  t("");
+  t("4. Reciclaje: cada residuo en su contenedor",12,true);
+  RESIDUOS.forEach(function(x){t("- "+x[0]+" -> "+CONT[x[1]].replace(/^\S+\s/,""),10,false,2,true);});
+  t("");
+  t("5. Ahorro de papel, tinta y energía",12,true);
+  AH.forEach(function(q){t("- "+q[1][q[2]],11,false,2,true);});
+  t("");
+  t("6. Fallos durante la práctica",12,true);
+  t("- Al unir riesgos y ejemplos: "+(o.err.relaciona||0),11,false,2,true);
+  t("- Al decidir qué hacer ante un peligro: "+(o.err.inspecciona||0),11,false,2,true);
+  t("- Al ordenar el atasco: "+(o.err.ordena||0),11,false,2,true);
+  t("- Al reciclar: "+(o.err.recicla||0),11,false,2,true);
+  t("- En ahorro: "+(o.err.ahorro||0),11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.06 · Seguridad, salud y medioambiente",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica de la inspección de seguridad",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Instalación y cables",F1);
+  sec("f2","Papel, tinta y tóner",F2);
+  sec("f3","Escáner, fotocopiadora y limpieza",F3);
+  sec("f4","Averías",F4);
+  sec("f5","Medioambiente",F5);
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(tipo){
+  var o=cargar(),f=nombrePDF(o.alumno,tipo);
+  if(!f)return;
+  var lineas=tipo==="Practica"?informePractica(o):informe(o);
+  var blob=new Blob([construyePDF(lineas)],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>

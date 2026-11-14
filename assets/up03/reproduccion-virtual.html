@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de reprografía virtual</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:900px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn.aviso{border-color:var(--ko);color:#8e1b1b}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-wrap:wrap;gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:700px){.dos{grid-template-columns:1fr}}
+.cont{font-size:18px;margin:8px 0}
+.chips{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.chip{font:inherit;font-size:18px;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;color:var(--texto);text-align:left}
+.chip.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.chip.vis{border-color:var(--ok);background:var(--okbg);cursor:default}
+.def{font:inherit;font-size:17px;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:8px 12px;cursor:pointer;color:var(--texto);text-align:left}
+.def.sel{border-color:var(--secundario);background:var(--claro)}
+.acc{border:2px solid var(--borde);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+.acc.ok{border-color:var(--ok);background:var(--okbg)}
+.acc .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.acc .ft b{font-size:19px}
+.acc small{display:block;color:var(--gris);font-size:16px;margin-top:4px}
+.info-parte{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:12px 14px;margin:0 0 10px}
+.hc{width:120px;height:160px;background:#fff;border:2px solid #999;position:relative;overflow:hidden;display:inline-block;margin:4px;vertical-align:top}
+.hc .in{position:absolute;left:12px;right:12px;top:14px}
+.hc .tt{display:block;height:12px;background:#222;width:60%;margin:0 auto 10px}
+.hc .ln{display:block;height:6px;background:#333;margin-bottom:8px}
+.hc .ln.s{width:70%}
+.hc.clara .in{opacity:.22}
+.hc.oscura{background:#707070}
+.hc.oscura .in{filter:brightness(.35)}
+.hc.cortada .in{left:-46px;right:-34px}
+.hc.torcida .in{transform:rotate(-9deg);transform-origin:center}
+.hoja2{width:170px;height:230px;background:#fff;border:2px solid #999;display:grid;gap:5px;padding:6px;margin:6px 0}
+.mp{border:1px solid #bbb;padding:3px;overflow:hidden}
+.mp i{display:block;height:2px;background:#333;margin:2px 0}
+.mp.ilegible i{filter:blur(1.2px);background:#999}
+.tam{margin:8px 0 2px;font-size:18px}
+.tam-bar{height:14px;background:#e6dfd5;border-radius:99px;overflow:hidden}
+.tam-bar i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.orden{list-style:none;margin:0 0 10px;padding:0}
+.orden li{padding:8px 12px;border-radius:10px;margin-bottom:6px;background:var(--okbg);border:2px solid var(--ok);font-size:18px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.pregunta .opciones{flex-direction:column}
+.pregunta .op{width:100%}
+.pregunta .fila-img{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.pregunta .fila-img .opciones{flex:1;min-width:220px}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧰 Taller de reprografía</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0305-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S03.05_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var CONCEPTOS=[
+ ["original","Original","Documento, imagen o archivo que queremos reproducir."],
+ ["copia","Copia","Resultado que obtenemos a partir del original."],
+ ["gramaje","Gramaje","Peso y grosor del papel, en gramos por metro cuadrado (g/m²)."],
+ ["tirada","Tirada","Cantidad total de copias que hay que hacer."],
+ ["prueba","Prueba","Primera copia para comprobar el resultado antes de seguir."],
+ ["consumible","Consumible","Material que se gasta al usar el equipo: papel, tinta o tóner."]
+];
+function concepto(id){return CONCEPTOS.filter(function(c){return c[0]===id;})[0];}
+var ORDEN_C=["gramaje","original","tirada","copia","consumible","prueba"];
+var ORDEN_D=["consumible","prueba","original","gramaje","copia","tirada"];
+function relComprobar(){
+  var r=S.rel; if(!r.name||!r.part)return;
+  if(r.name===r.part){
+    var x=concepto(r.name); intento("rel_"+r.name,true);
+    r.done[r.name]=true; r.msg="✔ <b>"+elogio(semilla(r.name))+"</b> "+x[1]+": "+x[2]; r.ok=true; r.name=null; r.part=null;
+  }else{
+    intento("rel_"+r.name,false); r.msg="¡Casi! Ese significado no es de ese concepto. ¡Prueba otra vez, tú puedes!"; r.ok=false; r.part=null; error("relaciona");
+  }
+}
+var EQ=[
+ ["Tienes un papel original y necesitas 30 copias iguales.",["Impresora","Fotocopiadora","Escáner"],1,"La fotocopiadora copia directamente de papel a papel, muy rápido y varias veces."],
+ ["Tienes un archivo en el ordenador y lo quieres en papel.",["Impresora","Escáner","Fotocopiadora"],0,"La impresora convierte un archivo digital en papel."],
+ ["Tienes una factura en papel y la quieres como archivo PDF.",["Escáner","Fotocopiadora","Impresora"],0,"El escáner digitaliza el papel y lo convierte en un archivo."]
+];
+var AJUSTES=["Aclarar la copia (reducir la densidad)","Cambiar el tamaño del papel","Pedir más copias"];
+var PROCESO=[
+ ["Configurar los parámetros","Antes hay que decidir cómo va a salir el trabajo: configura primero los parámetros.","Los parámetros deciden cómo saldrá el trabajo."],
+ ["Mirar la vista previa","Primero hay que configurar los parámetros y después mirar la vista previa.","Así ves los errores antes de gastar papel."],
+ ["Hacer una copia de prueba","Antes de la prueba hay que mirar la vista previa.","Una sola copia basta para comprobar cómo va a salir."],
+ ["Comprobar la calidad","Para comprobar la calidad necesitas antes una copia de prueba.","Se mira el texto, los márgenes, la claridad y el orden."],
+ ["Hacer el resto de copias (la tirada)","Antes de hacer muchas copias hay que comprobar que la prueba está bien.","Ahora sí: ya sabes que va a salir bien."],
+ ["Recoger todo y dejar el equipo preparado","Eso va al final, cuando el trabajo ya está terminado.","Dejar el equipo preparado es cuidar de las demás personas."]
+];
+var ORDEN_P=[4,1,5,2,0,3];
+
+/* estado en memoria */
+var S={
+  rel:{name:null,part:null,done:{},msg:"",ok:false},
+  eq:{},
+  cfg:{pph:1,caras:"una",color:"color"},
+  t:{s:0,msg:"",ok:false,ajuste:null,salto:0},
+  o:{orden:[],msg:"",ok:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+function hojaCopia(t){
+  return '<div class="hc '+t+'"><div class="in"><i class="tt"></i><i class="ln"></i><i class="ln"></i><i class="ln s"></i><i class="ln"></i><i class="ln s"></i></div></div>';
+}
+function hojaPPH(pph,color){
+  var cols=pph===1?1:2, rows=Math.ceil(pph/cols), h='<div class="hoja2" style="grid-template-columns:repeat('+cols+',1fr);grid-template-rows:repeat('+rows+',1fr);filter:'+(color==="bn"?"grayscale(1)":"none")+'">';
+  for(var i=0;i<pph;i++){h+='<div class="mp'+(pph>=6?" ilegible":"")+'">'+new Array(pph>=4?5:8).join("<i></i>")+'</div>';}
+  return h+'</div>';
+}
+function opB(act,data,txt,sel){
+  var at="";for(var k in data)at+=' data-'+k+'="'+esc(data[k])+'"';
+  return '<button class="op'+(sel?" sel":"")+'" data-act="'+act+'"'+at+'>'+txt+'</button>';
+}
+function accion(tit,ok,cuerpo,nota){return '<div class="acc'+(ok?" ok":"")+'"><div class="ft"><b>'+tit+'</b><span>'+(ok?"✔":"👉")+'</span></div>'+cuerpo+(nota?'<small>'+nota+'</small>':'')+'</div>';}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* cálculo del encargo: 8 páginas x 25 ejemplares */
+var PAGS=8, TIRADA=25;
+function hojasEncargo(c){var caras=Math.ceil(PAGS/c.pph),lados=c.caras==="doble"?2:1;return Math.ceil(caras/lados)*TIRADA;}
+function cfgOk(){var c=S.cfg;return {pph:c.pph===2,caras:c.caras==="doble",color:c.color==="bn"};}
+function todoCfg(){var a=cfgOk();return a.pph&&a.caras&&a.color;}
+
+/* ===== PRÁCTICA ===== */
+var PRACTICA=[
+ {t:"1. Une cada concepto con su significado",
+  ayuda:"<b>1.</b> Pulsa un concepto. <b>2.</b> Pulsa su significado. Si aciertas, se queda en verde.",
+  html:function(){
+    var r=S.rel, n=Object.keys(r.done).length;
+    var h='<p class="cont"><b>Llevas '+n+' de 6</b></p><div class="dos"><div><p class="cont"><b>Conceptos</b></p><div class="chips">';
+    ORDEN_C.forEach(function(id){
+      h+=r.done[id]?'<span class="chip vis">✔ '+concepto(id)[1]+'</span>':'<button class="chip'+(r.name===id?" sel":"")+'" data-act="rel-name" data-p="'+id+'">'+concepto(id)[1]+'</button>';
+    });
+    h+='</div></div><div><p class="cont"><b>Significados</b></p><div class="chips">';
+    ORDEN_D.forEach(function(id){
+      h+=r.done[id]?'<span class="chip vis">✔ '+esc(concepto(id)[2])+'</span>':'<button class="def'+(r.part===id?" sel":"")+'" data-act="rel-def" data-p="'+id+'">'+esc(concepto(id)[2])+'</button>';
+    });
+    h+='</div></div></div>'+msg(S.rel.msg,S.rel.ok);
+    if(n===6)h+=msg("🎉 ¡Muy bien! Has unido los 6 conceptos. Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){return Object.keys(S.rel.done).length===6;}},
+
+ {t:"2. Elige el equipo adecuado",
+  ayuda:"Para cada encargo, elige el equipo que necesitas.",
+  html:function(){return EQ.map(function(q,i){return pregunta("pe",i,q[0],q[1],q[2],S.eq[i],null,q[3]);}).join("");},
+  ok:function(){return EQ.every(function(q,i){return S.eq[i]!==undefined&&+S.eq[i]===q[2];});}},
+
+ {t:"3. Configura el encargo",
+  ayuda:"<b>Encargo:</b> 25 ejemplares de un dossier de <b>8 páginas</b>. Hay que <b>gastar poco papel</b>, pero que se lea bien.",
+  html:function(){
+    var c=S.cfg, a=cfgOk(), hojas=hojasEncargo(c), sin=PAGS*TIRADA;
+    var col=c.pph>=6?"#c62828":(hojas<=50?"#2e7d32":(hojas<=100?"#e69100":"#c62828")), pct=Math.min(100,hojas/sin*100);
+    var notaP={1:"Una página por hoja gasta mucho papel.",2:"",4:"Se lee muy pequeño: para este dossier es mejor 2.",6:"¡Letra ilegible! Demasiadas páginas en una hoja."}[c.pph];
+    var h='<div class="dos"><div><p class="cont"><b>Vista previa de una hoja:</b></p>'+hojaPPH(c.pph,c.color)+'</div><div>';
+    h+='<div class="info-parte"><b>Tiene que quedar así:</b> 2 páginas por hoja · Doble cara · Blanco y negro</div>';
+    h+=accion("Páginas por hoja",a.pph,'<div class="opciones">'+[1,2,4,6].map(function(v){return opB("c-set",{k:"pph",v:v},String(v),c.pph===v);}).join("")+'</div>',notaP);
+    h+=accion("Caras",a.caras,'<div class="opciones">'+opB("c-set",{k:"caras",v:"una"},"Una cara",c.caras==="una")+opB("c-set",{k:"caras",v:"doble"},"Doble cara",c.caras==="doble")+'</div>');
+    h+=accion("Color",a.color,'<div class="opciones">'+opB("c-set",{k:"color",v:"color"},"Color",c.color==="color")+opB("c-set",{k:"color",v:"bn"},"Blanco y negro",c.color==="bn")+'</div>',c.color==="color"?"El color gasta más tinta o tóner.":"");
+    h+='<p class="tam"><b>Hojas que gastarías:</b> '+hojas+' <small>(sin ahorrar serían '+sin+')</small>'+(c.pph>=6?' <b style="color:#c62828">⚠️ pero no se lee</b>':'')+'</p><div class="tam-bar"><i style="width:'+pct+'%;background:'+col+'"></i></div>';
+    if(todoCfg())h+=msg("✔ <b>¡Encargo bien configurado!</b> Solo <b>"+hojas+" hojas</b> en vez de "+sin+".<br>🌱 <b>¿Sabías que…?</b> Páginas por hoja y doble cara ahorran papel, pero hay que comprobar que el texto se lee.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return todoCfg();}},
+
+ {t:"4. Copia de prueba y ajuste",
+  ayuda:"Antes de hacer las 25 copias, haz <b>una copia de prueba</b> y revísala.",
+  html:function(){
+    var t=S.t, h='<div class="dos"><div>';
+    if(t.s===0)h+='<div class="info-parte"><b>Configuración:</b> 2 páginas por hoja · Doble cara · Blanco y negro · 25 ejemplares</div>';
+    if(t.s===1)h+='<p class="cont"><b>Tu copia de prueba:</b></p>'+hojaCopia("oscura");
+    if(t.s===2)h+='<p class="cont"><b>La nueva prueba:</b></p>'+hojaCopia("ok");
+    if(t.s===3)h+='<p class="cont"><b>Tirada:</b></p>'+hojaCopia("ok")+hojaCopia("ok");
+    h+='</div><div>';
+    if(t.s===0){
+      h+='<p><button class="btn pri grande" data-act="t-prueba">🧪 Hacer la copia de prueba</button></p>';
+      h+='<p class="cont">…o si tienes mucha prisa:</p><p><button class="btn aviso" data-act="t-salto">⚠️ Hacer ya las 25 copias (sin prueba)</button></p>';
+    }
+    if(t.s===1){
+      h+=pregunta("pa",0,"La prueba sale demasiado oscura. ¿Qué ajuste necesita?",AJUSTES,0,t.ajuste,null,"El brillo o la densidad se ajustan para aclarar la copia. Mejor descubrirlo con 1 hoja que con 50.");
+      if(t.ajuste===0)h+='<p style="margin-top:12px"><button class="btn pri grande" data-act="t-repetir">🔁 Repetir la prueba</button></p>';
+    }
+    if(t.s===2)h+=msg("✔ <b>¡Ahora sí!</b> La prueba está clara y bien colocada.",true)+'<p style="margin-top:12px"><button class="btn pri grande" data-act="t-tirada">🖨️ Hacer la tirada (25 ejemplares)</button></p>';
+    if(t.s===3)h+=msg("🎉 <b>¡Tirada terminada!</b> Con la copia de prueba solo gastaste <b>2 hojas</b> en el error. Sin prueba, <b>50 hojas oscuras</b> habrían ido a la basura. Pulsa <b>Siguiente</b>.",true);
+    h+=msg(t.msg,t.ok);
+    return h+'</div></div>';
+  },
+  ok:function(){return S.t.s===3;}},
+
+ {t:"5. Ordena el proceso",
+  ayuda:"Pulsa los pasos <b>en el orden correcto</b>. Empieza por el primero.",
+  html:function(){
+    var o=S.o, h='';
+    if(o.orden.length)h+='<ol class="orden">'+o.orden.map(function(i){return '<li>✔ '+esc(PROCESO[i][0])+'</li>';}).join("")+'</ol>';
+    if(o.orden.length<6){
+      h+='<p class="cont"><b>¿Qué va ahora?</b></p><div class="chips">'+ORDEN_P.filter(function(i){return o.orden.indexOf(i)<0;}).map(function(i){
+        return '<button class="chip" data-act="ord" data-i="'+i+'">'+esc(PROCESO[i][0])+'</button>';}).join("")+'</div>';
+    }
+    h+=msg(o.msg,o.ok);
+    if(o.orden.length===6){
+      var u=cargar(), f=nombrePDF(u.alumno,"Practica");
+      h+='<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas. Ahora descarga tu PDF de la práctica.</div>'+
+        '<p style="margin:14px 0 6px"><label for="inNombre"><b>Tu nombre y apellidos:</b></label></p>'+
+        '<input type="text" id="inNombre" value="'+esc(u.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">'+
+        '<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.05_Practica_Nombre_Apellido.pdf")+'</div>'+
+        '<p><button class="btn pri grande" id="btnDescarga" data-act="descargar-p"'+(f?"":" disabled")+'>⬇️ Descargar PDF de la práctica</button></p>'+
+        '<div class="msg info">Después pasa a la <b>ficha</b> (Parte 2).</div>';
+    }
+    return h;
+  },
+  ok:function(){return S.o.orden.length===6;},ultimo:true}
+];
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,extra,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+(extra?'<div class="fila-img">'+extra+o+'</div>':o)+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],null,q[3]);}).join("");};}
+function okSec(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["Antes de fotocopiar, ¿qué compruebas del original?",["Que esté bien colocado y alineado","Que sea de color rojo","Que tenga muchas páginas"],0,"Un original torcido da una copia torcida."],
+        ["Una fotocopia sale con manchas. ¿Qué miras?",["El número de copias","El estado del cristal","El nombre del archivo"],1,"El polvo, las manchas o los restos de papel en el cristal salen en la copia."],
+        ["Antes de imprimir, ¿qué compruebas siempre?",["La vista previa","La marca de la impresora","El color de la mesa"],0,"La vista previa te enseña los errores antes de gastar papel."],
+        ["¿Qué formato usas para escanear un documento?",["GIF","BMP","PDF"],2,"El PDF es el mejor formato para documentos de una o varias páginas."],
+        ["¿Qué resolución usas normalmente para un documento de texto?",["50 ppp","200-300 ppp","3000 ppp"],1,"Entre 200 y 300 ppp el texto se lee bien y el archivo no pesa demasiado."],
+        ["Queda poca tinta y salen líneas sin imprimir. ¿Qué haces?",["Seguir hasta agotar el cartucho","Comprobar el consumible y avisar para cambiarlo","Imprimir con más fuerza"],1,"No hay que agotar los cartuchos: aparecen colores apagados y zonas sin imprimir."]];
+var F2=[["Quieres imprimir solo la página 3. ¿Qué parámetro cambias?",["Páginas","Gramaje","Brillo"],0,"En «Páginas» eliges todas, una concreta o un intervalo."],
+        ["Quieres gastar menos papel con un documento largo.",["Contraste","Clasificación","Páginas por hoja"],2,"Con «páginas por hoja» caben varias páginas en una sola hoja."],
+        ["Quieres la copia más clara.",["Brillo","Número de copias","Orientación"],0,"El brillo permite aclarar u oscurecer el resultado."],
+        ["Tienes un cartel en A4 y lo quieres en A5.",["Grapado","Escala (reducir)","Caras"],1,"La escala permite reducir o ampliar el tamaño del contenido."],
+        ["Quieres usar las dos caras del papel.",["Gramaje","Doble cara","Tirada"],1,"Con la doble cara se gasta la mitad de hojas."]];
+var OPC_AJ=["Aclarar la copia","Oscurecer y comprobar el tóner","Alinear el original y ajustar las guías","Revisar el tamaño del papel y colocar bien el original"];
+var F3=[["oscura",0,"Sale oscura cuando el brillo o la densidad es demasiado alto: se aclara."],
+        ["torcida",2,"Sale torcida cuando el original o el papel están mal alineados: se alinea y se ajustan las guías."],
+        ["clara",1,"Sale clara cuando hay poca densidad o queda poco tóner: se oscurece y se comprueba el consumible."],
+        ["cortada",3,"Falta una parte cuando el original está mal colocado o el papel es pequeño: se revisa la colocación y el tamaño."]];
+var F4=[["Aparecen manchas en las copias.",["Detener el trabajo y hacer la limpieza autorizada","Seguir copiando","Poner más copias"],0,"Las manchas vienen de suciedad: se para y se limpia con permiso."],
+        ["La pantalla de la máquina está apagada.",["Cambiar el tóner","Pulsar el botón indicado para activarla","Desenchufar la máquina"],1,"Probablemente esté en ahorro de energía: se activa pulsando el botón."],
+        ["El texto sale demasiado pequeño.",["Aumentar las páginas por hoja","Cambiar el color","Reducir el número de páginas por hoja"],2,"Con menos páginas por hoja, el texto sale más grande."],
+        ["Se imprime mucho más de lo necesario.",["Cancelar el trabajo y revisar páginas y copias","Dejar que termine","Cambiar el papel"],0,"Se cancela enseguida y se revisan las páginas y el número de copias."],
+        ["Los colores no son correctos.",["Revisar el modo de color y el estado de los cartuchos","Imprimir más rápido","Usar el alimentador"],0,"El modo de color y los cartuchos influyen en los colores."]];
+var F5=[["¿Por qué hacemos una copia de prueba?",["Para gastar más papel","Para detectar errores antes de hacer toda la tirada","Porque lo manda la máquina"],1,"Un error en la prueba cuesta 1 hoja; en la tirada completa, muchas."],
+        ["En la doble cara manual, la segunda cara sale al revés. ¿Por qué?",["Se volvió a meter el papel en posición incorrecta","La impresora está rota","Hay poco tóner"],0,"Al volver a meter el papel hay que colocarlo con cuidado."],
+        ["Al terminar el trabajo, ¿qué haces?",["Me voy corriendo","Recojo los originales y dejo el equipo preparado","Dejo los originales dentro"],1,"Dejar el equipo listo es cuidar de la siguiente persona."],
+        ["La tirada completa ha salido mal. ¿Qué haces?",["Imprimo otra tirada igual","Sigo sin mirar","Paro, corrijo la configuración y hago una prueba"],2,"Primero se corrige y se prueba; si no, se repite el error."]];
+
+var FICHA=[
+ {t:"1. ¿Qué compruebo?",ayuda:"Calidad en fotocopias, impresiones y escaneos.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Elige el parámetro",ayuda:"¿Qué parámetro cambias en cada caso?",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. Mira las copias",ayuda:"¿Qué ajuste necesita cada copia? Elige la opción correcta.",
+  html:function(){
+    var r=cargar().ficha.f3||{};
+    return F3.map(function(q,i){return pregunta("f3",i,"Copia "+(i+1),OPC_AJ,q[1],r[i],'<div>'+hojaCopia(q[0])+'</div>',q[2]);}).join("");
+  },
+  ok:function(){var r=cargar().ficha.f3||{};return F3.every(function(q,i){return r[i]!==undefined&&+r[i]===q[1];});}},
+ {t:"4. Si algo falla",ayuda:"¿Qué ajuste necesita cada problema?",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Uso responsable",ayuda:"Cuatro preguntas para trabajar bien.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno,"Resultado"), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Elegir el equipo adecuado para cada encargo.</li><li>Configurar un trabajo gastando poco papel.</li><li>Hacer una copia de prueba y ajustar antes de la tirada.</li><li>Seguir el proceso correcto de reproducción.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.05_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado la práctica del taller virtual. Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> sube a Aules el <b>PDF de resultado</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){
+  var n=PASOS.length;
+  if(paso===n-1)return "¡Último paso!";
+  if(paso===0)return "¡Vamos allá!";
+  return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";
+}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas":"🧰 Taller de reprografía";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function finPractica(){
+  upd(function(o){o.practica={ok:true,t:ahora(),rel:Object.keys(S.rel.done),salto:S.t.salto,hojas:hojasEncargo({pph:2,caras:"doble"})};});
+}
+function alClic(e0){
+  var b=e0.target.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act"), t=S.t, o=S.o, c=S.cfg;
+  if(act==="rel-name"){var rr=S.rel;rr.name=b.getAttribute("data-p");rr.msg=rr.part?"":"👆 Ahora pulsa su significado.";rr.ok=false;relComprobar();}
+  else if(act==="rel-def"){var r2=S.rel;r2.part=b.getAttribute("data-p");r2.msg=r2.name?"":"👆 Ahora pulsa el concepto.";r2.ok=false;relComprobar();}
+  else if(act==="c-set"){var k=b.getAttribute("data-k"),v=b.getAttribute("data-v");c[k]=(k==="pph"?+v:v);if(todoCfg())intento("cfg",true);}
+  else if(act==="t-prueba"){t.s=1;t.msg="";}
+  else if(act==="t-salto"){
+    t.salto++;t.ok=false;intento("prueba",false);error("prueba");
+    t.msg="🙈 <b>¡Cuidado!</b> Sin prueba, las 25 copias habrían salido <b>demasiado oscuras</b>: <b>50 hojas a la basura</b>. Haz primero una copia de prueba.";
+  }
+  else if(act==="t-repetir"){t.s=2;t.msg="";}
+  else if(act==="t-tirada"){t.s=3;t.msg="";intento("tirada",true);}
+  else if(act==="ord"){
+    var i=+b.getAttribute("data-i");
+    if(i===o.orden.length){
+      o.orden.push(i);o.ok=true;o.msg="✔ <b>"+elogio(i)+"</b> "+PROCESO[i][2];intento("ord"+i,true);
+      if(o.orden.length===6)finPractica();
+    }else{o.ok=false;o.msg="✖ <b>Todavía no.</b> "+PROCESO[i][1];intento("ord"+i,false);error("ordena");}
+  }
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),ii=b.getAttribute("data-i"),vv=+b.getAttribute("data-v");
+    if(sec==="pe"){
+      if(vv!==EQ[ii][2])error("equipo");
+      intento("pe"+ii,vv===EQ[ii][2]);S.eq[ii]=vv;
+    }else if(sec==="pa"){
+      if(vv!==0)error("prueba");
+      intento("pa0",vv===0);t.ajuste=vv;
+    }else{
+      var lst={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5}[sec];
+      var corr=sec==="f3"?lst[ii][1]:lst[ii][2];
+      if(vv!==corr)error(sec);
+      intento(sec+ii,vv===corr);
+      upd(function(u){(u.ficha[sec]=u.ficha[sec]||{})[ii]=vv;});
+    }
+  }
+  else if(act==="descargar"){descargaPDF("Resultado");return;}
+  else if(act==="descargar-p"){descargaPDF("Practica");return;}
+  render();
+}
+function alEscribir(ev){
+  if(ev.target.id!=="inNombre")return;
+  var v=ev.target.value;upd(function(o){o.alumno=v;});
+  var tp=MODO==="ficha"?"Resultado":"Practica";var f=nombrePDF(v,tp);$("nomPdf").textContent=f||"S03.05_"+tp+"_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informePractica(o){
+  var L=[],canon=[],pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.05 · Práctica del taller de reprografía virtual",15,true);
+  t("Parte 1 · Encargo de reproducción",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);
+  t(pr.ok?"Práctica COMPLETADA el "+pr.t:"Práctica NO COMPLETADA",11,true);t("");
+  t("1. Conceptos que he unido",12,true);
+  var rel=pr.rel||[];
+  CONCEPTOS.forEach(function(c){t("- "+c[1]+(rel.indexOf(c[0])>=0?" [x]":" [ ]")+": "+c[2],10,false,2,true);});
+  t("");
+  t("2. Equipo elegido para cada encargo",12,true);
+  t("- Copias iguales de un original en papel: Fotocopiadora",11,false,2,true);
+  t("- Archivo del ordenador a papel: Impresora",11,false,2,true);
+  t("- Papel a archivo PDF: Escáner",11,false,2,true);
+  t("");
+  t("3. Configuración del encargo (8 páginas, 25 ejemplares)",12,true);
+  t("- 2 páginas por hoja, doble cara y blanco y negro",11,false,2,true);
+  t("- Hojas gastadas: "+(pr.hojas||50)+" (sin ahorrar serían 200)",11,false,2,true);
+  t("");
+  t("4. Copia de prueba y ajuste",12,true);
+  t("- La prueba salió demasiado oscura: ajuste elegido, aclarar la copia",11,false,2,true);
+  t("- Prueba repetida correcta y tirada de 25 ejemplares",11,false,2,true);
+  t("- Veces que intenté saltarme la prueba: "+(pr.salto||0),11,false,2,true);
+  t("");
+  t("5. Proceso en el orden correcto",12,true);
+  PROCESO.forEach(function(p,i){t((i+1)+". "+p[0],11,false,2,true);});
+  t("");
+  t("6. Fallos durante la práctica",12,true);
+  t("- Al unir conceptos: "+(o.err.relaciona||0),11,false,2,true);
+  t("- Al elegir el equipo: "+(o.err.equipo||0),11,false,2,true);
+  t("- Con la copia de prueba: "+(o.err.prueba||0),11,false,2,true);
+  t("- Al ordenar el proceso: "+(o.err.ordena||0),11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.05 · Encargo de reproducción",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica del taller de reprografía virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst,esImg){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];var c=esImg?q[1]:q[2];if(v!==undefined&&+v===c)ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){
+      var v=(F[id]||{})[i],txt;
+      if(esImg)txt="Copia "+(i+1)+" -> "+(v===undefined?"(sin responder)":OPC_AJ[v]);
+      else txt=q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]);
+      t("- "+txt,11,false,2,true);
+    });
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Qué compruebo",F1);
+  sec("f2","Parámetros",F2);
+  sec("f3","Ajuste de cada copia",F3,true);
+  sec("f4","Errores y ajustes",F4);
+  sec("f5","Uso responsable",F5);
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(tipo){
+  var o=cargar(),f=nombrePDF(o.alumno,tipo);
+  if(!f)return;
+  var lineas=tipo==="Practica"?informePractica(o):informe(o);
+  var blob=new Blob([construyePDF(lineas)],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>

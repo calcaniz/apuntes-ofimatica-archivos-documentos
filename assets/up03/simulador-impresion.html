@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de impresión</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{overflow-x:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45}
+.app{max-width:900px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.opciones{display:flex;flex-wrap:wrap;gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+/* impresoras */
+.impr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.impr{grid-template-columns:1fr}}
+.imp{font:inherit;text-align:left;border:3px solid #b9ad9f;background:#fff;border-radius:14px;padding:14px;cursor:pointer;color:var(--texto)}
+.imp.sel{border-color:var(--secundario);background:var(--claro)}
+.imp .ico{font-size:44px;line-height:1}
+.imp b{display:block;font-size:20px;margin:6px 0 2px}
+.imp small{display:block;font-size:16px;color:var(--gris)}
+.est-ok{color:var(--ok);font-weight:700;font-size:17px}.est-ko{color:var(--ko);font-weight:700;font-size:17px}
+/* ajustes */
+.dos{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+@media (max-width:700px){.dos{grid-template-columns:1fr}}
+.objetivo{background:var(--claro);border:2px dashed var(--secundario);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:18px}
+.f2{border:2px solid var(--borde);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+.f2.ok{border-color:var(--ok);background:var(--okbg)}
+.f2 .ft{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:19px}
+.f2 .m{font-size:22px}
+.copias{display:flex;align-items:center;gap:10px}
+.copias .n{min-width:48px;text-align:center;font-size:26px;font-weight:700}
+.copias .btn{min-width:54px;padding:6px}
+.prev{display:flex;flex-direction:column;align-items:center;gap:6px;background:#8d8579;border-radius:12px;padding:14px;min-height:300px;justify-content:center}
+.hoja{background:#fff;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.doc{position:absolute;left:0;top:0;background:#fff;transform-origin:0 0;width:794px;height:1123px;padding:94px;font-family:"Liberation Serif","Times New Roman",serif;color:#000}
+.doc h3{text-align:center;font-size:18pt;font-weight:bold;margin:0 0 20px}
+.doc p{font-size:12pt;text-align:justify;margin:0 0 14px;line-height:1.3}
+.prev .pie{color:#fff;font-size:15px;text-align:center}
+/* PDF guardado */
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+select{font:inherit;font-size:19px;min-height:52px;padding:6px 10px;border:2px solid #b9ad9f;border-radius:10px;width:100%;background:#fff;color:var(--texto)}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.pregunta .opciones{flex-direction:column}
+.pregunta .op{width:100%}
+.resumen li{margin:6px 0}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🖨️ Guía de impresión</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre las dos guías ===== */
+var KEY="s0303-ofimatica-v2", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function partesNombre(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:[norm(p[0]),norm(p.slice(1).join(""))];}
+function nombrePDF(a,prefijo){var p=partesNombre(a);return p?"S03.03_"+(prefijo?prefijo+"_":"")+p[0]+"_"+p[1]+".pdf":null;}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+/* estrella si se acierta a la primera; si falla, se cuenta el intento */
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var IMPR={
+  hp:{ico:"🖨️",nombre:"HP_LaserJet_Pasillo",tipo:"Física · cable USB",ok:false,msg:"Sin conexión"},
+  pdf:{ico:"💾",nombre:"Imprimir en archivo (PDF)",tipo:"Virtual · no gasta papel",ok:true,msg:"Preparada"}
+};
+var PAPELES={A4:[210,297],A3:[297,420],Carta:[215.9,279.4]};
+var P6=[["Un trabajo de clase","a4","Para trabajos de clase basta el papel A4 normal: es barato y es el más usado."],
+        ["Una fotografía","foto","El papel fotográfico tiene un acabado especial que hace que los colores se vean mejor."],
+        ["Una etiqueta","adh","El papel adhesivo lleva pegamento por detrás para poder pegar la etiqueta."],
+        ["Un cartel grande","a3","Un cartel necesita más tamaño: el A3 es el doble de grande que el A4."]];
+var OP6=[["a4","📄 Papel A4 normal"],["foto","🖼️ Papel fotográfico"],["adh","🏷️ Papel adhesivo"],["a3","📐 Papel A3"]];
+var P7=["El documento está completo.","El título está centrado.","El texto se lee bien.","Tiene una sola página.","El papel es A4 y vertical."];
+var P8=[
+ ["La impresora no aparece en el ordenador.",["Cambiar el tamaño del papel","Comprobar la conexión de la impresora","Abrir la impresora y sacar el tóner"],1,"Casi siempre es el cable o la conexión: lo primero que se comprueba."],
+ ["La impresión sale cortada.",["Revisar la orientación y el tamaño del papel","Imprimir más copias","Apagar el ordenador"],0,"Si la orientación o el tamaño no coinciden con el documento, una parte se queda fuera."],
+ ["Aparecen líneas blancas.",["Poner papel A3","Pulsar Imprimir muchas veces","Comprobar la tinta o el tóner"],2,"Las líneas blancas suelen avisar de que queda poca tinta o tóner."],
+ ["La impresora huele a quemado.",["Seguir imprimiendo","Apagar el equipo y avisar al profesor","Abrir la impresora"],1,"Un olor a quemado es peligroso: se apaga el equipo y se avisa, sin tocar nada."]
+];
+var P9=[
+ ["¿Por qué miramos la vista previa antes de imprimir?",["Para que la impresora vaya más rápido","No hace falta mirarla","Para ver errores antes de gastar papel"],2,"En la vista previa ves los errores antes de gastar papel, tinta y tiempo."],
+ ["¿Cómo gastamos menos papel?",["Imprimiendo solo las páginas y copias necesarias","Imprimiendo siempre 10 copias","Usando siempre color"],0,"Imprimir solo lo necesario ahorra papel, tinta y dinero."],
+ ["¿Cuándo avisamos al profesor?",["Nunca: lo arreglamos solos","Solo al final de la clase","Si hay un error que no entiendo o algo huele raro"],2,"Pedir ayuda a tiempo es de listos: evita averías y accidentes."]
+];
+
+/* ===== estado de la práctica (solo en memoria) ===== */
+var S={imp:null,copias:3,papel:"Carta",ori:"landscape",col:"color",caras:"doble",guardado:false};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+/* ===== vista previa ===== */
+function vistaPrevia(){
+  var d=PAPELES[S.papel], W=S.ori==="landscape"?d[1]:d[0], H=S.ori==="landscape"?d[0]:d[1];
+  var k=Math.min(240/W,300/H);
+  var filtro=S.col==="color"?"none":"grayscale(1)";
+  var doc='<div class="doc" style="transform:scale('+(k/3.7795)+')"><h3>PRUEBA DE IMPRESIÓN</h3>'+
+    '<p style="text-align:left">Nombre y apellidos: Lucía Martí Pons<br><b>Nombre del evento: Fiesta de fin de curso</b><br>Fecha: 12/12/2026</p>'+
+    '<p>Este documento se ha creado para comprobar el funcionamiento de la impresora y sus principales opciones.</p></div>';
+  return '<div class="prev"><div class="hoja" style="width:'+(W*k)+'px;height:'+(H*k)+'px;filter:'+filtro+'">'+doc+'</div>'+
+    '<div class="pie">'+esc(S.papel)+' · '+(S.ori==="landscape"?"horizontal":"vertical")+'<br>'+S.copias+' copia'+(S.copias===1?"":"s")+' · '+(S.caras==="doble"?"doble cara":"una cara")+'</div></div>';
+}
+function ajustesOk(){return {copias:S.copias===1,papel:S.papel==="A4",ori:S.ori==="portrait",col:S.col==="gray",caras:S.caras==="una"};}
+function todoAjustes(){var a=ajustesOk();return a.copias&&a.papel&&a.ori&&a.col&&a.caras;}
+
+function opB(act,data,txt,sel){
+  var at="";for(var k in data)at+=' data-'+k+'="'+esc(data[k])+'"';
+  return '<button class="op'+(sel?" sel":"")+'" data-act="'+act+'"'+at+'>'+txt+'</button>';
+}
+function fila(tit,ok,cuerpo){
+  return '<div class="f2'+(ok?" ok":"")+'"><div class="ft"><b>'+tit+'</b><span class="m">'+(ok?"✔":"👉")+'</span></div>'+cuerpo+'</div>';
+}
+
+/* ===== pasos: PRÁCTICA ===== */
+var PRACTICA=[
+ {t:"1. Elige la impresora",
+  ayuda:"Mira el estado de cada impresora y pulsa la que <b>esté preparada</b>.",
+  html:function(){
+    var h='<div class="impr">';
+    ["hp","pdf"].forEach(function(k){
+      var p=IMPR[k];
+      h+='<button class="imp'+(S.imp===k?" sel":"")+'" data-act="imp" data-v="'+k+'"><span class="ico">'+p.ico+'</span><b>'+p.nombre+'</b><small>'+p.tipo+'</small>'+
+         '<span class="'+(p.ok?"est-ok":"est-ko")+'">'+(p.ok?"✔ ":"✖ ")+p.msg+'</span></button>';
+    });
+    h+='</div>';
+    if(S.imp==="hp")h+='<div class="msg ko">⚠️ Esta impresora tiene un error: <b>«Sin conexión»</b>. No se puede usar. Lee siempre el mensaje y elige otra.</div>';
+    if(S.imp==="pdf")h+='<div class="msg ok">✔ ¡Muy bien! Esta impresora está preparada y no gasta papel: guarda un archivo PDF.</div>';
+    return h;
+  },
+  ok:function(){return S.imp==="pdf";}},
+ {t:"2. Prepara el documento",
+  ayuda:"Cambia lo que tenga 👉 hasta que todo tenga ✔.",
+  html:function(){
+    var a=ajustesOk();
+    var h='<div class="objetivo"><b>Tiene que quedar así:</b> 1 copia · A4 · Vertical · Grises · Una cara</div><div class="dos"><div>';
+    h+=fila("Copias",a.copias,'<div class="copias"><button class="btn" data-act="copias" data-d="-1" aria-label="Menos">−</button><span class="n">'+S.copias+'</span><button class="btn" data-act="copias" data-d="1" aria-label="Más">+</button></div>');
+    h+=fila("Papel",a.papel,'<div class="opciones">'+["A4","A3","Carta"].map(function(v){return opB("set",{k:"papel",v:v},v,S.papel===v);}).join("")+'</div>');
+    h+=fila("Orientación",a.ori,'<div class="opciones">'+opB("set",{k:"ori",v:"portrait"},"Vertical",S.ori==="portrait")+opB("set",{k:"ori",v:"landscape"},"Horizontal",S.ori==="landscape")+'</div>');
+    h+=fila("Color",a.col,'<div class="opciones">'+opB("set",{k:"col",v:"color"},"Color",S.col==="color")+opB("set",{k:"col",v:"gray"},"Grises",S.col==="gray")+'</div>');
+    h+=fila("Caras",a.caras,'<div class="opciones">'+opB("set",{k:"caras",v:"una"},"Una cara",S.caras==="una")+opB("set",{k:"caras",v:"doble"},"Doble cara",S.caras==="doble")+'</div>');
+    h+='</div><div>'+vistaPrevia()+'</div></div>';
+    if(todoAjustes())h+='<div class="msg ok">✔ <b>¡Todo correcto!</b> Pulsa <b>Siguiente</b>.<br>🌱 <b>¿Sabías que…?</b> Imprimir en escala de grises gasta menos tinta que en color.</div>';
+    return h;
+  },
+  ok:function(){return todoAjustes();}},
+ {t:"3. Guarda el PDF",
+  ayuda:"Escribe tu nombre y pulsa <b>Guardar PDF</b>. El nombre del archivo se crea solo.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno);
+    var h='<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Nombre del archivo:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.03_Nombre_Apellido.pdf")+'</div>';
+    if(S.guardado||o.practica.ok){
+      h+='<p class="grande-ok">✅</p><div class="msg ok"><b>¡PDF guardado!</b> Ya sabes configurar la impresión. Ahora haz lo mismo en <b>LibreOffice Writer</b>.</div>';
+    }else{
+      h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnGuardar" data-act="guardar"'+(f?"":" disabled")+'>💾 Guardar PDF</button></p>';
+    }
+    return h;
+  },
+  ok:function(){return S.guardado||!!cargar().practica.ok;},ultimo:true}
+];
+
+/* ===== pasos: FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="";
+  var bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var h='<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b><div class="opciones">';
+  ops.forEach(function(t,j){
+    if(j===quitar){h+='<button class="op quitada" disabled>'+esc(t)+'</button>';return;}
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    h+='<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  });
+  h+='</div>';
+  if(hecho&&!bien)h+='<div class="msg ko">'+animo(fallos-1)+'</div>';
+  if(quitar>=0)h+='<div class="msg info">💡 Pista: hemos quitado una opción.</div>';
+  if(bien)h+='<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>';
+  return h+'</div>';
+}
+function pregOk(sec,lista){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});}
+var FICHA=[
+ {t:"1. Mira LliureX",
+  ayuda:"Abre <b>Configuración del sistema → Impresoras</b> y contesta.",
+  html:function(){
+    var p=cargar().ficha.p1||{};
+    var h='<div class="pregunta"><b>La impresora que ves es…</b><div class="opciones">'+
+      opB("p1",{k:"tipo",v:"Física"},"🖨️ Física",p.tipo==="Física")+opB("p1",{k:"tipo",v:"Virtual"},"💾 Virtual (PDF)",p.tipo==="Virtual")+'</div></div>';
+    h+='<div class="pregunta"><b>¿Aparece algún error?</b><div class="opciones">'+
+      opB("p1",{k:"error",v:"No, está preparada"},"✔ No, está preparada",p.error==="No, está preparada")+opB("p1",{k:"error",v:"Sí, hay un error"},"⚠️ Sí, hay un error",p.error==="Sí, hay un error")+'</div></div>';
+    return h;
+  },
+  ok:function(){var p=cargar().ficha.p1||{};return !!(p.tipo&&p.error);}},
+ {t:"2. Elige el papel",
+  ayuda:"¿Qué papel usarías para cada trabajo? Elige en cada caso.",
+  html:function(){
+    var r=cargar().ficha.p6||{}, h="";
+    P6.forEach(function(f,i){
+      var v=r[i], bien=v===f[1];
+      h+='<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(f[0])+'</b><select data-act="sel" data-sec="p6" data-i="'+i+'"><option value="">— elige —</option>'+
+        OP6.map(function(o){return '<option value="'+o[0]+'"'+(v===o[0]?" selected":"")+'>'+esc(o[1])+'</option>';}).join("")+'</select>'+
+        (v?(bien?'<div class="msg ok"><b>'+elogio(semilla("p6"+i))+'</b> '+esc(f[2])+'</div>':'<div class="msg ko">'+animo((cargar().fails["p6"+i]||1)-1)+' Prueba con otro papel.</div>'):"")+'</div>';
+    });
+    return h;
+  },
+  ok:function(){var r=cargar().ficha.p6||{};return P6.every(function(f,i){return r[i]===f[1];});}},
+ {t:"3. Mira tu PDF",
+  ayuda:"Abre el PDF que has hecho con Writer. Contesta <b>Sí</b> o <b>No</b>.",
+  html:function(){
+    var r=cargar().ficha.p7||{}, h="";
+    P7.forEach(function(t,i){
+      h+='<div class="pregunta"><b>'+esc(t)+'</b><div class="opciones" style="flex-direction:row">'+
+        opB("p7",{i:i,v:"si"},"👍 Sí",r[i]==="si")+opB("p7",{i:i,v:"no"},"👎 No",r[i]==="no")+'</div></div>';
+    });
+    return h;
+  },
+  ok:function(){var r=cargar().ficha.p7||{};return P7.every(function(t,i){return !!r[i];});}},
+ {t:"4. Si algo falla",
+  ayuda:"¿Qué haces en cada problema?",
+  html:function(){var r=cargar().ficha.p8||{};return P8.map(function(q,i){return pregunta("p8",i,q[0],q[1],q[2],r[i],q[3]);}).join("");},
+  ok:function(){return pregOk("p8",P8);}},
+ {t:"5. Imprimir con cabeza",
+  ayuda:"Tres preguntas rápidas.",
+  html:function(){var r=cargar().ficha.p9||{};return P9.map(function(q,i){return pregunta("p9",i,q[0],q[1],q[2],r[i],q[3]);}).join("");},
+  ok:function(){return pregOk("p9",P9);}},
+ {t:"6. ¡Terminado!",
+  ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno,"Resultado"), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Elegir una impresora que funciona.</li><li>Preparar papel, orientación, color y caras.</li><li>Saber qué hacer si algo falla.</li><li>Imprimir gastando lo justo.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.03_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado la práctica con el simulador (la guía de la Parte 3). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> sube a Aules tu <b>.odt</b>, tu <b>.pdf</b> de Writer y este <b>PDF de resultado</b>.</div>';
+    return h;
+  },
+  ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== dibujo ===== */
+var prevOk={};
+function animoPaso(){
+  var n=PASOS.length;
+  if(paso===n-1)return "¡Último paso!";
+  if(paso===0)return "¡Vamos allá!";
+  return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";
+}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas":"🖨️ Practica con la impresora";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function contarError(sec){upd(function(o){o.err[sec]=(o.err[sec]||0)+1;});}
+function alClic(e){
+  var b=e.target.closest("[data-act]"); if(!b||b.tagName==="SELECT")return;
+  var act=b.getAttribute("data-act");
+  if(act==="imp"){S.imp=b.getAttribute("data-v");intento("imp",S.imp==="pdf");}
+  else if(act==="copias"){S.copias=Math.max(1,Math.min(9,S.copias+(+b.getAttribute("data-d"))));}
+  else if(act==="set"){S[b.getAttribute("data-k")]=b.getAttribute("data-v");}
+  else if(act==="guardar"){
+    S.guardado=true;
+    upd(function(o){o.practica={ok:true,t:ahora()};});
+    intento("guardar",true);
+  }
+  else if(act==="p1"){var k=b.getAttribute("data-k"),v=b.getAttribute("data-v");upd(function(o){(o.ficha.p1=o.ficha.p1||{})[k]=v;});}
+  else if(act==="p7"){var i7=b.getAttribute("data-i"),v7=b.getAttribute("data-v");upd(function(o){(o.ficha.p7=o.ficha.p7||{})[i7]=v7;});}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),v=+b.getAttribute("data-v");
+    var q=(sec==="p8"?P8:P9)[i]; if(v!==q[2])contarError(sec);
+    intento(sec+i,v===q[2]);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=v;});
+  }
+  else if(act==="descargar"){descarga();return;}
+  if(MODO==="practica"&&paso===1&&todoAjustes())intento("ajustes",true);
+  render();
+}
+function alCambiar(e){
+  var t=e.target;
+  if(t.getAttribute&&t.getAttribute("data-act")==="sel"){
+    var i=t.getAttribute("data-i"),v=t.value;
+    if(v&&v!==P6[i][1])contarError("p6");
+    if(v)intento("p6"+i,v===P6[i][1]);
+    upd(function(o){(o.ficha.p6=o.ficha.p6||{})[i]=v;});
+    render();
+  }
+}
+function alEscribir(e){
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value; upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v,MODO==="ficha"?"Resultado":null);
+  $("nomPdf").textContent=f||(MODO==="ficha"?"S03.03_Resultado_Nombre_Apellido.pdf":"S03.03_Nombre_Apellido.pdf");
+  var bt=$("btnGuardar")||$("btnDescarga"); if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  function txtOp(lista,v){return v===undefined||v===""?"(sin responder)":lista[v];}
+  t("S03.03 · Preparación e impresión de un documento",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el simulador",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);t("");
+  t("2. Ficha de respuestas",12,true);
+  var p1=F.p1||{};
+  t("Parte 1 · LliureX",11,true);
+  t("- Tipo de impresora: "+(p1.tipo||"(sin responder)"),11,false,2,true);
+  t("- Error: "+(p1.error||"(sin responder)"),11,false,2,true);t("");
+  var a6=0;P6.forEach(function(f,i){if((F.p6||{})[i]===f[1])a6++;});
+  t("Parte 6 · Papel ("+a6+"/"+P6.length+" correctas)",11,true);
+  P6.forEach(function(f,i){var v=(F.p6||{})[i],c=OP6.filter(function(x){return x[0]===v;})[0];t("- "+f[0]+": "+(c?c[1].replace(/^\S+\s/,""):"(sin responder)"),11,false,2,true);});
+  t("Intentos fallidos: "+(o.err.p6||0),10);t("");
+  t("Parte 7 · Control de calidad de mi PDF",11,true);
+  P7.forEach(function(x,i){var v=(F.p7||{})[i];t("- "+x+" "+({si:"SÍ",no:"NO"}[v]||"(sin responder)"),11,false,2,true);});t("");
+  [["p8","Parte 8 · Incidencias",P8],["p9","Parte 9 · Uso responsable",P9]].forEach(function(s){
+    var ac=0;s[2].forEach(function(q,i){if((F[s[0]]||{})[i]!==undefined&&+F[s[0]][i]===q[2])ac++;});
+    t(s[1]+" ("+ac+"/"+s[2].length+" correctas)",11,true);
+    s[2].forEach(function(q,i){var v=(F[s[0]]||{})[i];t("- "+q[0]+" -> "+txtOp(q[1],v),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[s[0]]||0),10);t("");
+  });
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descarga(){
+  var o=cargar(),f=nombrePDF(o.alumno,"Resultado");
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  var c=$("card");if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";c.appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("change",alCambiar);
+  $("card").addEventListener("input",alEscribir);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>
