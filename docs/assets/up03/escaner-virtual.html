@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escáner virtual</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:900px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-wrap:wrap;gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:700px){.dos{grid-template-columns:1fr}}
+.maq{background:#f4f1ec;border:2px solid var(--borde);border-radius:14px;padding:8px}
+.maq svg{width:100%;height:auto;display:block}
+.parte{cursor:pointer}
+.parte:hover{filter:brightness(1.08)}
+.parte.vis rect,.parte.vis polygon,.parte.vis line,.parte.vis path{stroke:#2e7d32;stroke-width:5}
+.parte.sel rect,.parte.sel polygon,.parte.sel line,.parte.sel path{stroke:#ff8a00;stroke-width:6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:16px;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:6px 14px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:var(--secundario);font-weight:700}
+.cont{font-size:18px;margin:8px 0}
+.pasos-l{list-style:none;margin:0 0 12px;padding:0}
+.pasos-l li{padding:6px 10px;border-radius:8px;margin-bottom:4px;font-size:18px;color:var(--gris)}
+.pasos-l li.act{background:var(--claro);color:var(--texto);font-weight:700;border:2px solid var(--principal)}
+.pasos-l li.hecho{color:var(--ok)}
+.info-parte{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:12px 14px;margin-top:10px}
+.acc{border:2px solid var(--borde);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+.acc.ok{border-color:var(--ok);background:var(--okbg)}
+.acc .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.acc .ft b{font-size:19px}
+.hs{width:120px;height:160px;background:#fff;border:2px solid #999;position:relative;overflow:hidden;display:inline-block;margin:4px;vertical-align:top}
+.hs.grande{width:150px;height:200px}
+.hs .in{position:absolute;left:12px;right:12px;top:14px}
+.hs .tt{display:block;height:12px;background:#222;width:60%;margin:0 auto 10px}
+.hs .ln{display:block;height:6px;background:#333;margin-bottom:8px}
+.hs .ln.s{width:70%}
+.hs.torcida .in{transform:rotate(-9deg);transform-origin:center}
+.hs.borrosa .in{filter:blur(2.4px)}
+.hs.cortada .in{left:-46px;right:-34px}
+.tam{margin:8px 0 2px;font-size:18px}
+.tam-bar{height:14px;background:#e6dfd5;border-radius:99px;overflow:hidden}
+.tam-bar i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.pregunta .opciones{flex-direction:column}
+.pregunta .op{width:100%}
+.pregunta .fila-img{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.pregunta .fila-img .opciones{flex:1;min-width:220px}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🖨️ Escáner virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0304-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S03.04_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var PARTES=[
+ ["tapa","Tapa","Mantiene el documento quieto y evita que entre luz de fuera."],
+ ["cristal","Cristal de exposición","Aquí se coloca el documento, con la cara que quieres escanear hacia abajo."],
+ ["panel","Panel de botones","Sirve para empezar o cancelar el escaneado."],
+ ["luz","Fuente de luz","Ilumina el documento mientras se escanea."],
+ ["sensor","Sensor","Recoge la luz que rebota en el documento y la convierte en información digital."],
+ ["carro","Carro de escaneado","Se desplaza por debajo del cristal para captar todo el documento."],
+ ["alimentador","Alimentador automático","Mete varias hojas solas, si el escáner lo tiene."],
+ ["conexion","Conexión","Une el escáner con el ordenador (USB, red o wifi)."]
+];
+function parte(id){return PARTES.filter(function(p){return p[0]===id;})[0];}
+var ORDEN_REL=["sensor","tapa","conexion","luz","panel","cristal","alimentador","carro"];
+function relComprobar(){
+  var r=S.rel; if(!r.name||!r.part)return;
+  if(r.name===r.part){
+    var x=parte(r.name); intento("rel_"+r.name,true);
+    r.done[r.name]=true; r.msg="✔ <b>"+elogio(semilla(r.name))+"</b> "+x[1]+": "+x[2]; r.ok=true; r.name=null; r.part=null;
+  }else{
+    intento("rel_"+r.name,false); r.msg="¡Casi! Ese nombre no es de esa parte. ¡Prueba otra vez, tú puedes!"; r.ok=false; r.part=null; error("relaciona");
+  }
+}
+
+/* estado en memoria */
+var S={
+  rel:{name:null,part:null,done:{},msg:"",ok:false},
+  p:{on:false,pc:false,grapa:true,clip:true,arrugas:true,sucio:true,msg:"",ok:false},
+  c:{s:0,tapa:false,orig:null,msg:"",ok:false},
+  e:{s:0,color:"color",dpi:1200,fmt:"bmp",nombre:null,carpeta:null,abierto:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+/* ===== dibujo del escáner ===== */
+function escaner(o){
+  var vis=o.vis||{}, sel=o.sel||null;
+  function c(p){return "parte"+(vis[p]?" vis":"")+(sel===p?" sel":"");}
+  function t(p){return '<title>'+esc(o.lab?parte(p)[1]:"Parte del escáner")+'</title>';}
+  var cx=130+(o.cx||0)*190;
+  var s='<svg viewBox="40 26 500 280" role="img" aria-label="Escáner plano">';
+  s+='<rect x="110" y="270" width="34" height="26" fill="#8a8278"/><rect x="380" y="270" width="34" height="26" fill="#8a8278"/>';
+  s+='<rect x="70" y="160" width="380" height="112" rx="8" fill="#e9e3d9" stroke="#8a8278" stroke-width="3"/>';
+  s+='<g class="'+c("cristal")+'" data-p="cristal">'+t("cristal")+'<rect x="90" y="138" width="340" height="22" fill="#bfe0ee" stroke="#5b8da3" stroke-width="2"/></g>';
+  if(o.orig){
+    s+='<g pointer-events="none"><rect x="150" y="141" width="120" height="16" fill="#fff" stroke="#555" stroke-width="1.5"/>';
+    if(o.orig==="arriba")s+='<line x1="158" y1="146" x2="260" y2="146" stroke="#222" stroke-width="2"/><line x1="158" y1="151" x2="236" y2="151" stroke="#222" stroke-width="2"/>';
+    s+='</g>';
+  }
+  /* interior (corte) */
+  s+='<rect x="90" y="176" width="340" height="62" rx="4" fill="#dfe5ea" stroke="#9aa5b1" stroke-width="2" pointer-events="none"/>';
+  s+='<line x1="100" y1="230" x2="420" y2="230" stroke="#9aa5b1" stroke-width="3" pointer-events="none"/>';
+  s+='<g class="'+c("carro")+'" data-p="carro">'+t("carro")+'<rect x="'+cx+'" y="198" width="70" height="30" rx="3" fill="#6b7280" stroke="#3f4650" stroke-width="2"/></g>';
+  s+='<g class="'+c("luz")+'" data-p="luz">'+t("luz")+'<rect x="'+(cx+6)+'" y="190" width="58" height="8" rx="2" fill="#ffd54a" stroke="#b8860b" stroke-width="2"/></g>';
+  s+='<g class="'+c("sensor")+'" data-p="sensor">'+t("sensor")+'<rect x="'+(cx+22)+'" y="208" width="26" height="12" rx="2" fill="#4a90e2" stroke="#2b5fa3" stroke-width="2"/></g>';
+  s+='<g class="'+c("panel")+'" data-p="panel">'+t("panel")+'<rect x="320" y="246" width="110" height="20" rx="4" fill="#3b3b3b" stroke="#222" stroke-width="2"/>'+
+     '<circle cx="338" cy="256" r="5" fill="'+(o.on?"#4caf50":"#a33")+'"/><circle cx="362" cy="256" r="5" fill="#bbb"/><circle cx="384" cy="256" r="5" fill="#bbb"/><circle cx="410" cy="256" r="6" fill="#e88"/></g>';
+  s+='<g class="'+c("conexion")+'" data-p="conexion">'+t("conexion")+'<path d="M450 205 H492" stroke="#555" stroke-width="6" fill="none"/><rect x="492" y="195" width="30" height="20" rx="3" fill="#cfd6dd" stroke="#555" stroke-width="3"/>'+(o.lab?'<text x="507" y="209" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#333">USB</text>':'')+'</g>';
+  s+='<g transform="'+(o.lid?"translate(0,-58)":"")+'">';
+  s+='<g class="'+c("tapa")+'" data-p="tapa">'+t("tapa")+'<rect x="70" y="128" width="380" height="32" rx="5" fill="#d6cec1" stroke="#8a8278" stroke-width="3"/></g>';
+  s+='<g class="'+c("alimentador")+'" data-p="alimentador">'+t("alimentador")+'<rect x="90" y="106" width="130" height="22" rx="3" fill="#c3baab" stroke="#8a8278" stroke-width="3"/><rect x="100" y="94" width="110" height="12" fill="#fff" stroke="#8a8278" stroke-width="2"/></g>';
+  s+='</g></svg>';
+  return '<div class="maq">'+s+'</div>';
+}
+function hojaScan(t,grande){
+  return '<div class="hs '+t+(grande?' grande':'')+'"><div class="in"><i class="tt"></i><i class="ln"></i><i class="ln"></i><i class="ln s"></i><i class="ln"></i><i class="ln s"></i></div></div>';
+}
+function opB(act,data,txt,sel){
+  var at="";for(var k in data)at+=' data-'+k+'="'+esc(data[k])+'"';
+  return '<button class="op'+(sel?" sel":"")+'" data-act="'+act+'"'+at+'>'+txt+'</button>';
+}
+function accion(tit,ok,cuerpo){return '<div class="acc'+(ok?" ok":"")+'"><div class="ft"><b>'+tit+'</b><span>'+(ok?"✔":"👉")+'</span></div>'+cuerpo+'</div>';}
+function lista(items,act){
+  return '<ul class="pasos-l">'+items.map(function(t,i){return '<li class="'+(i<act?"hecho":(i===act?"act":""))+'">'+(i<act?"✔ ":(i+1)+". ")+t+'</li>';}).join("")+'</ul>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* tamaño aproximado del archivo (A4) */
+function mbEstim(dpi,color,fmt){
+  var px=(8.27*dpi)*(11.69*dpi), bpp={color:3,gris:1,bn:0.125}[color], comp={pdf:0.08,jpg:0.06,png:0.4,bmp:1}[fmt];
+  return px*bpp*comp/1e6;
+}
+function txtMB(mb){return mb>=100?"más de 100 MB":(mb<1?mb.toFixed(2).replace(".",",")+" MB":mb.toFixed(1).replace(".",",")+" MB");}
+function ajE(){var e=S.e;return {color:e.color==="bn",dpi:+e.dpi===300,fmt:e.fmt==="pdf"};}
+function eOk(){var a=ajE();return a.color&&a.dpi&&a.fmt;}
+function pOk(){var p=S.p;return p.on&&p.pc&&!p.grapa&&!p.clip&&!p.arrugas&&!p.sucio;}
+
+/* ===== PRÁCTICA ===== */
+var NOMBRES=["escaneo.pdf","Factura_2026_11_13.pdf","documento final final (2).pdf"];
+var CARPETAS=["Documentos / Facturas","Escritorio (carpeta pública)","Descargas"];
+var PRACTICA=[
+ {t:"1. Une cada nombre con su parte",
+  ayuda:"<b>1.</b> Pulsa un nombre. <b>2.</b> Pulsa esa parte en el dibujo. Si aciertas, se queda en verde.",
+  html:function(){
+    var r=S.rel, hechas=ORDEN_REL.filter(function(id){return r.done[id];}), n=hechas.length;
+    var h='<div class="dos"><div>'+escaner({lid:true,vis:r.done,sel:r.part,lab:false})+'</div><div>';
+    h+='<p class="cont"><b>Llevas '+n+' de 8</b></p>';
+    h+='<div class="chips">'+ORDEN_REL.filter(function(id){return !r.done[id];}).map(function(id){
+      return '<button class="chip'+(r.name===id?" sel":"")+'" data-act="rel-name" data-p="'+id+'">'+parte(id)[1]+'</button>';}).join("")+'</div>';
+    if(n)h+='<p class="cont">Ya unidas:</p><div class="chips">'+hechas.map(function(id){return '<span class="chip vis">✔ '+parte(id)[1]+'</span>';}).join("")+'</div>';
+    h+=msg(r.msg,r.ok);
+    if(n===8)h+=msg("🎉 ¡Muy bien! Has unido las 8 partes. Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return Object.keys(S.rel.done).length===8;}},
+
+ {t:"2. Prepara el escáner",
+  ayuda:"Antes de escanear hay que comprobar cosas. Haz cada una hasta que tenga ✔.",
+  html:function(){
+    var p=S.p, h='<div class="dos"><div>'+escaner({lid:false,on:p.on,lab:true})+'<div style="text-align:center;font-size:30px">'+(p.grapa?"📌":"")+(p.clip?"📎":"")+(p.arrugas?"〰️":"")+(p.sucio?"🫧":"")+' 📄 <small style="font-size:15px;color:#6b6258">tu documento</small></div></div><div>';
+    h+=accion("Encender el escáner",p.on,p.on?"":'<button class="btn" data-act="p-on">⏻ Encender</button>');
+    h+=accion("Conectarlo al ordenador",p.pc,!p.on?'<small>Primero enciende el escáner.</small>':(p.pc?"":'<button class="btn" data-act="p-pc">🔌 Conectar cable USB</button>'));
+    h+=accion("Quitar la grapa",!p.grapa,p.grapa?'<button class="btn" data-act="p-grapa">📌 Quitar grapa</button>':"");
+    h+=accion("Quitar el clip",!p.clip,p.clip?'<button class="btn" data-act="p-clip">📎 Quitar clip</button>':"");
+    h+=accion("Alisar las arrugas",!p.arrugas,p.arrugas?'<button class="btn" data-act="p-arrugas">〰️ Alisar</button>':"");
+    h+=accion("Limpiar el cristal",!p.sucio,p.sucio?'<button class="btn" data-act="p-limpiar">🧽 Limpiar con un paño suave</button>':"");
+    h+=msg(p.msg,p.ok);
+    if(pOk())h+=msg("✔ <b>¡Todo listo!</b> Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return pOk();}},
+
+ {t:"3. Coloca el documento",
+  ayuda:"Sigue la lista. El escáner te avisa si algo no está bien.",
+  html:function(){
+    var c=S.c, h='<div class="dos"><div>'+escaner({lid:c.tapa,on:true,orig:c.orig,lab:true})+'</div><div>';
+    h+=lista(["Abre la tapa","Coloca el documento (cara hacia abajo) y alinéalo","Cierra la tapa"],c.s<=0?0:(c.s<=2?1:(c.s===3?2:3)));
+    if(c.s===0)h+='<button class="btn pri grande" data-act="c-abrir">🔓 Abrir la tapa</button>';
+    if(c.s===1)h+='<p class="cont"><b>¿Cómo pones el documento?</b></p><div class="opciones">'+opB("c-cara",{v:"abajo"},"⬇️ Cara hacia abajo",false)+opB("c-cara",{v:"arriba"},"⬆️ Cara hacia arriba",false)+'</div>';
+    if(c.s===2)h+='<button class="btn pri grande" data-act="c-alinear">📐 Alinear con las marcas</button>';
+    if(c.s===3)h+='<button class="btn pri grande" data-act="c-cerrar">🔒 Cerrar la tapa</button>';
+    if(c.s===4)h+=msg("🎉 <b>¡Listo para escanear!</b> Pulsa <b>Siguiente</b>.",true);
+    h+=msg(c.msg,c.ok);
+    return h+'</div></div>';
+  },
+  ok:function(){return S.c.s===4;}},
+
+ {t:"4. Configura y escanea",
+  ayuda:"Vas a escanear <b>una factura de una página</b>, solo con texto, para enviarla por correo.",
+  html:function(){
+    var e=S.e, a=ajE(), mb=mbEstim(+e.dpi,e.color==="color"?"color":(e.color==="gris"?"gris":"bn"),e.fmt);
+    var col=mb<1?"#2e7d32":(mb<5?"#e69100":"#c62828"), pct=Math.min(100,Math.max(4,Math.log10(mb*100+1)/4*100));
+    var h='<div class="dos"><div>'+escaner({lid:false,on:true,cx:e.s>=2?1:0,lab:true})+'</div><div>';
+    h+='<div class="info-parte" style="margin:0 0 10px"><b style="font-size:19px">Tiene que quedar así:</b> Blanco y negro · 300 ppp · PDF</div>';
+    h+=accion("Color",a.color,'<div class="opciones">'+opB("e-set",{k:"color",v:"color"},"Color",e.color==="color")+opB("e-set",{k:"color",v:"gris"},"Grises",e.color==="gris")+opB("e-set",{k:"color",v:"bn"},"Blanco y negro",e.color==="bn")+'</div>');
+    h+=accion("Resolución",a.dpi,'<div class="opciones">'+[150,300,600,1200].map(function(v){return opB("e-set",{k:"dpi",v:v},v+" ppp",+e.dpi===v);}).join("")+'</div>');
+    h+=accion("Formato",a.fmt,'<div class="opciones">'+["pdf","jpg","png","bmp"].map(function(v){return opB("e-set",{k:"fmt",v:v},v.toUpperCase(),e.fmt===v);}).join("")+'</div>');
+    h+='<p class="tam"><b>Tamaño aproximado:</b> '+txtMB(mb)+'</p><div class="tam-bar"><i style="width:'+pct+'%;background:'+col+'"></i></div>';
+    if(e.s===0)h+='<p style="margin-top:12px"><button class="btn pri grande" data-act="e-prev"'+(eOk()?"":" disabled")+'>🔍 Vista previa</button></p>';
+    if(e.s===1)h+='<p class="cont" style="margin-top:12px"><b>Vista previa:</b></p>'+hojaScan("ok",true)+'<p class="cont">✔ Recta · ✔ Completa · ✔ Se lee bien</p><button class="btn pri grande" data-act="e-escanear">▶ ESCANEAR</button>';
+    if(e.s===2)h+='<div style="margin-top:10px">'+hojaScan("ok")+'</div>'+msg("🎉 <b>¡Escaneado!</b> Ocupa solo <b>"+txtMB(mb)+"</b>. Con estos ajustes el texto se lee perfecto y el archivo pesa poco. Pulsa <b>Siguiente</b>.",true);
+    if(eOk()&&e.s===0)h+=msg("✔ <b>¡Ajustes correctos!</b> Haz una vista previa antes de escanear.<br>🌱 <b>¿Sabías que…?</b> Más resolución no siempre es mejor: el archivo pesa mucho más.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return S.e.s===2;}},
+
+ {t:"5. Guarda y comprueba",
+  ayuda:"Guarda el archivo con un buen nombre y en la carpeta correcta. ¡Es una factura: es información privada!",
+  html:function(){
+    var e=S.e, h="";
+    h+=pregunta("pr",0,"¿Qué nombre le pones al archivo?",NOMBRES,1,e.nombre,null,"Un buen nombre dice qué es y la fecha, y no lleva espacios raros.");
+    h+=pregunta("pr",1,"¿Dónde lo guardas?",CARPETAS,0,e.carpeta,null,"Una carpeta ordenada y privada: así lo encuentras y nadie más lo ve. En una carpeta pública cualquiera podría leerlo.");
+    if(e.nombre===1&&e.carpeta===0&&!e.abierto)h+='<p><button class="btn pri grande" data-act="e-abrir">📂 Abrir el archivo y comprobarlo</button></p>';
+    if(e.abierto){
+      var o=cargar(), f=nombrePDF(o.alumno,"Practica");
+      h+='<div style="margin:10px 0">'+hojaScan("ok",true)+'<p class="cont">✔ 1 página · ✔ Se lee el texto · ✔ Está en <b>Documentos / Facturas</b></p></div>';
+      h+='<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas. Ahora descarga tu PDF de la práctica.</div>'+
+        '<p style="margin:14px 0 6px"><label for="inNombre"><b>Tu nombre y apellidos:</b></label></p>'+
+        '<input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">'+
+        '<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.04_Practica_Nombre_Apellido.pdf")+'</div>'+
+        '<p><button class="btn pri grande" id="btnDescarga" data-act="descargar-p"'+(f?"":" disabled")+'>⬇️ Descargar PDF de la práctica</button></p>'+
+        '<div class="msg info">Después pasa a la <b>ficha</b> (Parte 2).</div>';
+    }
+    return h;
+  },
+  ok:function(){return S.e.abierto;},ultimo:true}
+];
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,extra,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+(extra?'<div class="fila-img">'+extra+o+'</div>':o)+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],null,q[3]);}).join("");};}
+function okSec(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["Tienes que digitalizar un informe de 20 hojas sueltas. ¿Qué escáner usas?",["Escáner de tambor","Escáner con alimentador de hojas","Escáner portátil"],1,"El alimentador mete las hojas solo: ahorra mucho tiempo con documentos de varias páginas."],
+        ["Quieres digitalizar un libro encuadernado sin estropearlo.",["Escáner para libros","Escáner de microfilm","Escáner de tambor"],0,"El escáner para libros usa una cámara desde arriba y no obliga a aplastar el libro."],
+        ["Necesitas digitalizar un plano muy grande.",["Escáner portátil","Escáner de gran formato","Escáner plano de sobremesa"],1,"Los planos y carteles se digitalizan con un escáner de gran formato."],
+        ["No hay escáner en casa. ¿Qué puedes usar?",["Nada: es imposible","Una fotocopiadora sin papel","Un teléfono móvil con una aplicación"],2,"La cámara del móvil y una app detectan los bordes, corrigen la perspectiva y crean un PDF."]];
+var F2=[["Un documento de 5 páginas para enviar por correo. ¿Qué formato?",["BMP","PDF","GIF"],1,"El PDF guarda varias páginas en un solo archivo."],
+        ["Una fotografía para un trabajo. ¿Qué formato?",["BMP","GIF","JPG"],2,"El JPG es ideal para fotos: ocupa poco espacio."],
+        ["Un texto normal para leer en el ordenador. ¿Qué resolución?",["50 ppp","300 ppp","4800 ppp"],1,"Con 300 ppp el texto se lee muy bien y el archivo no pesa demasiado."],
+        ["Un documento sencillo que solo vas a ver en pantalla. ¿Qué resolución basta?",["150 ppp","1200 ppp","4800 ppp"],0,"Para consultar en pantalla un documento sencillo, 150 ppp es suficiente."],
+        ["Una hoja solo con texto, sin colores. ¿Qué modo de color?",["Color","Blanco y negro","Todos a la vez"],1,"Para texto sencillo basta blanco y negro: el archivo pesa mucho menos."]];
+var OPC_ESC=["Está bien","Está torcida","Está borrosa","Falta una parte"];
+var F3=[["torcida",1,"Salió torcida: el documento estaba mal colocado. Hay que alinearlo con las marcas del cristal."],
+        ["ok",0,"¡Buen ojo! Está recta, completa y se lee bien."],
+        ["borrosa",2,"Borrosa: puede que el cristal esté sucio o que la resolución sea baja."],
+        ["cortada",3,"Falta una parte: el documento estaba fuera de la zona de escaneado."]];
+var F4=[["El ordenador no reconoce el escáner.",["Comprobar el cable, la red y el controlador","Abrir el escáner y tocar el interior","Cambiar el nombre del archivo"],0,"Casi siempre es la conexión o el controlador: se empieza por lo más sencillo."],
+        ["La imagen sale torcida.",["Escanear con más resolución","Colocar y alinear de nuevo el original","Apagar el ordenador"],1,"La imagen torcida viene de un documento mal colocado: se alinea con las marcas."],
+        ["El resultado está borroso.",["Limpiar el cristal y revisar la resolución","Cerrar el programa","Usar el formato BMP"],0,"Un cristal sucio o una resolución baja dejan la imagen borrosa."],
+        ["El archivo ocupa demasiado.",["Escanear a 4800 ppp","Reducir la resolución o usar PDF o JPG","Escanear otra vez en color"],1,"Menos resolución y un buen formato hacen que el archivo pese menos."],
+        ["El alimentador atasca las hojas.",["Detener, retirar las hojas y prepararlas bien","Empujar más fuerte","Seguir escaneando"],0,"Las hojas dobladas, con grapas o de distinto tamaño atascan: se detiene y se preparan."]];
+var F5=[["¿Puedes escanear el documento médico de otra persona?",["Sí, si me lo pide un amigo","No, sin su autorización","Sí, si nadie mira"],1,"Los documentos personales son privados: hace falta autorización."],
+        ["Has escaneado un original importante. ¿Lo tiras?",["Sí, ya está digitalizado","No, sin autorización: algunos originales se conservan","Lo rompo en trozos"],1,"La digitalización no sustituye siempre al original."],
+        ["¿Dónde guardas un documento personal escaneado?",["En una carpeta pública","En tu carpeta, donde solo entra quien debe","En el escritorio de todos"],1,"Guardarlo en una carpeta privada protege la información."],
+        ["La tapa no cierra bien. ¿Qué haces?",["La fuerzo","Sigo escaneando igual","Aviso al profesor"],2,"Nunca se fuerzan las piezas: si no sabes resolverlo, se avisa."]];
+
+var FICHA=[
+ {t:"1. Tipos de escáner",ayuda:"¿Qué escáner usarías en cada caso?",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Elige los ajustes",ayuda:"Formato, resolución y color: elige lo mejor para cada trabajo.",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. Mira los escaneos",ayuda:"¿Cómo ha salido cada escaneo? Elige la opción correcta.",
+  html:function(){
+    var r=cargar().ficha.f3||{};
+    return F3.map(function(q,i){return pregunta("f3",i,"Escaneo "+(i+1),OPC_ESC,q[1],r[i],'<div>'+hojaScan(q[0])+'</div>',q[2]);}).join("");
+  },
+  ok:function(){var r=cargar().ficha.f3||{};return F3.every(function(q,i){return r[i]!==undefined&&+r[i]===q[1];});}},
+ {t:"4. Si algo falla",ayuda:"¿Qué haces en cada problema?",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Seguridad y privacidad",ayuda:"Cuatro preguntas importantes.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno,"Resultado"), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Reconocer las partes de un escáner.</li><li>Preparar el escáner y colocar bien el documento.</li><li>Elegir color, resolución y formato.</li><li>Guardar y proteger los documentos escaneados.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.04_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado la práctica con el escáner virtual. Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> sube a Aules el <b>PDF de resultado</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){
+  var n=PASOS.length;
+  if(paso===n-1)return "¡Último paso!";
+  if(paso===0)return "¡Vamos allá!";
+  return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";
+}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas":"🖨️ Escáner virtual";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function alClicParte(id){
+  if(MODO!=="practica"||paso!==0)return;
+  var r=S.rel;
+  if(r.done[id]){var x=parte(id);r.msg="✔ Ya la tienes unida: <b>"+x[1]+"</b>. "+x[2];r.ok=true;}
+  else{r.part=id;r.msg=r.name?"":"👆 Ahora pulsa el nombre de esa parte.";r.ok=false;relComprobar();}
+  render();
+}
+function finPractica(){
+  var e=S.e, mb=mbEstim(+e.dpi,"bn","pdf");
+  upd(function(o){o.practica={ok:true,t:ahora(),rel:Object.keys(S.rel.done),tam:txtMB(mb),nombre:NOMBRES[1],carpeta:CARPETAS[0]};});
+}
+function alClic(e0){
+  var pt=e0.target.closest(".parte");
+  if(pt){alClicParte(pt.getAttribute("data-p"));return;}
+  var b=e0.target.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act"), p=S.p, c=S.c, e=S.e;
+  if(act==="rel-name"){var rr=S.rel;rr.name=b.getAttribute("data-p");rr.msg=rr.part?"":"👆 Ahora pulsa esa parte en el dibujo.";rr.ok=false;relComprobar();}
+  else if(act==="p-on"){p.on=true;p.ok=true;p.msg="✔ <b>¡Encendido!</b> El piloto verde indica que el escáner tiene corriente.";}
+  else if(act==="p-pc"){p.pc=true;p.ok=true;p.msg="✔ <b>¡Bien!</b> El ordenador reconoce el escáner: ya pueden hablar entre ellos.";}
+  else if(act==="p-grapa"){p.grapa=false;p.ok=true;p.msg="✔ <b>¡Bien!</b> Las grapas pueden rayar el cristal.";}
+  else if(act==="p-clip"){p.clip=false;p.ok=true;p.msg="✔ <b>¡Muy bien!</b> Los clips también pueden rayar el cristal o atascar el alimentador.";}
+  else if(act==="p-arrugas"){p.arrugas=false;p.ok=true;p.msg="✔ <b>¡Perfecto!</b> Una hoja lisa se escanea sin sombras.";}
+  else if(act==="p-limpiar"){p.sucio=false;p.ok=true;p.msg="✔ <b>¡Cristal limpio!</b> Si hay polvo o huellas, salen manchas en el escaneo.";}
+  else if(act==="c-abrir"){c.tapa=true;c.s=1;c.ok=true;c.msg="✔ <b>¡Muy bien!</b> La tapa está abierta y se ve el cristal.";}
+  else if(act==="c-cara"){
+    if(b.getAttribute("data-v")==="arriba"){intento("c_cara",false);c.orig="arriba";c.ok=false;c.msg="✖ Así saldría <b>una página en blanco</b>: la cara que quieres escanear debe mirar al cristal. Dale la vuelta.";error("coloca");}
+    else{intento("c_cara",true);c.orig="abajo";c.s=2;c.ok=true;c.msg="✔ <b>¡Eso es!</b> Con la cara hacia abajo, el sensor ve el documento.";}
+  }
+  else if(act==="c-alinear"){c.s=3;c.ok=true;c.msg="✔ <b>¡Bien alineado!</b> Así el escaneo saldrá recto.";}
+  else if(act==="c-cerrar"){c.tapa=false;c.s=4;c.ok=true;c.msg="";intento("c_cerrar",true);}
+  else if(act==="e-set"){if(e.s<2){var k=b.getAttribute("data-k"),v=b.getAttribute("data-v");e[k]=(k==="dpi"?+v:v);if(e.s===1)e.s=0;}}
+  else if(act==="e-prev"){e.s=1;intento("e_ajustes",true);}
+  else if(act==="e-escanear"){e.s=2;intento("e_escanear",true);}
+  else if(act==="e-abrir"){e.abierto=true;finPractica();}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v");
+    if(sec==="pr"){
+      var corr=(i==="0")?1:0;
+      if(vv!==corr)error("guarda");
+      intento("pr"+i,vv===corr);
+      if(i==="0")e.nombre=vv;else e.carpeta=vv;
+    }else{
+      var lst={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5}[sec];
+      var corr2=sec==="f3"?lst[i][1]:lst[i][2];
+      if(vv!==corr2)error(sec);
+      intento(sec+i,vv===corr2);
+      upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+    }
+  }
+  else if(act==="descargar"){descargaPDF("Resultado");return;}
+  else if(act==="descargar-p"){descargaPDF("Practica");return;}
+  render();
+}
+function alEscribir(ev){
+  if(ev.target.id!=="inNombre")return;
+  var v=ev.target.value;upd(function(o){o.alumno=v;});
+  var tp=MODO==="ficha"?"Resultado":"Practica";var f=nombrePDF(v,tp);$("nomPdf").textContent=f||"S03.04_"+tp+"_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informePractica(o){
+  var L=[],canon=[],pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.04 · Práctica con el escáner virtual",15,true);
+  t("Parte 1 · Digitalización de un documento",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);
+  t(pr.ok?"Práctica COMPLETADA el "+pr.t:"Práctica NO COMPLETADA",11,true);t("");
+  t("1. Partes del escáner que he unido",12,true);
+  var rel=pr.rel||[];
+  PARTES.forEach(function(p){t("- "+p[1]+(rel.indexOf(p[0])>=0?" [x]":" [ ]")+": "+p[2],10,false,2,true);});
+  t("");
+  t("2. Preparación del escáner",12,true);
+  ["Encendido y conectado al ordenador","Grapa y clip quitados","Arrugas alisadas","Cristal limpio"].forEach(function(x){t("- "+x,11,false,2,true);});
+  t("");
+  t("3. Colocación del documento",12,true);
+  ["Tapa abierta","Documento con la cara hacia abajo y alineado","Tapa cerrada"].forEach(function(x){t("- "+x,11,false,2,true);});
+  t("");
+  t("4. Configuración del escaneo (factura de una página)",12,true);
+  t("- Modo de color: Blanco y negro",11,false,2,true);
+  t("- Resolución: 300 ppp",11,false,2,true);
+  t("- Formato: PDF",11,false,2,true);
+  t("- Tamaño aproximado del archivo: "+(pr.tam||"-"),11,false,2,true);
+  t("");
+  t("5. Guardado",12,true);
+  t("- Nombre del archivo: "+(pr.nombre||"-"),11,false,2,true);
+  t("- Carpeta: "+(pr.carpeta||"-")+" (privada y ordenada)",11,false,2,true);
+  t("- Archivo abierto y comprobado: 1 página, texto legible",11,false,2,true);
+  t("");
+  t("6. Fallos durante la práctica",12,true);
+  t("- Al unir nombres con partes: "+(o.err.relaciona||0),11,false,2,true);
+  t("- Al colocar el documento: "+(o.err.coloca||0),11,false,2,true);
+  t("- Al guardar el archivo: "+(o.err.guarda||0),11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.04 · Digitalización de un documento",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el escáner virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst,esImg){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];var c=esImg?q[1]:q[2];if(v!==undefined&&+v===c)ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){
+      var v=(F[id]||{})[i],txt;
+      if(esImg)txt="Escaneo "+(i+1)+" -> "+(v===undefined?"(sin responder)":OPC_ESC[v]);
+      else txt=q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]);
+      t("- "+txt,11,false,2,true);
+    });
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Tipos de escáner",F1);
+  sec("f2","Ajustes",F2);
+  sec("f3","Calidad de los escaneos",F3,true);
+  sec("f4","Incidencias",F4);
+  sec("f5","Seguridad y privacidad",F5);
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(tipo){
+  var o=cargar(),f=nombrePDF(o.alumno,tipo);
+  if(!f)return;
+  var lineas=tipo==="Practica"?informePractica(o):informe(o);
+  var blob=new Blob([construyePDF(lineas)],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>
