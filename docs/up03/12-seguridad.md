@@ -399,4 +399,4 @@ Antes de abandonar el puesto de trabajo:
 
 - [ ] He comunicado cualquier incidencia.
 
-- [ ] He dejado el equipo en modo de ahorro o apagado cuando corresponde.
+- [ ] He dejado el equipo en modo de ahorro o apagado cuando corresponde.2
