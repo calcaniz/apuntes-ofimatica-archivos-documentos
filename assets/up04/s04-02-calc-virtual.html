@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calc virtual · S04.02</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:960px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.msg ul{margin:6px 0 0;padding-left:22px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-direction:column;gap:10px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:17px;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:#ff8a00;background:#fff3e0;font-weight:700}
+.chip code{font-size:17px}
+.recs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:700px){.recs{grid-template-columns:1fr 1fr}}
+.rec{font:inherit;font-size:18px;text-align:center;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:12px;cursor:pointer;color:var(--texto)}
+.rec.vis{border-color:var(--ok);background:var(--okbg)}
+.rec b{display:block;color:var(--ok);font-size:15px}
+.tarea{font-size:20px;font-weight:700;background:#fff3e0;border:2px solid #ff8a00;border-radius:10px;padding:8px 14px;margin:8px 0}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+
+/* ===== Ventana de Calc simulada ===== */
+.calc{border:2px solid #9e9e9e;border-radius:8px;overflow:hidden;background:#fff;font-size:14px;line-height:1.3;position:relative;user-select:none;margin-top:6px}
+.c-tit{background:#3c3c3c;color:#fff;padding:6px 10px;font-size:14px;display:flex;justify-content:space-between}
+.c-menu{display:flex;flex-wrap:wrap;gap:2px;background:#f3f3f3;border-bottom:1px solid #ddd;padding:3px 4px}
+.c-menu span{padding:3px 8px;border-radius:4px}
+.c-tool{display:flex;gap:6px;background:#f9f9f9;border-bottom:1px solid #ddd;padding:5px 8px;color:#555}
+.c-tool i{font-style:normal;border:1px solid #ccc;border-radius:4px;padding:1px 7px;background:#fff}
+.c-tool i[data-desfes]{cursor:pointer}
+.c-tool i[data-desfes]:hover{background:#d6e4f5}
+.c-form{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid #ddd;background:#fafafa}
+.c-nom{width:90px;border:1px solid #bbb;background:#fff;padding:2px 6px;font-family:Consolas,Menlo,monospace}
+.c-fx{color:#555;font-style:italic}
+.c-barra{flex:1;border:1px solid #bbb;background:#fff;padding:2px 6px;min-height:22px;font-family:Consolas,Menlo,monospace;white-space:nowrap;overflow:hidden}
+.c-area table{border-collapse:collapse;table-layout:fixed;width:100%}
+.c-area th{background:#efefef;border:1px solid #d0d0d0;font-weight:400;color:#444;font-size:12px;height:20px;position:relative}
+.c-area th.esq{width:34px}
+.c-area th.colsel{background:#d6e4f5}
+.c-area td{border:1px solid #e3e3e3;height:24px;padding:0 4px;white-space:nowrap;overflow:hidden;position:relative;cursor:cell;font-size:14px}
+.c-area td.num{text-align:right}
+.c-area td.rng{background:#dbe8fb}
+.c-area td.act{outline:2px solid #1e6fd9;outline-offset:-2px}
+.c-area td.diana{background:#fff3e0}
+.c-area td input{position:absolute;inset:0;width:100%;height:100%;border:2px solid #1e6fd9;font:inherit;font-size:14px;padding:0 3px;min-height:0;border-radius:0;background:#fff}
+.asa{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;background:#1e6fd9;border:1px solid #fff;cursor:crosshair;z-index:2}
+.asa.grande{width:13px;height:13px}
+.borde{position:absolute;top:0;right:-5px;width:10px;height:100%;cursor:col-resize;z-index:3}
+.borde.marca{background:repeating-linear-gradient(90deg,transparent 0 3px,#ff8a00 3px 6px,transparent 6px)}
+.c-tabs{display:flex;align-items:flex-end;gap:2px;background:#ececec;border-top:1px solid #ccc;padding:4px 6px 0}
+.c-tab{background:#dcdcdc;border:1px solid #bdbdbd;border-bottom:0;padding:4px 12px;border-radius:5px 5px 0 0;font-size:14px}
+.c-tab.act{background:#fff;font-weight:700}
+.c-estat{background:#f3f3f3;border-top:1px solid #ccc;padding:3px 10px;color:#555;font-size:13px;display:flex;justify-content:space-between}
+.zona{cursor:pointer}
+.zona.vis{box-shadow:inset 0 0 0 3px #2e7d32}
+.zona.sel{box-shadow:inset 0 0 0 4px #ff8a00}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧮 Calc virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0402-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.02_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== utilidades de hoja ===== */
+var COLS=["A","B","C","D","E","F"];
+function partir(ref){var m=/^([A-Z])(\d+)$/.exec(ref);return {c:COLS.indexOf(m[1]),f:+m[2]};}
+function ref(c,f){return COLS[c]+f;}
+function rango(a,b){var x=partir(a),y=partir(b),r=[];for(var f=Math.min(x.f,y.f);f<=Math.max(x.f,y.f);f++)for(var c=Math.min(x.c,y.c);c<=Math.max(x.c,y.c);c++)r.push(ref(c,f));return r;}
+function txtRango(a,b){return a===b?a:(rango(a,b)[0]+":"+rango(a,b).slice(-1)[0]);}
+/* número escrito como en Calc en valenciano/castellano: coma decimal */
+function esNum(v){return /^-?\d+(,\d+)?$/.test(String(v).trim());}
+function valNum(v){return parseFloat(String(v).trim().replace(",","."));}
+function simple(s){return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ");}
+
+var PRODUCTOS=[
+ ["Agua","Bebida","1","24"],["Zumo de naranja","Bebida","1,5","18"],["Refresco de cola","Bebida","1,2","24"],["Batido de cacao","Bebida","1","12"],
+ ["Bocadillo de tortilla","Bocadillo","2,5","15"],["Bocadillo de jamón","Bocadillo","2,5","15"],["Sándwich vegetal","Bocadillo","2","10"],
+ ["Manzana","Fruta","0,5","25"],["Galletas","Snack","0,8","20"],["Barrita de cereales","Snack","0,7","20"]
+];
+var CABECERAS=["Nº","Producto","Categoría","Precio de venta","Existencias"];
+
+/* ===== estado en memoria ===== */
+var S={
+  p1:{tarea:0,a:"A1",b:"A1",msg:"",ok:false},
+  p2:{sel:null,rec:null,done:{},msg:"",ok:false},
+  p3:{cel:{},a:"A1",ed:null,msg:"",ok:false,hecho:false},
+  p4:{cel:{},a:"A2",b:"A2",tarea:0,arr:false,msg:"",ok:false},
+  p5:{cel:{},ancho:false,borrado:false,hecho:false,msg:"",ok:false}
+};
+(function iniciar(){
+  var c4=S.p4.cel, c5=S.p5.cel;
+  CABECERAS.forEach(function(h,i){c4[ref(i,1)]=h;c5[ref(i,1)]=h;});
+  PRODUCTOS.forEach(function(p,i){var f=i+2;c4["B"+f]=p[0];c4["D"+f]=p[2];c4["E"+f]=p[3];
+    c5["A"+f]=String(i+1);c5["B"+f]=p[0];c5["C"+f]=p[1];c5["D"+f]=p[2];c5["E"+f]=p[3];});
+  c4.A2="1";c4.A3="2";c4.C2="Bebida";
+  PRODUCTOS.forEach(function(p,i){if(i>=4)c4["C"+(i+2)]=p[1];});
+})();
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+/* ===== ventana de Calc =====
+   op: cel (contenidos), a/b (selección), filas, anchos, ed (celda en edición), asa, diana, bordeB, estrecha, zonas */
+var MENUS=["Fitxer","Edita","Visualitza","Insereix","Format","Estils","Full","Dades","Eines","Finestra","Ajuda"];
+function calc(op){
+  var cel=op.cel||{}, a=op.a||"A1", b=op.b||a, filas=op.filas||7, sel=rango(a,b), act=a;
+  var anchos=op.anchos||[60,150,110,120,100,80];
+  var h='<div class="calc">';
+  h+='<div class="c-tit"><span>Kiosco_FPB.ods — LibreOffice Calc</span><span>— ▢ ✕</span></div>';
+  h+='<div class="c-menu">'+MENUS.map(function(m){return '<span>'+m+'</span>';}).join("")+'</div>';
+  h+='<div class="c-tool"><i>💾</i><i data-desfes="1" title="Desfés (Ctrl+Z)">↶</i><i>↷</i><i>📋</i><i>𝐍</i><i>𝐼</i><i>€</i><i>%</i><i>Σ</i></div>';
+  h+='<div class="c-form"><span class="c-nom">'+esc(txtRango(a,b))+'</span><span class="c-fx">ƒx Σ =</span><span class="c-barra">'+esc(cel[act]||"")+'</span></div>';
+  h+='<div class="c-area"><table><colgroup><col style="width:34px">'+anchos.map(function(w){return '<col style="width:'+w+'px">';}).join("")+'</colgroup><tr><th class="esq"></th>';
+  COLS.forEach(function(c){h+='<th class="'+(sel.some(function(r){return r.charAt(0)===c;})?"colsel":"")+'">'+c+(op.bordeB&&c==="B"?'<span class="borde'+(op.marcaBorde?" marca":"")+'" data-borde="B" title="Doble clic para ajustar el ancho"></span>':"")+'</th>';});
+  h+='</tr>';
+  for(var f=1;f<=filas;f++){
+    h+='<tr><th>'+f+'</th>';
+    COLS.forEach(function(c){
+      var r=c+f, v=cel[r]||"", cls=[];
+      if(esNum(v))cls.push("num");
+      if(sel.length>1&&sel.indexOf(r)>=0)cls.push("rng");
+      if(r===act)cls.push("act");
+      if(op.diana&&op.diana.indexOf(r)>=0)cls.push("diana");
+      var dentro=op.ed===r?'<input type="text" id="celdaEd" value="'+esc(op.edVal||"")+'" autocomplete="off">':esc(v);
+      if(op.asa&&r===sel[sel.length-1])dentro+='<span class="asa grande" data-asa="1" title="Controlador de relleno"></span>';
+      h+='<td data-c="'+r+'" class="'+cls.join(" ")+'">'+dentro+'</td>';
+    });
+    h+='</tr>';
+  }
+  h+='</table></div>';
+  h+='<div class="c-tabs"><span class="c-tab act">Productos</span><span class="c-tab">Compras</span><span class="c-tab">Ventas</span><span class="c-tab">Resumen</span></div>';
+  h+='<div class="c-estat"><span>Full 1 de 4</span><span>100 %</span></div>';
+  return h+'</div>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* ===== PRÁCTICA ===== */
+var TAREAS1=[
+ {t:"Pulsa la celda C4",tipo:"celda",obj:"C4"},
+ {t:"Pulsa la celda E2",tipo:"celda",obj:"E2"},
+ {t:"Selecciona el rango A2:A6 (pulsa A2 y después Mayús + clic en A6)",tipo:"rango",obj:"A2:A6"}
+];
+var TIPOS=[
+ ["texto","Agua","Texto"],["numero","24","Número"],["decimal","1,50","Número decimal"],
+ ["fecha","20/11/2026","Fecha"],["porcentaje","10 %","Porcentaje"],["formula","=D2*F2","Fórmula"]
+];
+var ORDEN_TIPOS=["fecha","formula","texto","porcentaje","decimal","numero"];
+var OBJ3={A1:"Nº",B1:"Producto",C1:"Categoría",D1:"Precio de venta",E1:"Existencias",
+          A2:"1",B2:"Agua",C2:"Bebida",D2:"1",E2:"24",A3:"2",B3:"Zumo de naranja",C3:"Bebida",D3:"1,5",E3:"18"};
+var ORDEN3=["A1","B1","C1","D1","E1","A2","B2","C2","D2","E2","A3","B3","C3","D3","E3"];
+
+var PRACTICA=[
+ {t:"1. Celdas y rangos",ayuda:"Cada celda se nombra con la <b>letra de la columna</b> y el <b>número de la fila</b>. Mira el <b>Quadre de noms</b>: muestra la celda o el rango que seleccionas.",
+  html:function(){
+    var r=S.p1, t=TAREAS1[Math.min(r.tarea,TAREAS1.length-1)];
+    var h=r.tarea<TAREAS1.length?'<div class="tarea">👉 '+(r.tarea+1)+' de '+TAREAS1.length+': '+t.t+'</div>':'';
+    h+=calc({cel:{},a:r.a,b:r.b,filas:7});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p1.tarea>=TAREAS1.length;}},
+ {t:"2. Tipos de datos",ayuda:"Pulsa un <b>dato</b> y después su <b>tipo</b>.",
+  html:function(){
+    var r=S.p2;
+    var h='<div class="chips">'+TIPOS.map(function(x){return '<button class="chip'+(r.done[x[0]]?" vis":"")+(r.sel===x[0]?" sel":"")+'" data-act="p2-dato" data-v="'+x[0]+'">'+(r.done[x[0]]?"✔ ":"")+'<code>'+esc(x[1])+'</code></button>';}).join("")+'</div>';
+    h+='<div class="recs">'+ORDEN_TIPOS.map(function(id){var x=TIPOS.filter(function(y){return y[0]===id;})[0];return '<button class="rec'+(r.done[id]?" vis":"")+'" data-act="p2-tipo" data-v="'+id+'">'+(r.done[id]?'<b>✔ '+esc(x[1])+'</b>':"")+x[2]+'</button>';}).join("")+'</div>';
+    h+=msg(r.msg,r.ok);
+    if(Object.keys(r.done).length===TIPOS.length)h+='<div class="msg info">💡 Calc coloca normalmente el <b>texto a la izquierda</b> y los <b>números a la derecha</b>. Si un número se queda a la izquierda, Calc lo está tratando como texto.</div>';
+    return h;
+  },ok:function(){return Object.keys(S.p2.done).length===TIPOS.length;}},
+ {t:"3. Escribir en el catálogo",ayuda:"Escribe los <b>encabezados</b> en la fila 1 y los dos primeros productos. Pulsa una celda y escribe. <b>Intro</b> baja a la celda de abajo y <b>Tab</b> pasa a la derecha. Escribe los decimales con <b>coma</b>.",
+  html:function(){
+    var r=S.p3;
+    var h='<div class="msg info" style="margin-top:0"><b>Datos:</b> Nº · Producto · Categoría · Precio de venta · Existencias<br>1 · Agua · Bebida · 1 · 24<br>2 · Zumo de naranja · Bebida · 1,50 · 18</div>';
+    h+=calc({cel:r.cel,a:r.a,filas:5,ed:r.ed,edVal:r.edVal});
+    h+='<p style="margin:10px 0 0"><button class="btn pri" data-act="p3-comprobar">✔ Comprobar</button></p>';
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p3.hecho;}},
+ {t:"4. El controlador de relleno",ayuda:"El <b>controlador de relleno</b> es el cuadradito azul de la esquina de la selección. Púlsalo y después pulsa la celda hasta donde quieres «arrastrar».",
+  html:function(){
+    var r=S.p4, tareas=["Numera los productos del 1 al 10: selecciona A2:A3 (A2 y Mayús + clic en A3) y arrastra el controlador hasta A11.","Copia «Bebida» en las cuatro bebidas: selecciona C2 y arrastra el controlador hasta C5."];
+    var h=r.tarea<2?'<div class="tarea">👉 '+(r.tarea+1)+' de 2: '+tareas[r.tarea]+'</div>':'';
+    if(r.arr)h+='<div class="msg info" style="margin-top:0">✋ Estás arrastrando. Ahora pulsa la celda <b>hasta donde</b> quieres rellenar.</div>';
+    h+=calc({cel:r.cel,a:r.a,b:r.b,filas:11,asa:r.tarea<2});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p4.tarea>=2;}},
+ {t:"5. Ajustar y corregir",ayuda:"Si no se ve el texto completo, haz <b>doble clic en el borde derecho</b> del encabezado de la columna. Si te equivocas, <b>Ctrl + Z</b> (o el botón ↶) deshace la última acción.",
+  html:function(){
+    var r=S.p5, cel=r.cel, anchos=[44,r.ancho?165:85,100,120,95,60];
+    var h="";
+    if(!r.ancho)h+='<div class="tarea">👉 1 de 2: No se ve entero «Bocadillo de tortilla». Haz doble clic en el borde entre los encabezados <b>B</b> y <b>C</b> (la línea naranja).</div>';
+    else if(r.borrado)h+='<div class="tarea">👉 2 de 2: ¡Ups! Se han borrado los precios sin querer. Deshaz el error con <b>Ctrl + Z</b> o con el botón <b>↶</b>.</div>';
+    h+=calc({cel:cel,a:r.borrado?"D2":"B6",b:r.borrado?"D11":"B6",filas:11,anchos:anchos,bordeB:!r.ancho,marcaBorde:true});
+    if(r.hecho)h+=bloqueFinPractica(); else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p5.hecho;},ultimo:true}
+];
+function bloqueFinPractica(){
+  return msg("✔ <b>¡Recuperado!</b> Ctrl + Z ha deshecho el borrado y los precios vuelven a estar en su sitio.",true)+
+    '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
+    '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha</b> (Parte 2). Después escribirás el catálogo completo en tu <b>Calc de verdad</b> (Parte 3).</div>';
+}
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[3]);}).join("");};}
+function okSec(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["¿Cómo se llama la celda de la columna C y la fila 4?",["4C","C4","C-4"],1,"Primero la letra de la columna y después el número de la fila."],
+        ["A2:A6 es…",["Una sola celda","Un rango de 5 celdas, de A2 a A6","Una fórmula"],1,"Los dos puntos indican un rango: desde A2 hasta A6."]];
+var F2=[["Escribes 1.50 con punto. ¿Qué hace Calc?",["Lo trata como número","Lo trata como texto y no podrá calcular con él","Lo convierte en euros"],1,"En nuestro Calc el decimal se escribe con coma: 1,50."],
+        ["Normalmente, ¿hacia dónde se alinean los números?",["A la izquierda","A la derecha","Al centro"],1,"Los números a la derecha y el texto a la izquierda: así sabes cómo los entiende Calc."],
+        ["¿Con qué empieza siempre una fórmula?",["=","*","#"],0,"El signo = le dice a Calc que tiene que calcular."]];
+var F3=[["¿Dónde está el controlador de relleno?",["En la esquina inferior derecha de la celda seleccionada","En la barra de menús","En la pestaña de la hoja"],0,"Es el cuadradito de la esquina de la selección."],
+        ["Escribes 1 y 2, seleccionas las dos celdas y arrastras hacia abajo. ¿Qué ocurre?",["Copia 1 y 2 sin cambiarlos","Continúa la serie: 3, 4, 5…","Borra las celdas"],1,"Calc entiende el salto entre los dos números y continúa la serie."]];
+var F4=[["¿Qué hace Copiar (Ctrl + C)?",["Deja el original y permite pegarlo en otro sitio","Quita el original","Borra la hoja"],0,"Al copiar, el dato sigue en su sitio y además lo pegas en otro."],
+        ["¿Para qué sirve Cortar (Ctrl + X)?",["Para duplicar un dato","Para mover un dato a otro sitio","Para cambiar el color"],1,"Cortar y pegar mueve el contenido."],
+        ["Has borrado algo sin querer. ¿Qué atajo lo recupera?",["Ctrl + Z","Ctrl + Y","Ctrl + S"],0,"Ctrl + Z deshace la última acción. Ctrl + Y la rehace."]];
+var F5=[["¿Cómo puedes cambiar el contenido de una celda?",["Con doble clic en la celda o desde la barra de fórmulas","Apagando el ordenador","Cambiando de hoja"],0,"También puedes seleccionarla y escribir encima."],
+        ["Una columna no deja ver un texto entero. ¿Qué haces?",["Escribo el texto más corto","Doble clic en el borde derecho del encabezado de la columna","Cambio de hoja"],1,"El doble clic ajusta el ancho de la columna a su contenido."],
+        ["¿Qué tecla borra el contenido de las celdas seleccionadas?",["Intro","Supr","Bloq Num"],1,"Supr borra el contenido de la selección."]];
+var LISTAS={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5};
+
+var FICHA=[
+ {t:"1. Celdas y rangos",ayuda:"Dos preguntas para empezar.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Tipos de datos",ayuda:"¿Cómo entiende Calc lo que escribes?",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. El controlador de relleno",ayuda:"El cuadradito que ahorra mucho trabajo.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. Copiar, cortar y deshacer",ayuda:"Tres atajos muy útiles.",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Modificar y ajustar",ayuda:"Tres preguntas más.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Nombrar celdas y seleccionar rangos.</li><li>Reconocer los tipos de datos.</li><li>Escribir datos y números decimales con coma.</li><li>Usar el controlador de relleno.</li><li>Ajustar el ancho de una columna y deshacer errores.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.02_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado el Calc virtual (Parte 1). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> haz la <b>Parte 3</b> en tu Calc y sube a Aules este PDF y tu archivo <b>Kiosco_FPB_Nombre.ods</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){var n=PASOS.length;if(paso===n-1)return "¡Último paso!";if(paso===0)return "¡Vamos allá!";return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas · S04.02":"🧮 Calc virtual · S04.02";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+  var ed=$("celdaEd"); if(ed){ed.focus(); var v=ed.value; ed.value=""; ed.value=v;}
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== paso 1 ===== */
+function clicCelda1(r,shift){
+  var p=S.p1, t=TAREAS1[p.tarea]; if(!t)return;
+  if(shift&&t.tipo==="rango")p.b=r; else {p.a=r;p.b=r;}
+  var got=txtRango(p.a,p.b);
+  if(t.tipo==="celda"){
+    if(got===t.obj){intento("celda"+p.tarea,true);p.msg="✔ <b>"+elogio(p.tarea)+"</b> Has pulsado <b>"+got+"</b>: columna "+got.charAt(0)+", fila "+got.slice(1)+".";p.ok=true;p.tarea++;}
+    else{intento("celda"+p.tarea,false);error("celdas");var x=partir(got),y=partir(t.obj);
+      p.msg="¡Casi! Has pulsado <b>"+got+"</b>. "+(x.c!==y.c?"La columna es la <b>letra</b>: busca la <b>"+t.obj.charAt(0)+"</b>. ":"")+(x.f!==y.f?"La fila es el <b>número</b>: busca el <b>"+t.obj.slice(1)+"</b>.":"");p.ok=false;}
+  }else{
+    if(got===t.obj){intento("rango",true);p.msg="✔ <b>¡Perfecto!</b> Has seleccionado el rango <b>A2:A6</b>: son 5 celdas. Fíjate en el Quadre de noms: muestra el rango completo.";p.ok=true;p.tarea++;}
+    else if(!shift&&r==="A2"){p.msg="Bien, empiezas en <b>A2</b>. Ahora mantén pulsada la tecla <b>Mayús</b> y haz clic en <b>A6</b>.";p.ok=true;}
+    else if(!shift){p.msg="Para seleccionar un rango, pulsa primero <b>A2</b> y después <b>Mayús + clic</b> en <b>A6</b>.";p.ok=false;}
+    else{intento("rango",false);error("celdas");p.msg="Has seleccionado <b>"+got+"</b>. El rango que se pide va de <b>A2</b> a <b>A6</b>. Vuelve a pulsar A2.";p.ok=false;}
+  }
+}
+/* ===== paso 2 ===== */
+function unir2(){
+  var r=S.p2; if(!r.sel||!r.rec)return;
+  var x=TIPOS.filter(function(y){return y[0]===r.sel;})[0];
+  if(r.sel===r.rec){r.done[r.sel]=true;intento("tipo_"+r.sel,true);r.msg="✔ <b>"+elogio(semilla(r.sel))+"</b> <code>"+esc(x[1])+"</code> es "+x[2].toLowerCase()+".";r.ok=true;}
+  else{intento("tipo_"+r.sel,false);error("tipos");var pista={decimal:"Tiene coma: es un número con decimales.",fecha:"Tiene día, mes y año.",porcentaje:"Lleva el símbolo %.",formula:"Empieza por =.",numero:"Es un número entero.",texto:"Son letras."}[r.sel];
+    r.msg="¡Casi! "+pista+" ¡Prueba otra vez!";r.ok=false;}
+  r.sel=null;r.rec=null;
+}
+/* ===== paso 3 ===== */
+function confirmar3(dir){
+  var p=S.p3; if(!p.ed)return;
+  var v=p.edVal||""; if(v.trim()==="")delete p.cel[p.ed]; else p.cel[p.ed]=v.trim();
+  var x=partir(p.ed); p.ed=null;
+  if(dir==="abajo"&&x.f<5)p.a=ref(x.c,x.f+1); else if(dir==="derecha"&&x.c<COLS.length-1)p.a=ref(x.c+1,x.f);
+  p.msg="";
+}
+function comprobar3(){
+  var p=S.p3, prob=[];
+  ORDEN3.forEach(function(r){
+    var esp=OBJ3[r], v=p.cel[r];
+    if(v===undefined){
+      var donde=Object.keys(p.cel).filter(function(k){return simple(p.cel[k])===simple(esp)&&!OBJ3[k];})[0];
+      prob.push(donde?"<b>«"+esc(esp)+"»</b> está en "+donde+", pero va en <b>"+r+"</b>.":"Falta <b>"+r+"</b>: «"+esc(esp)+"».");return;}
+    if(esNum(esp)){
+      if(/^\d+\.\d+$/.test(v))prob.push("<b>"+r+"</b>: «"+esc(v)+"» está escrito con <b>punto</b>. Calc lo toma como texto (se queda a la izquierda). Escribe <b>"+v.replace(".",",")+"</b>.");
+      else if(!esNum(v))prob.push("<b>"+r+"</b>: aquí va un número («"+esc(esp)+"»), pero has escrito «"+esc(v)+"».");
+      else if(valNum(v)!==valNum(esp))prob.push("<b>"+r+"</b>: el valor es <b>"+esp.replace(/^1$/,"1")+"</b>, no "+esc(v)+".");
+    }else if(r==="A1"){if(!/^n(º|°|o|\.|um|úm)?\.?$/i.test(v.trim()))prob.push("<b>A1</b>: el encabezado es <b>Nº</b>.");}
+    else if(simple(v)!==simple(esp))prob.push("<b>"+r+"</b>: debería ser «"+esc(esp)+"» y has escrito «"+esc(v)+"».");
+  });
+  Object.keys(p.cel).forEach(function(k){if(!OBJ3[k])prob.push("<b>"+k+"</b> debería estar vacía.");});
+  if(prob.length){intento("catalogo",false);error("catalogo");p.msg="Revisa estos datos:<ul><li>"+prob.slice(0,5).join("</li><li>")+"</li></ul>"+(prob.length>5?"…y "+(prob.length-5)+" más.":"");p.ok=false;}
+  else{intento("catalogo",true);p.hecho=true;p.msg="✔ <b>¡Muy bien!</b> Los encabezados y los dos productos están en su sitio. Fíjate: los números se alinean a la derecha y el texto a la izquierda.";p.ok=true;}
+}
+/* ===== paso 4 ===== */
+function rellenar4(destino){
+  var p=S.p4, sel=rango(p.a,p.b), ini=partir(sel[0]), fin=partir(sel[sel.length-1]), d=partir(destino);
+  p.arr=false;
+  if(p.tarea===0){
+    if(ini.c!==0||ini.f!==2||fin.c!==0){p.msg="Primero selecciona las celdas con los números: <b>A2</b> y <b>Mayús + clic</b> en <b>A3</b>.";p.ok=false;error("relleno");intento("serie",false);return;}
+    if(d.c!==0){p.msg="Arrastra hacia <b>abajo</b>, por la misma columna A.";p.ok=false;error("relleno");intento("serie",false);return;}
+    if(d.f<11){p.msg="Has llegado hasta <b>A"+d.f+"</b>, pero hay 10 productos: arrastra hasta <b>A11</b>.";p.ok=false;error("relleno");intento("serie",false);return;}
+    for(var f=2;f<=11;f++)p.cel["A"+f]=String(f-1);
+    intento("serie",true);p.tarea=1;p.a="C2";p.b="C2";
+    p.msg="✔ <b>¡Genial!</b> Calc ha continuado la serie: 1, 2, 3… hasta 10."+(fin.f===2?" (Con un solo número Calc también continúa la serie; con dos le indicas el salto.)":"");p.ok=true;return;
+  }
+  if(sel.length!==1||sel[0]!=="C2"){p.msg="Selecciona solo la celda <b>C2</b> («Bebida») antes de arrastrar.";p.ok=false;error("relleno");intento("copia",false);return;}
+  if(d.c!==2){p.msg="Arrastra hacia abajo por la columna <b>C</b>.";p.ok=false;error("relleno");intento("copia",false);return;}
+  if(d.f>5){p.msg="Te has pasado: desde la fila 6 hay <b>bocadillos</b>, no bebidas. Arrastra solo hasta <b>C5</b>.";p.ok=false;error("relleno");intento("copia",false);return;}
+  if(d.f<5){p.msg="Faltan bebidas: el refresco y el batido también son bebidas. Arrastra hasta <b>C5</b>.";p.ok=false;error("relleno");intento("copia",false);return;}
+  for(var g=2;g<=5;g++)p.cel["C"+g]="Bebida";
+  intento("copia",true);p.tarea=2;p.msg="✔ <b>¡Perfecto!</b> Con texto, el controlador de relleno <b>copia</b> el dato: «Bebida» en las cuatro bebidas.";p.ok=true;
+}
+/* ===== paso 5 ===== */
+var PRECIOS={};
+function ajustar5(){
+  var p=S.p5; if(p.ancho)return;
+  intento("ancho",true);p.ancho=true;
+  for(var f=2;f<=11;f++){PRECIOS["D"+f]=p.cel["D"+f];delete p.cel["D"+f];}
+  p.borrado=true;p.msg="✔ <b>¡Bien!</b> La columna B se ha ajustado y ya se lee «Bocadillo de tortilla».";p.ok=true;
+}
+function deshacer5(){
+  var p=S.p5; if(!p.borrado)return;
+  Object.keys(PRECIOS).forEach(function(k){p.cel[k]=PRECIOS[k];});
+  p.borrado=false;p.hecho=true;intento("deshacer",true);
+  upd(function(o){o.practica={ok:true,t:ahora(),catalogo:JSON.parse(JSON.stringify(S.p3.cel))};});
+}
+
+/* ===== eventos ===== */
+var ULT={r:"",t:0};
+function alClic(e){
+  var t=e.target;
+  if(MODO==="practica"){
+    if(t.closest("[data-borde]"))return; /* el borde solo reacciona al doble clic */
+    if(t.closest("[data-desfes]")){if(paso===4){if(S.p5.borrado)deshacer5();else{S.p5.msg="Todavía no hay nada que deshacer.";S.p5.ok=false;}render();}return;}
+    if(t.closest("[data-asa]")&&paso===3){S.p4.arr=true;S.p4.msg="";render();return;}
+    var td=t.closest("td[data-c]");
+    if(td&&!t.closest("#celdaEd")){
+      var r=td.getAttribute("data-c");
+      if(paso===0){clicCelda1(r,e.shiftKey);render();return;}
+      if(paso===2){ /* doble clic (detectado a mano: cada clic vuelve a pintar la tabla) = editar la celda */
+        var ahoraMs=Date.now(), doble=ULT.r===r&&ahoraMs-ULT.t<450; ULT={r:r,t:ahoraMs};
+        if(S.p3.ed)confirmar3(null);
+        if(doble&&S.p3.a===r){S.p3.ed=r;S.p3.edVal=S.p3.cel[r]||"";render();return;}
+        S.p3.a=r;render();return;}
+      if(paso===3){var p4=S.p4;
+        if(p4.arr){rellenar4(r);render();return;}
+        if(e.shiftKey)p4.b=r; else {p4.a=r;p4.b=r;}
+        p4.msg="";render();return;}
+      if(paso===4){S.p5.msg=S.p5.ancho?"":"Para ajustar el ancho, haz <b>doble clic</b> en el borde naranja entre B y C.";S.p5.ok=false;render();return;}
+    }
+  }
+  var b=t.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act");
+  if(act==="p2-dato"){var r2=S.p2,v=b.getAttribute("data-v");if(r2.done[v]){r2.msg="✔ Ese dato ya está unido.";r2.ok=true;}else{r2.sel=v;r2.msg=r2.rec?"":"👆 Ahora pulsa su tipo.";r2.ok=false;unir2();}}
+  else if(act==="p2-tipo"){var r2b=S.p2,v2=b.getAttribute("data-v");if(r2b.done[v2]){r2b.msg="✔ Ese tipo ya está unido.";r2b.ok=true;}else{r2b.rec=v2;if(!r2b.sel){r2b.msg="👆 Ahora pulsa el dato.";r2b.ok=false;}else unir2();}}
+  else if(act==="p3-comprobar"){if(S.p3.ed)confirmar3(null);comprobar3();}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v"),corr=LISTAS[sec][i][2];
+    if(vv!==corr)error(sec);
+    intento(sec+i,vv===corr);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+  }
+  else if(act==="descargar"){descargaPDF();return;}
+  render();
+}
+function alDobleClic(e){
+  if(MODO==="practica"&&paso===4&&e.target.closest("[data-borde]")){ajustar5();render();}
+}
+function alTecla(e){
+  if(MODO!=="practica")return;
+  if(paso===4&&(e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z")){e.preventDefault();if(S.p5.borrado){deshacer5();render();}return;}
+  if(paso!==2)return;
+  var p=S.p3;
+  if(e.target.id==="celdaEd"){
+    if(e.key==="Enter"){e.preventDefault();p.edVal=e.target.value;confirmar3("abajo");render();}
+    else if(e.key==="Tab"){e.preventDefault();p.edVal=e.target.value;confirmar3("derecha");render();}
+    else if(e.key==="Escape"){p.ed=null;render();}
+    return;
+  }
+  if(e.target.tagName==="INPUT"||e.ctrlKey||e.altKey||e.metaKey)return;
+  if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();delete p.cel[p.a];render();return;}
+  if(e.key==="F2"){e.preventDefault();p.ed=p.a;p.edVal=p.cel[p.a]||"";render();return;}
+  if(e.key&&e.key.length===1){e.preventDefault();p.ed=p.a;p.edVal=e.key;render();}
+}
+function alEscribir(e){
+  if(e.target.id==="celdaEd"){S.p3.edVal=e.target.value;return;}
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value;upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.02_Resultado_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","›":">","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.02 · El catálogo de productos",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el Calc virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);
+  if(pr.ok&&pr.catalogo){
+    t("Catálogo escrito en el paso 3:",11,false,2,true);
+    [1,2,3].forEach(function(f){t(["A","B","C","D","E"].map(function(c){return pr.catalogo[c+f]||"-";}).join("  |  "),10,false,4,true);});
+  }
+  t("Fallos con celdas y rangos: "+(o.err.celdas||0),10,false,2,true);
+  t("Fallos con los tipos de datos: "+(o.err.tipos||0),10,false,2,true);
+  t("Revisiones del catálogo con errores: "+(o.err.catalogo||0),10,false,2,true);
+  t("Fallos con el controlador de relleno: "+(o.err.relleno||0),10,false,2,true);
+  t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Celdas y rangos",F1);
+  sec("f2","Tipos de datos",F2);
+  sec("f3","El controlador de relleno",F3);
+  sec("f4","Copiar, cortar y deshacer",F4);
+  sec("f5","Modificar y ajustar",F5);
+  t("3. Práctica en Calc",12,true);
+  t("Entrega en Aules el archivo Kiosco_FPB_Nombre.ods con el catálogo de 10 productos en la hoja Productos.",11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(){
+  var o=cargar(),f=nombrePDF(o.alumno);
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("dblclick",alDobleClic);
+  $("card").addEventListener("input",alEscribir);
+  document.addEventListener("keydown",alTecla);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>

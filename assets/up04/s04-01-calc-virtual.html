@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calc virtual · S04.01</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:960px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-direction:column;gap:10px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:17px;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:#ff8a00;background:#fff3e0;font-weight:700}
+.recs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.recs{grid-template-columns:1fr}}
+.rec{font:inherit;font-size:17px;text-align:left;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--texto)}
+.rec.vis{border-color:var(--ok);background:var(--okbg)}
+.rec b{display:block;color:var(--ok);font-size:15px}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+
+/* ===== Ventana de Calc simulada ===== */
+.calc{border:2px solid #9e9e9e;border-radius:8px;overflow:hidden;background:#fff;font-size:14px;line-height:1.3;position:relative;user-select:none;margin-top:6px}
+.c-tit{background:#3c3c3c;color:#fff;padding:6px 10px;font-size:14px;display:flex;justify-content:space-between}
+.c-menu{display:flex;flex-wrap:wrap;gap:2px;background:#f3f3f3;border-bottom:1px solid #ddd;padding:3px 4px;position:relative}
+.c-menu span{padding:3px 8px;border-radius:4px;cursor:pointer}
+.c-menu span:hover,.c-menu span.abierto{background:#d6e4f5}
+.c-tool{display:flex;gap:6px;background:#f9f9f9;border-bottom:1px solid #ddd;padding:5px 8px;color:#555}
+.c-tool i{font-style:normal;border:1px solid #ccc;border-radius:4px;padding:1px 7px;background:#fff}
+.c-form{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid #ddd;background:#fafafa}
+.c-nom{width:80px;border:1px solid #bbb;background:#fff;padding:2px 6px;font-family:Consolas,Menlo,monospace}
+.c-fx{color:#555;font-style:italic}
+.c-barra{flex:1;border:1px solid #bbb;background:#fff;padding:2px 6px;min-height:22px;font-family:Consolas,Menlo,monospace}
+.c-area{background:#fff}
+.c-area table{border-collapse:collapse;width:100%;table-layout:fixed}
+.c-area th{background:#efefef;border:1px solid #d0d0d0;font-weight:400;color:#444;font-size:12px;height:20px}
+.c-area td{border:1px solid #e3e3e3;height:22px}
+.c-area td.act{outline:2px solid #1e6fd9;outline-offset:-2px}
+.c-area th.esq{width:34px}
+.c-vacio{height:196px;display:flex;align-items:center;justify-content:center;color:#888;background:#f4f4f4;font-size:16px;text-align:center;padding:10px}
+.c-tabs{display:flex;align-items:flex-end;gap:2px;background:#ececec;border-top:1px solid #ccc;padding:4px 6px 0}
+.c-tab{background:#dcdcdc;border:1px solid #bdbdbd;border-bottom:0;padding:4px 12px;border-radius:5px 5px 0 0;cursor:pointer;font-size:14px}
+.c-tab.act{background:#fff;font-weight:700}
+.c-mas{border:1px solid #bdbdbd;background:#fff;border-radius:4px;padding:1px 9px;margin:0 6px 3px 2px;cursor:pointer;font-weight:700}
+.c-estat{background:#f3f3f3;border-top:1px solid #ccc;padding:3px 10px;color:#555;font-size:13px;display:flex;justify-content:space-between}
+.zona{cursor:pointer;transition:box-shadow .15s}
+.zona.vis{box-shadow:inset 0 0 0 3px #2e7d32}
+.zona.sel{box-shadow:inset 0 0 0 4px #ff8a00}
+.zona.diana{box-shadow:inset 0 0 0 4px #c62828}
+.desp{position:absolute;background:#fff;border:1px solid #9e9e9e;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:5;min-width:210px;padding:4px 0;font-size:15px}
+.desp div{padding:6px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:18px}
+.desp div:hover{background:#d6e4f5}
+.desp div.sep{border-top:1px solid #ddd;padding:0;margin:3px 0;cursor:default}
+.desp small{color:#777}
+.dialeg{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:min(92%,470px);background:#f7f7f7;border:1px solid #888;box-shadow:0 6px 22px rgba(0,0,0,.35);z-index:6;border-radius:6px;overflow:hidden;font-size:15px}
+.dialeg .dt{background:#3c3c3c;color:#fff;padding:6px 10px}
+.dialeg .dc{padding:12px}
+.dialeg label{display:block;margin:6px 0 3px;font-weight:600}
+.dialeg input,.dialeg select{font:inherit;font-size:16px;width:100%;padding:6px 8px;border:1px solid #999;border-radius:4px;background:#fff;min-height:0}
+.dialeg .db{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.dialeg .db button{font:inherit;font-size:15px;padding:6px 16px;border:1px solid #888;border-radius:4px;background:#fff;cursor:pointer}
+.dialeg .db button.p{background:#1e6fd9;color:#fff;border-color:#1556a8}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧮 Calc virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0401-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.01_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var PUESTO=[
+ ["silla","Silla","Apoya toda la espalda y deja los pies en el suelo."],
+ ["pantalla","Pantalla","Enfrente, a la distancia de un brazo y a la altura de los ojos."],
+ ["teclado","Teclado y ratón","Cerca del cuerpo, con los codos en ángulo recto y las muñecas rectas."],
+ ["luz","Iluminación","La luz llega de lado, sin reflejos en la pantalla."]
+];
+var ORDEN_PUESTO=["pantalla","luz","silla","teclado"];
+var ZONAS=[
+ ["menu","Barra de menús","Contiene los menús Fitxer, Edita, Insereix, Format…"],
+ ["nom","Quadre de noms","Muestra la celda activa, por ejemplo A1."],
+ ["formula","Barra de fórmules","Muestra y permite cambiar lo que hay en la celda activa."],
+ ["pestanyes","Pestanyes dels fulls","Sirven para cambiar de hoja, añadir hojas y cambiarles el nombre."],
+ ["estat","Barra d'estat","Da información del documento y permite cambiar el zoom."]
+];
+function zona(id){return ZONAS.filter(function(z){return z[0]===id;})[0];}
+var HOJAS=["Productos","Compras","Ventas","Resumen"];
+
+/* ===== estado en memoria ===== */
+var S={
+  p1:{sel:null,done:{},msg:"",ok:false},
+  p2:{sel:null,zsel:null,done:{},msg:"",ok:false},
+  p3:{abierto:false,menu:null,sub:false,msg:"",ok:false},
+  p4:{menu:null,dialeg:false,nombre:"",tipo:"",guardado:false,archivo:"",msg:"",ok:false},
+  p5:{tabs:["Full1"],act:0,ren:null,val:"",msg:"",ok:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+/* ===== ventana de Calc ===== */
+var MENUS=["Fitxer","Edita","Visualitza","Insereix","Format","Estils","Full","Dades","Eines","Finestra","Ajuda"];
+function calc(op){
+  op=op||{};
+  var z=function(id){if(!op.zonas)return "";var c=" zona";if(op.vis&&op.vis[id])c+=" vis";if(op.sel===id)c+=" sel";return c+'" data-z="'+id;};
+  var h='<div class="calc">';
+  h+='<div class="c-tit"><span>'+esc(op.titulo||"Sense títol 1")+' — LibreOffice Calc</span><span>— ▢ ✕</span></div>';
+  h+='<div class="c-menu'+z("menu")+'">'+MENUS.map(function(m){return '<span'+(op.menus?' data-menu="'+m+'"':"")+(op.menu===m?' class="abierto"':"")+'>'+m+'</span>';}).join("")+'</div>';
+  if(op.desp)h+=op.desp;
+  h+='<div class="c-tool"><i>💾</i><i>↶</i><i>↷</i><i>📋</i><i>𝐍</i><i>𝐼</i><i>€</i><i>%</i><i>Σ</i></div>';
+  h+='<div class="c-form"><span class="c-nom'+z("nom")+'">'+(op.vacio?"":"A1")+'</span><span class="c-fx">ƒx Σ =</span><span class="c-barra'+z("formula")+'"></span></div>';
+  if(op.vacio)h+='<div class="c-vacio">Todavía no hay ningún documento abierto.<br>Utiliza el menú <b>&nbsp;Fitxer&nbsp;</b>.</div>';
+  else{
+    var cols=["A","B","C","D","E","F","G"];
+    h+='<div class="c-area"><table><tr><th class="esq"></th>'+cols.map(function(c){return '<th>'+c+'</th>';}).join("")+'</tr>';
+    for(var r=1;r<=7;r++){h+='<tr><th>'+r+'</th>'+cols.map(function(c){return '<td'+(r===1&&c==="A"?' class="act"':"")+'></td>';}).join("")+'</tr>';}
+    h+='</table></div>';
+  }
+  var tabs=op.vacio?[]:(op.tabs||["Full1"]);
+  h+='<div class="c-tabs'+z("pestanyes")+'">'+tabs.map(function(t,i){return '<span class="c-tab'+(i===(op.act||0)?" act":"")+'"'+(op.tabsAct?' data-tab="'+i+'"':"")+'>'+esc(t)+'</span>';}).join("")+(op.vacio?"":'<span class="c-mas"'+(op.tabsAct?' data-mas="1"':"")+' title="Insereix un full">+</span>')+'</div>';
+  h+='<div class="c-estat'+z("estat")+'"><span>'+(op.vacio?"":"Full "+((op.act||0)+1)+" de "+tabs.length)+'</span><span>100 %</span></div>';
+  if(op.dialeg)h+=op.dialeg;
+  return h+'</div>';
+}
+function despFitxer(conNou){
+  return '<div class="desp" style="left:4px;top:58px">'+
+    '<div data-fx="nou">Nou <small>▸</small></div>'+
+    '<div data-fx="obri">Obri… <small>Ctrl+O</small></div>'+
+    '<div class="sep"></div>'+
+    '<div data-fx="guarda">Guarda <small>Ctrl+S</small></div>'+
+    '<div data-fx="anomena">Anomena i guarda… <small>Ctrl+Maj+S</small></div>'+
+    '<div data-fx="exporta">Exporta com a <small>▸</small></div>'+
+    '<div class="sep"></div>'+
+    '<div data-fx="tanca">Tanca</div></div>'+
+    (conNou?'<div class="desp" style="left:214px;top:58px">'+
+      '<div data-nou="calc">Full de càlcul</div><div data-nou="text">Document de text</div><div data-nou="pres">Presentació</div><div data-nou="dib">Dibuix</div></div>':"");
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* ===== PRÁCTICA ===== */
+var PRACTICA=[
+ {t:"1. Mi puesto de trabajo",ayuda:"Antes de abrir Calc, prepara tu puesto. Pulsa una <b>parte del puesto</b> y después su <b>recomendación</b>.",
+  html:function(){
+    var r=S.p1;
+    var h='<div class="chips">'+PUESTO.map(function(p){return '<button class="chip'+(r.done[p[0]]?" vis":"")+(r.sel===p[0]?" sel":"")+'" data-act="p1-nom" data-v="'+p[0]+'">'+(r.done[p[0]]?"✔ ":"")+p[1]+'</button>';}).join("")+'</div>';
+    h+='<div class="recs">'+ORDEN_PUESTO.map(function(id){var p=PUESTO.filter(function(x){return x[0]===id;})[0];return '<button class="rec'+(r.done[id]?" vis":"")+'" data-act="p1-rec" data-v="'+id+'">'+(r.done[id]?'<b>✔ '+p[1]+'</b>':"")+p[2]+'</button>';}).join("")+'</div>';
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return Object.keys(S.p1.done).length===PUESTO.length;}},
+ {t:"2. Conocer la ventana",ayuda:"Pulsa un <b>nombre</b> y después la <b>parte de la ventana</b> donde está. Las partes unidas se marcan en verde.",
+  html:function(){
+    var r=S.p2;
+    var h='<div class="chips">'+ZONAS.map(function(z){return '<button class="chip'+(r.done[z[0]]?" vis":"")+(r.sel===z[0]?" sel":"")+'" data-act="p2-nom" data-v="'+z[0]+'">'+(r.done[z[0]]?"✔ ":"")+z[1]+'</button>';}).join("")+'</div>';
+    h+=calc({zonas:true,vis:r.done,sel:r.zsel});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return Object.keys(S.p2.done).length===ZONAS.length;}},
+ {t:"3. Crear el archivo",ayuda:"Crea una hoja de cálculo nueva: <b>Fitxer › Nou › Full de càlcul</b>.",
+  html:function(){
+    var r=S.p3;
+    var h=calc({vacio:!r.abierto,titulo:r.abierto?"Sense títol 1":"LibreOffice",menus:!r.abierto,menu:r.menu,desp:r.menu==="Fitxer"?despFitxer(r.sub):""});
+    if(r.abierto)h+=msg("✔ <b>¡Muy bien!</b> Ya tienes una hoja de cálculo nueva. Fíjate en el título: todavía se llama <b>Sense títol 1</b> porque no la has guardado.",true);
+    else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p3.abierto;}},
+ {t:"4. Guardarlo bien",ayuda:"Guarda el archivo con <b>Fitxer › Anomena i guarda</b>. Nombre: <b>Kiosco_FPB_</b> y tu nombre, sin espacios ni tildes. Tipo: <b>ODS</b>.",
+  html:function(){
+    var r=S.p4, dlg="";
+    if(r.dialeg){
+      dlg='<div class="dialeg"><div class="dt">Anomena i guarda</div><div class="dc">'+
+        '<label for="dNom">Nom:</label><input type="text" id="dNom" value="'+esc(r.nombre)+'" placeholder="Kiosco_FPB_Lucia" autocomplete="off">'+
+        '<label for="dTipus">Tipus de fitxer:</label><select id="dTipus"><option value="">— Tria un tipus —</option>'+
+        [["ods","Full de càlcul ODF (.ods)"],["xlsx","Excel 2007-365 (.xlsx)"],["csv","Text CSV (.csv)"]].map(function(t){return '<option value="'+t[0]+'"'+(r.tipo===t[0]?" selected":"")+'>'+t[1]+'</option>';}).join("")+'</select>'+
+        '<div class="db"><button data-act="p4-cancel">Cancel·la</button><button class="p" data-act="p4-guarda">Guarda</button></div></div></div>';
+    }
+    var h=calc({titulo:r.guardado?r.archivo:"Sense títol 1",menus:!r.guardado&&!r.dialeg,menu:r.menu,desp:r.menu==="Fitxer"?despFitxer(false):"",dialeg:dlg});
+    if(r.guardado)h+=msg("✔ <b>¡Perfecto!</b> El título de la ventana ya muestra <b>"+esc(r.archivo)+"</b>: el archivo está guardado en formato ODS.",true);
+    else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p4.guardado;}},
+ {t:"5. Las hojas del kiosco",ayuda:"Haz <b>doble clic</b> en una pestaña para cambiarle el nombre. Con el botón <b>+</b> añades una hoja. Necesitamos, en este orden: <b>Productos, Compras, Ventas y Resumen</b>.",
+  html:function(){
+    var r=S.p5, dlg="";
+    if(r.ren!==null){
+      dlg='<div class="dialeg"><div class="dt">Nom del full</div><div class="dc"><label for="dFull">Nom:</label><input type="text" id="dFull" value="'+esc(r.val)+'" autocomplete="off">'+
+        '<div class="db"><button data-act="p5-cancel">Cancel·la</button><button class="p" data-act="p5-ok">D\'acord</button></div></div></div>';
+    }
+    var h=calc({titulo:S.p4.archivo||"Kiosco_FPB.ods",tabs:r.tabs,act:r.act,tabsAct:r.ren===null,dialeg:dlg});
+    h+='<div class="msg info">Objetivo: '+HOJAS.map(function(n,i){return (r.tabs[i]===n?"✔ ":"⬜ ")+"<b>"+n+"</b>";}).join(" · ")+'</div>';
+    if(okHojas())h+=bloqueFinPractica(); else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:okHojas,ultimo:true}
+];
+function okHojas(){return S.p5.tabs.length===HOJAS.length&&HOJAS.every(function(n,i){return S.p5.tabs[i]===n;});}
+function bloqueFinPractica(){
+  return '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
+    '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha</b> (Parte 2). Después harás lo mismo en tu <b>Calc de verdad</b> (Parte 3).</div>';
+}
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[3]);}).join("");};}
+function okSec(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["¿Para qué usaremos Calc en el kiosco?",["Para escribir una carta","Para guardar productos y calcular el dinero","Para dibujar el logotipo"],1,"Calc organiza datos en filas y columnas y hace cálculos con ellos."],
+        ["Un archivo de Calc puede tener…",["Solo una hoja","Varias hojas, cada una en una pestaña","Ninguna hoja"],1,"El archivo es como una libreta: cada pestaña de abajo es una hoja."]];
+var F2=[["Es la primera vez que guardas un archivo nuevo. ¿Qué eliges?",["Fitxer › Anomena i guarda","Fitxer › Tanca","Fitxer › Obri"],0,"La primera vez eliges la carpeta, el nombre y el tipo con Anomena i guarda."],
+        ["Ya guardaste el archivo y has añadido datos. ¿Qué pulsas para guardar los cambios?",["Fitxer › Nou","Fitxer › Guarda (Ctrl + S)","Cerrar sin guardar"],1,"Guarda actualiza el mismo archivo, con el mismo nombre y en la misma carpeta."]];
+var F3=[["Quieres seguir trabajando en el kiosco con todas las opciones de Calc. ¿Qué formato usas?",[".ods",".pdf",".csv"],0,"ODS es el formato propio de Calc: lo conserva todo."],
+        ["Tienes que enviar el archivo a alguien que usa Microsoft Excel.",[".csv",".xlsx",".pdf"],1,"XLSX es el formato de Excel. Guarda también una copia en ODS."],
+        ["Quieres entregar el resultado final para que se lea y no se modifique.",[".ods",".xlsx",".pdf"],2,"El PDF se ve igual en cualquier ordenador y no se modifica fácilmente."]];
+var F4=[["¿Qué nombre de archivo es correcto?",["kiosco final de verdad.ods","Kiosco_FPB_Lucia.ods","KIOSCO!!.ods"],1,"Sin espacios, sin signos raros y con un nombre que se entiende."],
+        ["¿Por qué no ponemos tildes ni ñ en el nombre del archivo?",["Porque quedan feas","Porque algunos programas y plataformas pueden dar problemas con ellas","Porque Calc no deja escribirlas"],1,"Así el archivo se abre y se sube a Aules sin problemas en cualquier ordenador."]];
+var F5=[["¿Dónde debe estar la parte de arriba de la pantalla?",["Por encima de la cabeza","A la altura de los ojos o un poco por debajo","A la altura de la mesa"],1,"Así no doblas el cuello hacia arriba ni hacia abajo."],
+        ["¿Qué es mejor para descansar?",["Una pausa larga al final del día","Pausas cortas y frecuentes","No hacer pausas"],1,"Descansar unos minutos cada hora evita el cansancio."],
+        ["Tienes una ventana justo detrás de la pantalla. ¿Qué haces?",["Nada, así hay más luz","Cambio la pantalla de sitio o bajo la persiana para evitar el deslumbramiento","Subo el brillo al máximo"],1,"La luz debe llegar de lado para evitar reflejos y deslumbramientos."]];
+var LISTAS={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5};
+
+var FICHA=[
+ {t:"1. Las hojas de cálculo",ayuda:"Dos preguntas para empezar.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Guarda o Anomena i guarda",ayuda:"¿Qué opción del menú <b>Fitxer</b> eliges?",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. ¿Qué formato elijo?",ayuda:"Elige el formato adecuado para cada situación.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. El nombre del archivo",ayuda:"Un buen nombre ayuda a encontrar y entregar el archivo.",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Trabajar de forma saludable",ayuda:"Tres preguntas sobre tu puesto de trabajo.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Preparar tu puesto para trabajar de forma saludable.</li><li>Reconocer las partes de la ventana de Calc.</li><li>Crear un archivo con Fitxer › Nou.</li><li>Guardarlo con un nombre correcto en formato ODS.</li><li>Crear las hojas del kiosco y cambiarles el nombre.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.01_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado el Calc virtual (Parte 1). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> haz la <b>Parte 3</b> en tu Calc y sube a Aules este PDF y tu archivo <b>Kiosco_FPB_Nombre.ods</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){var n=PASOS.length;if(paso===n-1)return "¡Último paso!";if(paso===0)return "¡Vamos allá!";return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas · S04.01":"🧮 Calc virtual · S04.01";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+  var fo=$("dNom")||$("dFull"); if(fo){fo.focus(); var v=fo.value; fo.value=""; fo.value=v;}
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== comprobaciones ===== */
+function unirPuesto(){
+  var r=S.p1; if(!r.sel||!r.rec)return;
+  var p=PUESTO.filter(function(x){return x[0]===r.sel;})[0];
+  if(r.sel===r.rec){r.done[r.sel]=true;intento("puesto_"+r.sel,true);r.msg="✔ <b>"+elogio(semilla(r.sel))+"</b> "+p[1]+": "+p[2];r.ok=true;}
+  else{intento("puesto_"+r.sel,false);error("puesto");r.msg="¡Casi! Esa recomendación no es de <b>"+p[1].toLowerCase()+"</b>. ¡Prueba otra vez!";r.ok=false;}
+  r.sel=null;r.rec=null;
+}
+function unirZona(){
+  var r=S.p2; if(!r.sel||!r.zsel)return;
+  var z=zona(r.sel);
+  if(r.sel===r.zsel){r.done[r.sel]=true;intento("zona_"+r.sel,true);r.msg="✔ <b>"+elogio(semilla(r.sel))+"</b> "+z[1]+": "+z[2];r.ok=true;r.sel=null;r.zsel=null;}
+  else{intento("zona_"+r.sel,false);error("ventana");r.msg="¡Casi! Ahí no está «<b>"+z[1]+"</b>». Esa parte es: "+zona(r.zsel)[1]+". ¡Prueba otra vez!";r.ok=false;r.zsel=null;}
+}
+function comprobarGuardado(){
+  var r=S.p4, n=(r.nombre||"").trim().replace(/\.ods$/i,"");
+  var m="";
+  if(!n)m="Escribe el nombre del archivo en <b>Nom</b>.";
+  else if(/\s/.test(n))m="El nombre no puede tener <b>espacios</b>. Usa el guion bajo: <b>Kiosco_FPB_Lucia</b>.";
+  else if(/[áéíóúàèìòùäëïöüñçÁÉÍÓÚÀÈÌÒÙÑÇ]/.test(n))m="Quita las <b>tildes</b> y la <b>ñ</b> del nombre: así no dará problemas en ningún ordenador.";
+  else if(!/^kiosco_fpb_/i.test(n))m="El nombre debe empezar por <b>Kiosco_FPB_</b>.";
+  else if(!/^kiosco_fpb_[A-Za-z]+$/i.test(n))m="Detrás de <b>Kiosco_FPB_</b> escribe solo tu nombre, con letras.";
+  else if(!r.tipo)m="Elige el <b>Tipus de fitxer</b>.";
+  else if(r.tipo==="xlsx")m="XLSX es el formato de <b>Excel</b>. Para trabajar en Calc usamos <b>ODS</b>.";
+  else if(r.tipo==="csv")m="CSV solo guarda los datos de <b>una hoja</b>, sin fórmulas ni formatos. Elige <b>ODS</b>.";
+  if(m){intento("guardar",false);error("guardar");r.msg=m;r.ok=false;return;}
+  intento("guardar",true);
+  r.guardado=true;r.dialeg=false;r.archivo="Kiosco_FPB_"+n.replace(/^kiosco_fpb_/i,"")+".ods";r.msg="";r.ok=true;
+}
+function finPractica(){upd(function(o){o.practica={ok:true,t:ahora(),archivo:S.p4.archivo,hojas:S.p5.tabs.slice()};});}
+function comprobarHoja(){
+  var r=S.p5, v=(r.val||"").trim(), i=r.ren, cap=v.charAt(0).toUpperCase()+v.slice(1).toLowerCase();
+  if(!v){r.msg="Escribe el nombre de la hoja.";r.ok=false;return;}
+  if(HOJAS.indexOf(cap)<0){intento("hoja"+i,false);error("hojas");r.msg="«"+esc(v)+"» no es una de las hojas del kiosco. Revisa cómo se escribe: <b>"+HOJAS.join(", ")+"</b>.";r.ok=false;return;}
+  if(cap!==HOJAS[i]){intento("hoja"+i,false);error("hojas");r.msg="<b>"+cap+"</b> va en otra posición. Esta pestaña es la número "+(i+1)+": aquí va <b>"+HOJAS[i]+"</b>.";r.ok=false;return;}
+  intento("hoja"+i,true);r.tabs[i]=cap;r.ren=null;r.val="";r.ok=true;
+  r.msg="✔ <b>"+elogio(i)+"</b> La pestaña "+(i+1)+" ya se llama <b>"+cap+"</b>."+(r.tabs.length<HOJAS.length?" Pulsa <b>+</b> para añadir otra hoja.":"");
+  if(okHojas())finPractica();
+}
+
+/* ===== acciones ===== */
+function alClic(e){
+  var t=e.target;
+  var zEl=t.closest("[data-z]");
+  if(MODO==="practica"&&paso===1&&zEl){var r2=S.p2;r2.zsel=zEl.getAttribute("data-z");if(r2.done[r2.zsel]){r2.msg="✔ Ya la tienes unida: <b>"+zona(r2.zsel)[1]+"</b>.";r2.ok=true;r2.zsel=null;}else if(!r2.sel){r2.msg="👆 Ahora pulsa el <b>nombre</b> de esa parte.";r2.ok=false;}else unirZona();render();return;}
+  var mEl=t.closest("[data-menu]");
+  if(mEl){
+    var m=mEl.getAttribute("data-menu"), st=paso===2?S.p3:S.p4;
+    if(m!=="Fitxer"){st.menu=null;st.sub=false;st.msg="El menú <b>"+m+"</b> no es el que necesitamos. Las opciones para crear y guardar archivos están en <b>Fitxer</b>.";st.ok=false;error(paso===2?"crear":"guardar");}
+    else{st.menu=st.menu==="Fitxer"?null:"Fitxer";st.sub=false;st.msg="";}
+    render();return;
+  }
+  var fx=t.closest("[data-fx]");
+  if(fx){
+    var a=fx.getAttribute("data-fx");
+    if(paso===2){var r3=S.p3;
+      if(a==="nou"){r3.sub=true;r3.msg="";}
+      else{r3.menu=null;r3.sub=false;r3.msg="Para crear un archivo nuevo, la opción es <b>Nou</b>.";r3.ok=false;error("crear");intento("crear",false);}
+    }else if(paso===3){var r4=S.p4;r4.menu=null;
+      if(a==="anomena"){r4.dialeg=true;r4.msg="";}
+      else if(a==="guarda"){r4.dialeg=true;r4.msg="";r4.aviso=true;}
+      else{r4.msg="Esa opción no guarda el archivo. Busca <b>Anomena i guarda</b>.";r4.ok=false;error("guardar");intento("guardar",false);}
+    }
+    render();
+    if(paso===3&&S.p4.aviso){S.p4.aviso=false;S.p4.msg="ℹ️ Como el archivo es nuevo, <b>Guarda</b> también abre la ventana <b>Anomena i guarda</b>.";S.p4.ok=true;render();}
+    return;
+  }
+  var nv=t.closest("[data-nou]");
+  if(nv){var r3b=S.p3, v=nv.getAttribute("data-nou");
+    if(v==="calc"){r3b.abierto=true;r3b.menu=null;r3b.sub=false;intento("crear",true);}
+    else{var app={text:"Writer (textos)",pres:"Impress (presentaciones)",dib:"Draw (dibujos)"}[v];r3b.menu=null;r3b.sub=false;r3b.msg="Eso abriría <b>"+app+"</b>. Para el kiosco necesitamos un <b>Full de càlcul</b>.";r3b.ok=false;error("crear");intento("crear",false);}
+    render();return;
+  }
+  var tb=t.closest("[data-tab]");
+  /* Clic simple en una pestaña: solo se marca como activa, SIN redibujar.
+     Si se redibujara aquí, el segundo clic caería sobre otra pestaña y el doble clic no llegaría. */
+  if(tb&&paso===4){
+    S.p5.act=+tb.getAttribute("data-tab");
+    Array.prototype.forEach.call(document.querySelectorAll(".c-tab"),function(x){x.classList.toggle("act",x===tb);});
+    return;
+  }
+  if(t.closest("[data-mas]")&&paso===4){var r5=S.p5;
+    if(r5.tabs.length>=HOJAS.length){r5.msg="Ya tienes las cuatro hojas. No hace falta añadir más.";r5.ok=false;}
+    else if(r5.tabs.some(function(x){return /^Full\d+$/.test(x);})){r5.msg="Antes de añadir otra hoja, cambia el nombre de <b>"+r5.tabs.filter(function(x){return /^Full\d+$/.test(x);})[0]+"</b> (doble clic en su pestaña).";r5.ok=false;}
+    else{r5.tabs.push("Full"+(r5.tabs.length+1));r5.act=r5.tabs.length-1;r5.msg="";}
+    render();return;
+  }
+  var b=t.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act");
+  if(act==="p1-nom"){var r1=S.p1,v1=b.getAttribute("data-v");if(r1.done[v1]){r1.msg="✔ Ya la tienes unida.";r1.ok=true;}else{r1.sel=v1;r1.msg=r1.rec?"":"👆 Ahora pulsa su recomendación.";r1.ok=false;unirPuesto();}}
+  else if(act==="p1-rec"){var r1b=S.p1,v1b=b.getAttribute("data-v");if(r1b.done[v1b]){r1b.msg="✔ Esa recomendación ya está unida.";r1b.ok=true;}else{r1b.rec=v1b;if(!r1b.sel){r1b.msg="👆 Ahora pulsa la parte del puesto.";r1b.ok=false;}else unirPuesto();}}
+  else if(act==="p2-nom"){var r2b=S.p2,v2=b.getAttribute("data-v");if(r2b.done[v2]){r2b.msg="✔ Ya la tienes unida.";r2b.ok=true;}else{r2b.sel=v2;r2b.msg="👆 Ahora pulsa esa parte en la ventana de Calc.";r2b.ok=false;}}
+  else if(act==="p4-cancel"){S.p4.dialeg=false;S.p4.msg="Has cancelado. Vuelve a abrir <b>Fitxer › Anomena i guarda</b>.";S.p4.ok=false;}
+  else if(act==="p4-guarda"){var dn=$("dNom"),dt=$("dTipus");S.p4.nombre=dn?dn.value:"";S.p4.tipo=dt?dt.value:"";comprobarGuardado();}
+  else if(act==="p5-cancel"){S.p5.ren=null;S.p5.val="";S.p5.msg="";}
+  else if(act==="p5-ok"){var df=$("dFull");S.p5.val=df?df.value:"";comprobarHoja();}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v"),corr=LISTAS[sec][i][2];
+    if(vv!==corr)error(sec);
+    intento(sec+i,vv===corr);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+  }
+  else if(act==="descargar"){descargaPDF();return;}
+  render();
+}
+function alDobleClic(e){
+  var tb=e.target.closest("[data-tab]");
+  if(tb&&MODO==="practica"&&paso===4){var i=+tb.getAttribute("data-tab");S.p5.ren=i;S.p5.act=i;S.p5.val=S.p5.tabs[i];S.p5.msg="";render();}
+}
+function alEscribir(e){
+  if(e.target.id==="dNom"){S.p4.nombre=e.target.value;return;}
+  if(e.target.id==="dTipus"){S.p4.tipo=e.target.value;return;}
+  if(e.target.id==="dFull"){S.p5.val=e.target.value;return;}
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value;upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.01_Resultado_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+function alTecla(e){
+  if(e.key!=="Enter")return;
+  if(e.target.id==="dNom"){e.preventDefault();S.p4.nombre=e.target.value;var dt=$("dTipus");S.p4.tipo=dt?dt.value:"";comprobarGuardado();render();}
+  else if(e.target.id==="dFull"){e.preventDefault();S.p5.val=e.target.value;comprobarHoja();render();}
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","›":">","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.01 · Abrimos el kiosco",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el Calc virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);
+  if(pr.ok){t("Archivo guardado como: "+pr.archivo,11,false,2,true);t("Hojas creadas: "+(pr.hojas||[]).join(", "),11,false,2,true);}
+  t("Fallos al preparar el puesto: "+(o.err.puesto||0),10,false,2,true);
+  t("Fallos al reconocer la ventana: "+(o.err.ventana||0),10,false,2,true);
+  t("Fallos al crear el archivo: "+(o.err.crear||0),10,false,2,true);
+  t("Fallos al guardar el archivo: "+(o.err.guardar||0),10,false,2,true);
+  t("Fallos al crear las hojas: "+(o.err.hojas||0),10,false,2,true);
+  t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Las hojas de cálculo",F1);
+  sec("f2","Guarda o Anomena i guarda",F2);
+  sec("f3","Formatos de archivo",F3);
+  sec("f4","El nombre del archivo",F4);
+  sec("f5","Trabajar de forma saludable",F5);
+  t("3. Práctica en Calc",12,true);
+  t("Entrega en Aules el archivo Kiosco_FPB_Nombre.ods con las hojas Productos, Compras, Ventas y Resumen.",11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(){
+  var o=cargar(),f=nombrePDF(o.alumno);
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("dblclick",alDobleClic);
+  $("card").addEventListener("input",alEscribir);
+  $("card").addEventListener("change",alEscribir);
+  $("card").addEventListener("keydown",alTecla);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>
