@@ -94,3 +94,26 @@ nav:
       - 11. S03.05: up03/11-s03-05.md
       - 12. Seguridad, salud y medioambiente en las operaciones de reprografía: up03/12-seguridad.md
       - 13. S03.06: up03/13-s03-06.md
+  - UP04:
+      - 1. Introducción: up04/01-index.md
+      - 2. ¿Qué es una hoja de cálculo?: up04/02-introduccion.md
+      - 3. Primeros pasos con LibreOffice Calc: up04/03-entorno-calc.md
+      - 4. Trabajar con el ordenador de forma saludable: up04/04-ergonomia.md
+      - 5. S04.01: up04/s04-01.md
+      - 6. Filas, columnas, celdas y rangos: up04/05-celdas-rangos.md
+      - 7. Introducir, modificar y copiar datos: up04/06-introducir-datos.md
+      - 8. S04.02: up04/s04-02.md
+      - 9. Introducir datos con periféricos y aplicaciones: up04/07-perifericos.md
+      - 10. S04.03: up04/s04-03.md
+      - 11. Formato de datos y celdas: up04/08-formato.md
+      - 12. S04.04: up04/s04-04.md
+      - 13. Fórmulas y operadores: up04/09-formulas.md
+      - 14. S04.05: up04/s04-05.md
+      - 15. Copiar fórmulas y utilizar referencias: up04/10-referencias.md
+      - 16. Funciones básicas: up04/11-funciones.md
+      - 17. S04.06: up04/s04-06.md
+      - 18. Dar formato para comprender los datos: up04/12-formato-condicional.md
+      - 19. Revisar, imprimir y exportar: up04/13-revisar-exportar.md
+      - 20. Conclusión del proyecto: up04/14-conclusion.md
+      - 21. S04.07: up04/s04-07.md
+      - 22. Resumen y preguntas finales: up04/15-resumen.md

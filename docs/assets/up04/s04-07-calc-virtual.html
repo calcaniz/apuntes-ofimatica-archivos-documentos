@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calc virtual · S04.07</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:980px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.msg code,.ayuda code,.tarea code{font-size:.92em;background:#f3ece2;padding:0 4px;border-radius:4px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.op.marcada{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.opciones{display:flex;flex-direction:column;gap:10px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.tarea{font-size:20px;font-weight:700;background:#fff3e0;border:2px solid #ff8a00;border-radius:10px;padding:8px 14px;margin:8px 0}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+.tarjetas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}
+@media (max-width:700px){.tarjetas{grid-template-columns:1fr}}
+.tj{border:2px solid var(--borde);border-radius:12px;padding:10px;text-align:center;background:#fffdfa}
+.tj b{display:block;font-size:28px;color:var(--secundario)}
+.tj.verde b{color:var(--ok)}
+
+/* ===== Ventana de Calc simulada ===== */
+.calc{border:2px solid #9e9e9e;border-radius:8px;overflow:hidden;background:#fff;font-size:14px;line-height:1.3;position:relative;user-select:none;margin-top:6px}
+.c-tit{background:#3c3c3c;color:#fff;padding:6px 10px;font-size:14px;display:flex;justify-content:space-between}
+.c-menu{display:flex;flex-wrap:wrap;gap:2px;background:#f3f3f3;border-bottom:1px solid #ddd;padding:3px 4px}
+.c-menu span{padding:3px 8px;border-radius:4px}
+.c-menu span[data-menu]{cursor:pointer}
+.c-menu span[data-menu]:hover,.c-menu span.abierto{background:#d6e4f5}
+.c-tool{display:flex;gap:5px;background:#f9f9f9;border-bottom:1px solid #ddd;padding:5px 8px;color:#555}
+.c-tool i{font-style:normal;border:1px solid #ccc;border-radius:4px;padding:1px 8px;background:#fff}
+.c-form{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid #ddd;background:#fafafa}
+.c-nom{width:90px;border:1px solid #bbb;background:#fff;padding:2px 6px;font-family:Consolas,Menlo,monospace}
+.c-fx{color:#555;font-style:italic}
+.c-barra{flex:1;border:1px solid #bbb;background:#fff;padding:2px 6px;min-height:22px;font-family:Consolas,Menlo,monospace;white-space:nowrap;overflow:hidden;color:#1a237e}
+.c-area table{border-collapse:collapse;table-layout:fixed;width:100%}
+.c-area th{background:#efefef;border:1px solid #d0d0d0;font-weight:400;color:#444;font-size:12px;height:20px}
+.c-area th.esq{width:30px}
+.c-area td{border:1px solid #c9c9c9;height:23px;padding:0 4px;white-space:nowrap;overflow:hidden;font-size:13.5px;cursor:cell}
+.c-area td.num{text-align:right}
+.c-area td.cab{font-weight:700;text-align:center;background:#fbd5ae}
+.c-area td.etq{font-weight:700;text-align:right;background:#fdf4e9}
+.c-area td.err{color:#c62828;font-weight:700;text-align:right}
+.c-area td.dolent{background:#ffc7ce;color:#9c0006}
+.c-area td.rec{color:#c62828;font-weight:700}
+.c-area td.suf{color:#2e7d32;font-weight:700}
+.c-area td.rng{box-shadow:inset 0 0 0 999px rgba(30,111,217,.16)}
+.c-area td.act{outline:2px solid #1e6fd9;outline-offset:-2px}
+.c-area td.hallado{box-shadow:inset 0 0 0 3px #2e7d32}
+.c-tabs{display:flex;align-items:flex-end;gap:2px;background:#ececec;border-top:1px solid #ccc;padding:4px 6px 0}
+.c-tab{background:#dcdcdc;border:1px solid #bdbdbd;border-bottom:0;padding:4px 12px;border-radius:5px 5px 0 0;font-size:14px}
+.c-tab.act{background:#fff;font-weight:700}
+.c-estat{background:#f3f3f3;border-top:1px solid #ccc;padding:3px 10px;color:#555;font-size:13px;display:flex;justify-content:space-between}
+.desp{position:absolute;background:#fff;border:1px solid #9e9e9e;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:5;min-width:220px;padding:4px 0;font-size:15px}
+.desp div{padding:6px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:18px}
+.desp div:hover{background:#d6e4f5}
+.desp div.sep{border-top:1px solid #ddd;padding:0;margin:3px 0;cursor:default}
+.desp small{color:#777}
+.dialeg{position:absolute;left:50%;top:56px;transform:translateX(-50%);width:min(94%,580px);background:#f7f7f7;border:1px solid #888;box-shadow:0 6px 22px rgba(0,0,0,.35);z-index:6;border-radius:6px;overflow:hidden;font-size:15px}
+.dialeg .dt{background:#3c3c3c;color:#fff;padding:6px 10px}
+.dialeg .dc{padding:12px}
+.dialeg label{display:block;margin:8px 0 3px;font-weight:600}
+.dialeg select,.dialeg input{font:inherit;font-size:15px;padding:5px 8px;border:1px solid #999;border-radius:4px;background:#fff;min-height:0;width:auto}
+.dialeg .fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dialeg .db{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.dialeg .db button{font:inherit;font-size:15px;padding:6px 16px;border:1px solid #888;border-radius:4px;background:#fff;cursor:pointer}
+.dialeg .db button.p{background:#1e6fd9;color:#fff;border-color:#1556a8}
+/* previsualización de impresión */
+.previ{background:#7a7a7a;padding:18px;display:flex;justify-content:center;gap:18px;border-radius:8px;margin-top:6px;min-height:330px;align-items:center}
+.pagina{background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4);position:relative;overflow:hidden;padding:14px}
+.pagina.vert{width:210px;height:297px}
+.pagina.hori{width:330px;height:233px}
+.pagina table{border-collapse:collapse;font-size:6.5px;width:100%}
+.pagina td{border:1px solid #999;padding:1px 2px;white-space:nowrap}
+.pagina tr:first-child td{background:#fbd5ae;font-weight:700}
+.pagina .np{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:9px;color:#666}
+.orient{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧮 Calc virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0407-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.07_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos del kiosco (ya calculados) ===== */
+var COLS=["A","B","C","D","E","F","G","H"];
+function partir(r){var m=/^([A-Z])(\d+)$/.exec(r);return {c:COLS.indexOf(m[1]),f:+m[2]};}
+function ref(c,f){return COLS[c]+f;}
+function rango(a,b){var x=partir(a),y=partir(b),r=[];for(var f=Math.min(x.f,y.f);f<=Math.max(x.f,y.f);f++)for(var c=Math.min(x.c,y.c);c<=Math.max(x.c,y.c);c++)r.push(ref(c,f));return r;}
+function txtRango(a,b){var r=rango(a,b);return r.length===1?r[0]:r[0]+":"+r[r.length-1];}
+function eur(n){return n.toFixed(2).replace(".",",")+" €";}
+function pct(n){return (n*100).toFixed(2).replace(".",",")+" %";}
+var PROD=[["Agua",1,20,24],["Zumo de naranja",1.5,15,18],["Refresco de cola",1.2,22,24],["Batido de cacao",1,10,12],["Bocadillo de tortilla",2.5,14,15],
+ ["Bocadillo de jamón",2.5,12,15],["Sándwich vegetal",2,6,10],["Manzana",0.5,18,25],["Galletas",0.8,16,20],["Barrita de cereales",0.7,11,20]];
+var TOTAL=185.4;
+/* hoja Ventas completa: texto que se ve en cada celda y la fórmula (si la hay) */
+function hojaVentas(){
+  var v={},f={};
+  ["Producto","Precio","Vendidas","Ingresos","% del total","Existencias","Quedan","Estado"].forEach(function(t,i){v[COLS[i]+"1"]=t;});
+  PROD.forEach(function(p,i){var r=i+2,ing=p[1]*p[2],q=p[3]-p[2];
+    v["A"+r]=p[0];v["B"+r]=eur(p[1]);v["C"+r]=String(p[2]);v["D"+r]=eur(ing);v["E"+r]=pct(ing/TOTAL);v["F"+r]=String(p[3]);v["G"+r]=String(q);v["H"+r]=q<5?"RECOMPRAR":"SUFICIENTE";
+    f["D"+r]="=B"+r+"*C"+r;f["E"+r]="=D"+r+"/$D$12";f["G"+r]="=F"+r+"-C"+r;f["H"+r]='=SI(G'+r+'<5;"RECOMPRAR";"SUFICIENTE")';});
+  v.C12="Total";v.D12=eur(TOTAL);f.D12="=SUMA(D2:D11)";
+  return {v:v,f:f};
+}
+
+/* ===== estado ===== */
+var S={
+  p1:{a:"A1",b:"A1",menu:null,sub:false,dialeg:false,op:"",val:"",estil:"",aplicado:false,msg:"",ok:false},
+  p2:{hallados:{},a:"A1",msg:"",ok:false},
+  p3:{orient:"vert",ok3:false,msg:"",ok:false},
+  p4:{menu:null,sub:false,dialeg:null,nombre:"Kiosco_FPB_Lucia",hecho:false,msg:"",ok:false},
+  p5:{decision:null,datos:{},hecho:false,msg:"",ok:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+var MENUS=["Fitxer","Edita","Visualitza","Insereix","Format","Estils","Full","Dades","Eines","Finestra","Ajuda"];
+function calc(op){
+  var h=hojaVentas(), v=Object.assign({},h.v,op.cambia||{}), fm=Object.assign({},h.f,op.cambiaF||{});
+  var a=op.a||"A1", b=op.b||a, sel=rango(a,b), filas=12;
+  var anchos=[130,70,70,80,80,85,65,105];
+  var hh='<div class="calc"'+(op.dialeg?' style="min-height:470px"':'')+'>';
+  hh+='<div class="c-tit"><span>Kiosco_FPB_Lucia.ods — LibreOffice Calc</span><span>— ▢ ✕</span></div>';
+  hh+='<div class="c-menu">'+MENUS.map(function(m){return '<span'+(op.menus&&op.menus.indexOf(m)>=0?' data-menu="'+m+'"':"")+(op.menu===m?' class="abierto"':"")+'>'+m+'</span>';}).join("")+'</div>';
+  if(op.desp)hh+=op.desp;
+  hh+='<div class="c-tool"><i>💾</i><i>↶</i><i>↷</i><i>🖌</i><i style="font-weight:700">N</i><i>€</i><i>%</i><i>Σ</i></div>';
+  hh+='<div class="c-form"><span class="c-nom">'+esc(txtRango(a,b))+'</span><span class="c-fx">ƒx Σ =</span><span class="c-barra">'+esc(fm[a]||v[a]||"")+'</span></div>';
+  hh+='<div class="c-area"><table><colgroup><col style="width:30px">'+anchos.map(function(w){return '<col style="width:'+w+'px">';}).join("")+'</colgroup><tr><th class="esq"></th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join("")+'</tr>';
+  for(var f=1;f<=filas;f++){
+    hh+='<tr><th>'+f+'</th>';
+    COLS.forEach(function(c){
+      var r=c+f, t=v[r]!==undefined?v[r]:"", cls=[];
+      if(f===1&&t)cls.push("cab");
+      else if(r==="C12")cls.push("etq");
+      else if(/^#/.test(t))cls.push("err");
+      else if(c==="H")cls.push(t==="RECOMPRAR"?"rec":"suf");
+      else if(/^-?[\d,]+( €| %)?$/.test(t))cls.push("num");
+      if(op.dolent&&c==="G"&&f>1&&f<12&&+t<5)cls.push("dolent");
+      if(op.hallados&&op.hallados[r])cls.push("hallado");
+      if(sel.length>1&&sel.indexOf(r)>=0)cls.push("rng");
+      if(r===a)cls.push("act");
+      hh+='<td data-c="'+r+'" class="'+cls.join(" ")+'">'+esc(t)+'</td>';
+    });
+    hh+='</tr>';
+  }
+  hh+='</table></div>';
+  hh+='<div class="c-tabs">'+["Productos","Compras","Ventas","Resumen"].map(function(n){return '<span class="c-tab'+(n==="Ventas"?" act":"")+'">'+n+'</span>';}).join("")+'</div>';
+  hh+='<div class="c-estat"><span>Full 3 de 4</span><span>100 %</span></div>';
+  if(op.dialeg)hh+=op.dialeg;
+  return hh+'</div>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* ===== PRÁCTICA ===== */
+var ERRORES={
+  D4:{t:"«26,4» sin formato de moneda",x:"Los ingresos del refresco aparecen como <b>26,4</b>, sin €: a esta celda le falta el formato <b>Moneda</b>."},
+  D5:{t:"#VALUE! en los ingresos del batido",x:"<b>#VALUE!</b>: en <b>C5</b> pone «diez» con letras. La fórmula necesita el número <b>10</b>."},
+  D12:{t:"Total al que le falta un producto",x:"El total usa <code>=SUMA(D2:D10)</code>: se ha olvidado la fila 11 (la barrita). Por eso da 177,70 € en lugar de 185,40 €."}
+};
+var REVISION={cambia:{D4:"26,4",C5:"diez",D5:"#VALUE!",D12:"177,70 €",E5:"#VALUE!"},cambiaF:{D12:"=SUMA(D2:D10)",C5:"diez"}};
+
+var PRACTICA=[
+ {t:"1. Formato condicional",ayuda:"Queremos ver de un vistazo los productos que se agotan. Selecciona <b>G2:G11</b> (Quedan) y abre <b>Format › Condicional › Condició…</b>: si el valor es <b>menor que 5</b>, aplica el estilo <b>Dolent</b> (rojo).",
+  html:function(){
+    var r=S.p1, dlg="";
+    if(r.dialeg){
+      dlg='<div class="dialeg"><div class="dt">Formatació condicional per a G2:G11</div><div class="dc"><b>Condició 1</b>'+
+        '<div class="fila" style="margin-top:6px"><select disabled><option>El valor de la cel·la és</option></select>'+
+        '<select id="cOp"><option value="">— tria —</option>'+[["igual","igual a"],["menor","menor que"],["major","més gran que"],["entre","entre"]].map(function(o){return '<option value="'+o[0]+'"'+(r.op===o[0]?" selected":"")+'>'+o[1]+'</option>';}).join("")+'</select>'+
+        '<input id="cVal" type="text" size="4" value="'+esc(r.val)+'" placeholder="valor"></div>'+
+        '<label for="cEst">Aplica l\'estil</label><select id="cEst"><option value="">— tria —</option>'+[["Dolent","Dolent (fons roig)"],["Bo","Bo (fons verd)"],["Neutral","Neutral (fons groc)"]].map(function(o){return '<option value="'+o[0]+'"'+(r.estil===o[0]?" selected":"")+'>'+o[1]+'</option>';}).join("")+'</select>'+
+        '<div class="db"><button data-act="p1-cancel">Cancel·la</button><button class="p" data-act="p1-ok">D\'acord</button></div></div></div>';
+    }
+    var desp="";
+    if(r.menu==="Format")desp='<div class="desp" style="left:268px;top:58px"><div data-fx="cel">Cel·les… <small>Ctrl+1</small></div><div data-fx="files">Files <small>▸</small></div><div data-fx="cond">Condicional <small>▸</small></div></div>'+
+      (r.sub?'<div class="desp" style="left:490px;top:120px"><div data-fx="condicio">Condició…</div><div data-fx="escala">Escala de colors…</div><div data-fx="barra">Barra de dades…</div></div>':"");
+    var h=calc({a:r.a,b:r.b,menus:r.dialeg||r.aplicado?null:["Format"],menu:r.menu,desp:desp,dialeg:dlg,dolent:r.aplicado});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p1.aplicado;}},
+ {t:"2. La revisión final",ayuda:"Antes de entregar, revisamos. En esta copia de la hoja <b>Ventas</b> hay <b>3 errores</b> escondidos. Pulsa cada celda que tenga un problema.",
+  html:function(){
+    var r=S.p2, n=Object.keys(r.hallados).length;
+    var h='<div class="msg info" style="margin-top:0">Errores encontrados: <b>'+n+' de 3</b> '+Object.keys(ERRORES).map(function(k){return r.hallados[k]?"✔":"⬜";}).join(" ")+'</div>';
+    h+=calc({a:r.a,cambia:REVISION.cambia,cambiaF:REVISION.cambiaF,hallados:r.hallados});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return Object.keys(S.p2.hallados).length===3;}},
+ {t:"3. Preparar la impresión",ayuda:"Esta es la <b>previsualización de impresión</b> (<b>Ctrl + Mayús + O</b>) de la hoja Ventas. La tabla es muy ancha. Elige la orientación para que quepa entera en una sola página.",
+  html:function(){
+    var r=S.p3, hv=hojaVentas().v, vert=r.orient==="vert";
+    var cols=vert?COLS.slice(0,5):COLS;
+    function tabla(cs){var t='<table>';for(var f=1;f<=12;f++){t+='<tr>'+cs.map(function(c){return '<td>'+esc(hv[c+f]||"")+'</td>';}).join("")+'</tr>';}return t+'</table>';}
+    var h='<div class="orient"><button class="btn'+(vert?" pri":"")+'" data-act="p3-or" data-v="vert">📄 Vertical</button><button class="btn'+(!vert?" pri":"")+'" data-act="p3-or" data-v="hori">📄 Horizontal</button></div>';
+    h+='<div class="previ">';
+    if(vert)h+='<div class="pagina vert">'+tabla(COLS.slice(0,5))+'<div class="np">Pàgina 1 de 2</div></div><div class="pagina vert">'+tabla(COLS.slice(5))+'<div class="np">Pàgina 2 de 2</div></div>';
+    else h+='<div class="pagina hori">'+tabla(COLS)+'<div class="np">Pàgina 1 de 1</div></div>';
+    h+='</div>';
+    if(!r.ok3)h+='<p style="margin:10px 0 0"><button class="btn pri" data-act="p3-ok">✔ Así está bien</button></p>';
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p3.ok3;}},
+ {t:"4. Exportar a PDF",ayuda:"Exporta el archivo con <b>Fitxer › Exporta com a › Exporta com a PDF</b>. Ponle el mismo nombre que al archivo del kiosco.",
+  html:function(){
+    var r=S.p4, dlg="", desp="";
+    if(r.menu==="Fitxer"){desp='<div class="desp" style="left:4px;top:58px"><div data-fx="nou">Nou <small>▸</small></div><div data-fx="obri">Obri… <small>Ctrl+O</small></div><div class="sep"></div><div data-fx="guarda">Guarda <small>Ctrl+S</small></div><div data-fx="anomena">Anomena i guarda…</div><div data-fx="exporta">Exporta com a <small>▸</small></div></div>';
+      if(r.sub)desp+='<div class="desp" style="left:230px;top:180px"><div data-fx="pdf">Exporta com a PDF…</div><div data-fx="exp">Exporta…</div></div>';}
+    if(r.dialeg==="opcions")dlg='<div class="dialeg"><div class="dt">Opcions de PDF</div><div class="dc"><div class="fila"><b>Interval:</b> <label style="display:inline;font-weight:400"><input type="radio" checked> Tot</label></div><p style="margin:10px 0 0;font-size:14px;color:#555">Deixa les opcions per defecte.</p><div class="db"><button data-act="p4-cancel">Cancel·la</button><button class="p" data-act="p4-exporta">Exporta</button></div></div></div>';
+    if(r.dialeg==="desa")dlg='<div class="dialeg"><div class="dt">Exporta</div><div class="dc"><b>Documents › Ofimatica › UP04</b><label for="pNom">Nom:</label><input id="pNom" type="text" style="width:100%" value="'+esc(r.nombre)+'"><label>Tipus de fitxer:</label><select disabled><option>PDF - Portable Document Format (.pdf)</option></select><div class="db"><button data-act="p4-cancel">Cancel·la</button><button class="p" data-act="p4-guarda">Guarda</button></div></div></div>';
+    var h=calc({menus:r.dialeg||r.hecho?null:["Fitxer"],menu:r.menu,desp:desp,dialeg:dlg,dolent:true});
+    if(r.hecho)h+=msg("✔ <b>¡Exportado!</b> Ya tienes <b>Kiosco_FPB_Lucia.pdf</b> para entregar o imprimir. Guarda también el <b>.ods</b>: es el único que puedes seguir modificando.",true);
+    else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p4.hecho;}},
+ {t:"5. ¿Abrimos el kiosco?",ayuda:"Es el momento de decidir con los datos de la hoja <b>Resumen</b>.",
+  html:function(){
+    var r=S.p5;
+    var h='<div class="tarjetas"><div class="tj">Total de gastos<b>113,15 €</b></div><div class="tj">Total de ingresos<b>185,40 €</b></div><div class="tj verde">Beneficio<b>72,25 €</b></div></div>';
+    h+='<div class="msg info" style="margin-top:0">Productos para <b>RECOMPRAR</b>: 8 de 10 (casi agotados). Sobran más <b>manzanas</b> (7) y <b>barritas</b> (9).</div>';
+    h+='<div class="pregunta"><b>1. ¿Qué decides?</b><div class="opciones">'+DECISIONES.map(function(d,i){return '<button class="op'+(r.decision===i?(i===1?" bien":" mal"):"")+'" data-act="p5-dec" data-v="'+i+'">'+esc(d[0])+'</button>';}).join("")+'</div>';
+    if(r.decision!==null)h+='<div class="msg '+(r.decision===1?"ok":"ko")+'">'+DECISIONES[r.decision][1]+'</div>';
+    h+='</div>';
+    if(r.decision===1){
+      h+='<div class="pregunta"><b>2. ¿Qué datos justifican tu decisión? Marca los dos correctos.</b><div class="opciones">'+DATOS.map(function(d,i){return '<button class="op'+(r.datos[i]?" marcada":"")+'" data-act="p5-dato" data-v="'+i+'">'+(r.datos[i]?"☑ ":"☐ ")+esc(d[0])+'</button>';}).join("")+'</div>';
+      h+='<p style="margin:10px 0 0"><button class="btn pri" data-act="p5-ok">✔ Comprobar</button></p></div>';
+    }
+    if(r.hecho)h+=bloqueFinPractica(); else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p5.hecho;},ultimo:true}
+];
+var DECISIONES=[
+ ["Abrimos con todos los productos y las mismas cantidades.","Hay beneficio, pero si repetimos las mismas cantidades nos quedaremos sin 8 productos y nos sobrarán manzanas y barritas. Mira bien los datos."],
+ ["Abrimos, pero cambiamos algunas cantidades: más de lo que se agota y menos de lo que sobra.","✔ <b>¡Muy bien pensado!</b> Hay beneficio (72,25 €) y los datos dicen qué hay que comprar más y qué menos."],
+ ["No abrimos el kiosco porque no es rentable.","Los datos dicen lo contrario: ingresamos 185,40 € y gastamos 113,15 €. ¡Sí es rentable!"]
+];
+var DATOS=[["El beneficio es de 72,25 €.",true],["Me gusta más el bocadillo de tortilla.",false],["8 productos están casi agotados y sobran manzanas y barritas.",true],["El logotipo es naranja.",false]];
+function bloqueFinPractica(){
+  return msg("✔ <b>¡Decisión justificada con datos!</b> Una hoja de cálculo no decide por nosotros, pero nos da la información para decidir mejor.",true)+
+    '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
+    '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha de repaso</b> (Parte 2) y después termina tu proyecto en tu <b>Calc de verdad</b> (Parte 3).</div>';
+}
+
+/* ===== FICHA (repaso de la unidad) ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[3]);}).join("");};}
+function okSec(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["¿Qué hace el formato condicional?",["Cambia el aspecto de una celda cuando cumple una regla","Cambia el valor de la celda","Borra los datos que no cumplen la regla"],0,"Por ejemplo, pone en rojo las existencias bajas."],
+        ["Si el valor de una celda con formato condicional cambia, ¿qué pasa?",["El color se actualiza solo","Hay que volver a aplicarlo","Se borra el formato"],0,"El formato condicional se recalcula automáticamente."],
+        ["¿Dónde está en nuestro Calc?",["Format › Condicional","Fitxer › Condicional","Dades › Ordena"],0,"Format › Condicional › Condició…"]];
+var F2=[["El total de una lista que llega hasta D11 es =SUMA(D2:D10). ¿Qué pasa?",["Falta sumar un producto","Está bien","Suma dos veces el último"],0,"El rango debe incluir todas las celdas: D2:D11."],
+        ["Antes de imprimir, ¿qué revisamos?",["La previsualización de impresión","El color del escritorio","El nombre del profesor"],0,"Así evitamos páginas vacías o tablas cortadas."],
+        ["Una tabla es muy ancha y no cabe en la página. ¿Qué orientación eliges?",["Vertical","Horizontal","Da igual"],1,"La orientación horizontal deja más anchura."]];
+var F3=[["¿Cómo se exporta a PDF en nuestro Calc?",["Fitxer › Exporta com a › Exporta com a PDF","Edita › PDF","Format › Cel·les"],0,"Así se crea una copia en PDF del documento."],
+        ["¿Por qué hay que conservar también el archivo .ods?",["Porque es el que podemos seguir modificando","Porque el PDF ocupa más","No hace falta conservarlo"],0,"El PDF sirve para entregar; el ODS, para seguir trabajando."],
+        ["¿En qué debe basarse la decisión final sobre el kiosco?",["En los datos de la hoja de cálculo","En los gustos personales","En lo que diga un amigo"],0,"La hoja nos da la información para decidir mejor."]];
+var F4=[["=B2*C2 copiada a la fila 5 queda…",["=B5*C5","=B2*C2","=B5*C2"],0,"Las referencias relativas cambian de fila."],
+        ["Para que todas las fórmulas dividan entre el total de D12 escribimos…",["=D2/D12","=D2/$D$12","=$D2/D12"],1,"$D$12 no cambia al copiar."],
+        ["¿Qué función calcula la media en nuestro Calc?",["MITJANA","PROMEDIO","MEDIA"],0,"En valenciano, la media es MITJANA."]];
+var F5=[["¿Cómo se llama la celda de la columna C y la fila 4?",["4C","C4","C-4"],1,"Primero la letra y después el número."],
+        ["¿Cómo escribes un precio de un euro y medio?",["1.50","1,50","1'50"],1,"Con coma decimal; con punto, Calc lo toma como texto."],
+        ["¿Dónde debe estar la parte de arriba de la pantalla?",["A la altura de los ojos o un poco por debajo","Por encima de la cabeza","A la altura de la mesa"],0,"Así no fuerzas el cuello."]];
+var LISTAS={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5};
+
+var FICHA=[
+ {t:"1. Formato condicional",ayuda:"Repaso: dar formato para entender los datos.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Revisar e imprimir",ayuda:"Repaso: antes de entregar.",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. PDF y conclusión",ayuda:"Repaso: el final del proyecto.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. Fórmulas y funciones",ayuda:"Repaso: los cálculos del kiosco.",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Lo básico",ayuda:"Repaso: celdas, datos y salud.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>En esta unidad has aprendido a:</b><ul><li>Crear y organizar un libro de cálculo con varias hojas.</li><li>Introducir datos, códigos e imágenes.</li><li>Dar formato para que se entienda.</li><li>Calcular con fórmulas, referencias y funciones.</li><li>Revisar, imprimir, exportar y decidir con datos.</li><li>Trabajar con el ordenador de forma saludable.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.07_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado el Calc virtual (Parte 1). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> haz la <b>Parte 3</b> en tu Calc y sube a Aules este PDF, tu archivo <b>Kiosco_FPB_Nombre.ods</b> y su versión <b>Kiosco_FPB_Nombre.pdf</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){var n=PASOS.length;if(paso===n-1)return "¡Último paso!";if(paso===0)return "¡Vamos allá!";return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de repaso · S04.07":"🧮 Calc virtual · S04.07";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function aceptar1(){
+  var r=S.p1, op=($("cOp")||{}).value, val=(($("cVal")||{}).value||"").trim(), est=($("cEst")||{}).value;
+  r.op=op;r.val=val;r.estil=est;
+  if(!op||!val||!est){r.msg="Completa la condición: el operador, el valor y el estilo.";r.ok=false;return;}
+  var m=[];
+  if(op!=="menor")m.push(op==="major"?"Con <b>més gran que</b> se marcarían los que tienen <b>muchas</b> unidades.":"La condición es que queden <b>menos de</b> 5: elige <b>menor que</b>.");
+  if(val.replace(",",".")!=="5")m.push("El valor límite es <b>5</b>.");
+  if(est!=="Dolent")m.push(est==="Bo"?"El verde (<b>Bo</b>) significa que todo va bien; para avisar usamos <b>Dolent</b> (rojo).":"Para avisar de que se agota, usa el estilo <b>Dolent</b> (rojo).");
+  if(m.length){intento("condicional",false);error("condicional");r.msg=m.join(" ");r.ok=false;return;}
+  intento("condicional",true);r.dialeg=false;r.aplicado=true;
+  r.msg="✔ <b>¡Perfecto!</b> Los productos con menos de 5 unidades se ven en <b>rojo</b>. Si el dato cambia, el color se actualiza solo.";r.ok=true;
+}
+function clicCelda1(c,shift){var r=S.p1;if(r.dialeg||r.aplicado)return;if(shift)r.b=c;else{r.a=c;r.b=c;}r.menu=null;r.sub=false;r.msg="";}
+function revisar2(c){
+  var r=S.p2; r.a=c;
+  var k=c==="C5"?"D5":c;
+  if(ERRORES[k]){if(r.hallados[k]){r.msg="✔ Ese error ya lo has encontrado.";r.ok=true;return;}r.hallados[k]=true;intento("rev_"+k,true);r.msg="✔ <b>"+elogio(semilla(k))+"</b> "+ERRORES[k].x;r.ok=true;
+    if(Object.keys(r.hallados).length===3)r.msg+=" <b>¡Has encontrado los tres errores!</b>";return;}
+  if(c==="E5"){r.msg="<b>E5</b> también muestra un error, pero es una consecuencia: viene del error de la fila 5. Busca dónde empieza.";r.ok=false;return;}
+  error("revision");r.msg="Esta celda (<b>"+c+"</b>) está bien. Sigue buscando: fíjate en los formatos, los mensajes de error y el total.";r.ok=false;
+}
+function alClic(e){
+  var t=e.target;
+  if(MODO==="practica"){
+    var mn=t.closest("[data-menu]");
+    if(mn){var nm=mn.getAttribute("data-menu");
+      if(paso===0){var r1=S.p1;if(txtRango(r1.a,r1.b)!=="G2:G11"){r1.msg="Primero selecciona las unidades que quedan: pulsa <b>G2</b> y <b>Mayús + clic</b> en <b>G11</b>.";r1.ok=false;error("condicional");intento("cond_sel",false);render();return;}r1.menu=r1.menu?null:"Format";r1.sub=false;}
+      if(paso===3){S.p4.menu=S.p4.menu?null:"Fitxer";S.p4.sub=false;}
+      render();return;}
+    var fx=t.closest("[data-fx]");
+    if(fx){var a=fx.getAttribute("data-fx");
+      if(paso===0){var p1=S.p1;if(a==="cond"){p1.sub=true;}else if(a==="condicio"){p1.menu=null;p1.sub=false;p1.dialeg=true;p1.msg="";}else{p1.menu=null;p1.sub=false;p1.msg=a==="cel"?"<b>Cel·les…</b> da un formato fijo. Para que el color dependa del valor, usa <b>Condicional</b>.":"Para esta regla necesitamos <b>Condicional › Condició…</b>";p1.ok=false;error("condicional");}}
+      if(paso===3){var p4=S.p4;if(a==="exporta"){p4.sub=true;}else if(a==="pdf"){p4.menu=null;p4.sub=false;p4.dialeg="opcions";p4.msg="";}
+        else{p4.menu=null;p4.sub=false;p4.msg=a==="anomena"||a==="guarda"?"Guardar no crea un PDF. Busca <b>Exporta com a › Exporta com a PDF</b>.":(a==="imprimeix"?"Imprimir saca el papel. Para crear el archivo PDF, usa <b>Exporta com a</b>.":"Busca <b>Exporta com a › Exporta com a PDF</b>.");p4.ok=false;error("pdf");intento("pdf_menu",false);}}
+      render();return;}
+    var td=t.closest("td[data-c]");
+    if(td){var c=td.getAttribute("data-c");if(paso===0){clicCelda1(c,e.shiftKey);render();return;}if(paso===1){revisar2(c);render();return;}}
+  }
+  var b=t.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act");
+  if(act==="p1-cancel"){S.p1.dialeg=false;S.p1.msg="Has cancelado. Vuelve a <b>Format › Condicional › Condició…</b>";S.p1.ok=false;}
+  else if(act==="p1-ok")aceptar1();
+  else if(act==="p3-or"){var p3=S.p3;p3.orient=b.getAttribute("data-v");p3.msg=p3.orient==="vert"?"En vertical la tabla se parte en <b>2 páginas</b>: las columnas F, G y H van a otra hoja.":"En horizontal la tabla cabe <b>entera en una página</b>.";p3.ok=p3.orient==="hori";}
+  else if(act==="p3-ok"){var q3=S.p3;if(q3.orient!=="hori"){intento("orient",false);error("imprimir");q3.msg="Así la tabla sale <b>cortada en dos páginas</b>. Prueba la otra orientación.";q3.ok=false;}else{intento("orient",true);q3.ok3=true;q3.msg="✔ <b>¡Bien elegido!</b> En horizontal la tabla cabe en una sola página y se lee entera.";q3.ok=true;}}
+  else if(act==="p4-cancel"){S.p4.dialeg=null;S.p4.msg="Has cancelado. Vuelve a <b>Fitxer › Exporta com a › Exporta com a PDF</b>.";S.p4.ok=false;}
+  else if(act==="p4-exporta"){S.p4.dialeg="desa";S.p4.msg="";}
+  else if(act==="p4-guarda"){var p4b=S.p4, n=(($("pNom")||{}).value||"").trim().replace(/\.pdf$/i,"");p4b.nombre=n;
+    if(/\s/.test(n)){p4b.msg="El nombre no puede tener espacios.";p4b.ok=false;error("pdf");intento("pdf_nombre",false);}
+    else if(!/^Kiosco_FPB_[A-Za-z]+$/i.test(n)){p4b.msg="Usa el mismo nombre que el archivo del kiosco: <b>Kiosco_FPB_</b> y tu nombre.";p4b.ok=false;error("pdf");intento("pdf_nombre",false);}
+    else{intento("pdf_nombre",true);p4b.dialeg=null;p4b.hecho=true;}}
+  else if(act==="p5-dec"){var p5=S.p5,v=+b.getAttribute("data-v");if(p5.decision!==v){p5.decision=v;intento("decision",v===1);if(v!==1)error("decision");}p5.msg="";}
+  else if(act==="p5-dato"){var p5b=S.p5,k=+b.getAttribute("data-v");p5b.datos[k]=!p5b.datos[k];p5b.msg="";}
+  else if(act==="p5-ok"){var p5c=S.p5, marc=Object.keys(p5c.datos).filter(function(k){return p5c.datos[k];}).map(Number);
+    var bien=marc.length===2&&marc.every(function(k){return DATOS[k][1];});
+    if(!bien){intento("datos",false);error("decision");p5c.msg=marc.some(function(k){return !DATOS[k][1];})?"Has marcado algo que no es un dato del kiosco, sino un gusto o algo que no tiene que ver. Una decisión se justifica con <b>datos</b>.":"Marca los <b>dos</b> datos que justifican la decisión.";p5c.ok=false;}
+    else{intento("datos",true);p5c.hecho=true;upd(function(o){o.practica={ok:true,t:ahora(),decision:DECISIONES[1][0]};});}}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v"),corr=LISTAS[sec][i][2];
+    if(vv!==corr)error(sec);
+    intento(sec+i,vv===corr);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+  }
+  else if(act==="descargar"){descargaPDF();return;}
+  render();
+}
+function alEscribir(e){
+  if(e.target.id==="cVal"){S.p1.val=e.target.value;return;}
+  if(e.target.id==="pNom"){S.p4.nombre=e.target.value;return;}
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value;upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.07_Resultado_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+function alCambio(e){
+  if(e.target.id==="cOp")S.p1.op=e.target.value;
+  if(e.target.id==="cEst")S.p1.estil=e.target.value;
+  alEscribir(e);
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","›":">","✔":"[x]","✖":"[ ]","−":"-","×":"x"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.07 · ¿Abrimos el kiosco?",15,true);
+  t("Resultado de la actividad y repaso de la unidad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el Calc virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);
+  if(pr.ok)t("Decisión tomada: "+pr.decision,11,false,2,true);
+  t("Fallos con el formato condicional: "+(o.err.condicional||0),10,false,2,true);
+  t("Celdas correctas señaladas como error en la revisión: "+(o.err.revision||0),10,false,2,true);
+  t("Fallos al preparar la impresión: "+(o.err.imprimir||0),10,false,2,true);
+  t("Fallos al exportar a PDF: "+(o.err.pdf||0),10,false,2,true);
+  t("Fallos al justificar la decisión: "+(o.err.decision||0),10,false,2,true);
+  t("");
+  t("2. Ficha de repaso",12,true);
+  var tot=0,ac=0;
+  function sec(id,titulo,lst){
+    var a=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])a++;});tot+=lst.length;ac+=a;
+    t(titulo+" ("+a+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Formato condicional",F1);
+  sec("f2","Revisar e imprimir",F2);
+  sec("f3","PDF y conclusión",F3);
+  sec("f4","Fórmulas y funciones",F4);
+  sec("f5","Lo básico",F5);
+  t("3. Práctica en Calc",12,true);
+  t("Entrega en Aules Kiosco_FPB_Nombre.ods (con formato condicional, revisado y con la decisión escrita en Resumen) y Kiosco_FPB_Nombre.pdf.",11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(){
+  var o=cargar(),f=nombrePDF(o.alumno);
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  $("card").addEventListener("change",alCambio);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>

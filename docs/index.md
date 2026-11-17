@@ -47,14 +47,14 @@ A lo largo del curso aprenderemos a:
 | Unidad { .table-full-container .table-cl-secundario .table-bg-principal } | Título { .table-cl-secundario .table-bg-principal } | Resultado de aprendizaje { .table-cl-secundario .table-bg-principal } | Duración { .table-cl-secundario .table-bg-principal } |
 |---|---|:---:|:---:|
 | **Inicio** | Acogida y evaluación inicial | — | 1 h |
-| **[UP01](up01/01-index.md)** | Primeros documentos con Writer | RA1 | 24 h |
-| **[UP02](up02/01-index.md)** | Documentos útiles y profesionales con Writer | RA1 | 30 h |
-| **UP03** | Impresión, escaneado y reproducción de documentos | RA4 | 24 h |
-| **UP04** | Primeros pasos con Calc | RA2 | 24 h |
-| **UP05** | Presupuestos, listas y gráficos con Calc | RA2 | 30 h |
-| **UP06** | Presentaciones que no aburren | RA3 | 18 h |
-| **UP07** | Presentamos nuestra idea | RA3 | 24 h |
-| **UP08** | Dossier final y encuadernación | RA5 | 24 h |
+| **[UP01](up01/01-index.md)** | Primeros documentos con Writer | RA03 | 24 h |
+| **[UP02](up02/01-index.md)** | Documentos útiles y profesionales con Writer | RA03 | 30 h |
+| **[UP03](up03/01-introduccion.md)** | Impresión, escaneado y reproducción de documentos | RA06 | 24 h |
+| **[UP04](up04/01-index.md)** | Primeros pasos con Calc | RA04 | 24 h |
+| **UP05** | Presupuestos, listas y gráficos con Calc | RA04 | 30 h |
+| **UP06** | Presentaciones que no aburren | RA05 | 18 h |
+| **UP07** | Presentamos nuestra idea | RA05 | 24 h |
+| **UP08** | Dossier final y encuadernación | RA07 | 24 h |
 |  | **Total** |  | **199 h** |
 
 ## ¿Cómo trabajaremos?

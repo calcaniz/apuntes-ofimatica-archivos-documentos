@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calc virtual · S04.06</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:980px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.msg code,.ayuda code,.tarea code,.rec code{font-size:.92em;background:#f3ece2;padding:0 4px;border-radius:4px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-direction:column;gap:10px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:20px;font-family:Consolas,Menlo,monospace;font-weight:700;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:8px 18px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:#ff8a00;background:#fff3e0}
+.recs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.recs{grid-template-columns:1fr}}
+.rec{font:inherit;font-size:17px;text-align:left;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--texto)}
+.rec.vis{border-color:var(--ok);background:var(--okbg)}
+.rec b{display:block;color:var(--ok);font-size:15px}
+.tarea{font-size:20px;font-weight:700;background:#fff3e0;border:2px solid #ff8a00;border-radius:10px;padding:8px 14px;margin:8px 0}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+
+/* ===== Ventana de Calc simulada ===== */
+.calc{border:2px solid #9e9e9e;border-radius:8px;overflow:hidden;background:#fff;font-size:14px;line-height:1.3;position:relative;user-select:none;margin-top:6px}
+.c-tit{background:#3c3c3c;color:#fff;padding:6px 10px;font-size:14px;display:flex;justify-content:space-between}
+.c-menu{display:flex;flex-wrap:wrap;gap:2px;background:#f3f3f3;border-bottom:1px solid #ddd;padding:3px 4px}
+.c-menu span{padding:3px 8px;border-radius:4px}
+.c-tool{display:flex;gap:5px;background:#f9f9f9;border-bottom:1px solid #ddd;padding:5px 8px;color:#555}
+.c-tool i{font-style:normal;border:1px solid #ccc;border-radius:4px;padding:1px 8px;background:#fff}
+.c-form{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid #ddd;background:#fafafa}
+.c-nom{width:90px;border:1px solid #bbb;background:#fff;padding:2px 6px;font-family:Consolas,Menlo,monospace}
+.c-fx{color:#555;font-style:italic}
+.c-barra{flex:1;border:1px solid #bbb;background:#fff;padding:2px 6px;min-height:22px;font-family:Consolas,Menlo,monospace;white-space:nowrap;overflow:hidden;color:#1a237e}
+.c-area table{border-collapse:collapse;table-layout:fixed;width:100%}
+.c-area th{background:#efefef;border:1px solid #d0d0d0;font-weight:400;color:#444;font-size:12px;height:20px}
+.c-area th.esq{width:30px}
+.c-area td{border:1px solid #c9c9c9;height:23px;padding:0 4px;white-space:nowrap;overflow:hidden;font-size:14px;cursor:cell;position:relative}
+.c-area td.num{text-align:right}
+.c-area td.cab{font-weight:700;text-align:center;background:#fbd5ae}
+.c-area td.etq{font-weight:700;text-align:right;background:#fdf4e9}
+.c-area td.err{color:#c62828;font-weight:700;text-align:right}
+.c-area td.rec{color:#c62828;font-weight:700}
+.c-area td.suf{color:#2e7d32;font-weight:700}
+.c-area td.rng{box-shadow:inset 0 0 0 999px rgba(30,111,217,.16)}
+.c-area td.act{outline:2px solid #1e6fd9;outline-offset:-2px}
+.c-area td.ref1{box-shadow:inset 0 0 0 2px #1565c0}
+.c-area td.ref2{box-shadow:inset 0 0 0 2px #c62828}
+.c-area td.ref3{box-shadow:inset 0 0 0 2px #6a1b9a}
+.c-area td input{position:absolute;inset:0;width:100%;height:100%;border:2px solid #1e6fd9;font:inherit;font-size:14px;padding:0 3px;min-height:0;border-radius:0;background:#fff}
+.asa{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;background:#1e6fd9;border:1px solid #fff;cursor:crosshair;z-index:2}
+.c-tabs{display:flex;align-items:flex-end;gap:2px;background:#ececec;border-top:1px solid #ccc;padding:4px 6px 0}
+.c-tab{background:#dcdcdc;border:1px solid #bdbdbd;border-bottom:0;padding:4px 12px;border-radius:5px 5px 0 0;font-size:14px}
+.c-tab.act{background:#fff;font-weight:700}
+.c-estat{background:#f3f3f3;border-top:1px solid #ccc;padding:3px 10px;color:#555;font-size:13px;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧮 Calc virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0406-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.06_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== hoja y fórmulas ===== */
+var COLS=["A","B","C","D","E","F","G"];
+function partir(r){var m=/^\$?([A-Z])\$?(\d+)$/.exec(r);return {c:COLS.indexOf(m[1]),f:+m[2]};}
+function ref(c,f){return COLS[c]+f;}
+function rango(a,b){var x=partir(a),y=partir(b),r=[];for(var f=Math.min(x.f,y.f);f<=Math.max(x.f,y.f);f++)for(var c=Math.min(x.c,y.c);c<=Math.max(x.c,y.c);c++)r.push(ref(c,f));return r;}
+function txtRango(a,b){var r=rango(a,b);return r.length===1?r[0]:r[0]+":"+r[r.length-1];}
+function esNum(v){return /^-?\d+(,\d+)?$/.test(String(v).trim());}
+function valNum(v){return parseFloat(String(v).trim().replace(",","."));}
+function redondea(n){return Math.round(n*1e9)/1e9;}
+var FUNCIONES={"SUMA":"SUMA","MITJANA":"MITJANA","MÀX":"MÀX","MÍN":"MÍN","COMPTA":"COMPTA","SI":"SI"};
+var PISTAS_FN={"PROMEDIO":"En nuestro Calc la media se calcula con <code>MITJANA</code>.","CONTAR":"En nuestro Calc se cuenta con <code>COMPTA</code>.","MAX":"En valenciano se escribe <code>MÀX</code>, con acento.","MIN":"En valenciano se escribe <code>MÍN</code>, con acento.","SUM":"En nuestro Calc la suma es <code>SUMA</code>.","AVERAGE":"En nuestro Calc la media es <code>MITJANA</code>.","IF":"En nuestro Calc la función es <code>SI</code>.","MEDIA":"En nuestro Calc la media se calcula con <code>MITJANA</code>."};
+/* Evaluador propio (sin eval): números con coma, textos "…", referencias con o sin $, rangos, funciones en valenciano, comparaciones */
+function evalua(form,cel,propia){
+  var s=form.slice(1), i=0, ultimaFn=null;
+  function err(e,extra){throw {calc:e,extra:extra};}
+  function blancos(){while(s.charAt(i)===" ")i++;}
+  function leeRef(){var m=/^\$?[A-Ga-g]\$?[1-9]\d*/.exec(s.slice(i));if(!m)return null;var resto=s.slice(i+m[0].length);if(/^[A-Za-zÀ-ÿ(]/.test(resto))return null;i+=m[0].length;return m[0].toUpperCase().replace(/\$/g,"");}
+  function valorCelda(r){
+    if(r===propia)err("Err:522");
+    var v=cel[r];
+    if(v===undefined||v==="")return 0;
+    if(String(v).charAt(0)==="="){var x=evalua(v,cel,r);if(typeof x==="string"&&/^(#|Err)/.test(x))err(x);return x;}
+    if(esNum(v))return valNum(v);
+    return {txt:String(v)};
+  }
+  function num(v){if(typeof v==="number")return v;if(v&&v.txt!==undefined)err("#VALUE!");if(Array.isArray(v))err("#VALUE!");return v;}
+  function primario(){
+    blancos();
+    var c=s.charAt(i);
+    if(c==="("){i++;var v=comp();blancos();if(s.charAt(i)!==")")err("Err:501");i++;return v;}
+    if(c==="-"){i++;return -num(primario());}
+    if(c==='"'){var j=s.indexOf('"',i+1);if(j<0)err("Err:501");var t=s.slice(i+1,j);i=j+1;return {txt:t};}
+    var m=/^\d+(,\d+)?/.exec(s.slice(i)); if(m){i+=m[0].length;return valNum(m[0]);}
+    var p0=i, r1=leeRef();
+    if(r1){blancos();if(s.charAt(i)===":"){i++;var r2=leeRef();if(!r2)err("Err:501");return rango(r1,r2).map(valorCelda);}return valorCelda(r1);}
+    i=p0;
+    m=/^[A-Za-zÀ-ÿ]+/.exec(s.slice(i));
+    if(m){var nombre=m[0].toUpperCase();i+=m[0].length;blancos();
+      if(s.charAt(i)!=="("||!FUNCIONES[nombre])err("#NAME?",PISTAS_FN[nombre]);
+      i++;var args=[];blancos();
+      if(s.charAt(i)!==")"){while(true){args.push(comp());blancos();if(s.charAt(i)===";"){i++;continue;}if(s.charAt(i)===",")err("Err:508","Los argumentos se separan con <b>punto y coma</b> (;).");break;}}
+      blancos();if(s.charAt(i)!==")")err("Err:501","Falta cerrar el paréntesis.");i++;
+      ultimaFn=nombre;return funcion(nombre,args);}
+    err("Err:509");
+  }
+  function plano(args){var r=[];args.forEach(function(a){if(Array.isArray(a))r=r.concat(a);else r.push(a);});return r;}
+  function funcion(n,args){
+    if(n==="SI"){if(args.length<2)err("Err:511");var cond=args[0];return (cond&&cond!==0)?args[1]:(args.length>2?args[2]:false);}
+    var vals=plano(args), nums=vals.filter(function(v){return typeof v==="number";});
+    if(n==="COMPTA")return nums.length;
+    if(n==="SUMA")return nums.reduce(function(a,b){return a+b;},0);
+    if(!nums.length)err("#DIV/0!");
+    if(n==="MITJANA")return nums.reduce(function(a,b){return a+b;},0)/nums.length;
+    if(n==="MÀX")return Math.max.apply(null,nums);
+    if(n==="MÍN")return Math.min.apply(null,nums);
+  }
+  function potencia(){var b=primario();blancos();while(s.charAt(i)==="^"){i++;b=Math.pow(num(b),num(primario()));blancos();}return b;}
+  function producto(){var v=potencia();blancos();while(s.charAt(i)==="*"||s.charAt(i)==="/"){var o=s.charAt(i++),d=num(potencia());v=num(v);if(o==="/"){if(d===0)err("#DIV/0!");v=v/d;}else v=v*d;blancos();}return v;}
+  function suma(){var v=producto();blancos();while(s.charAt(i)==="+"||s.charAt(i)==="-"){var o=s.charAt(i++),d=num(producto());v=num(v);v=o==="+"?v+d:v-d;blancos();}return v;}
+  function comp(){var v=suma();blancos();var m=/^(<=|>=|<>|<|>|=)/.exec(s.slice(i));if(m){i+=m[0].length;var d=suma();var a=(v&&v.txt!==undefined)?v.txt:v,b=(d&&d.txt!==undefined)?d.txt:d;
+      switch(m[0]){case"<":return a<b;case">":return a>b;case"<=":return a<=b;case">=":return a>=b;case"=":return a===b;case"<>":return a!==b;}}return v;}
+  try{if(!s.trim())err("Err:509");var r=comp();blancos();if(i<s.length)err("Err:509");evalua.fn=ultimaFn;evalua.extra=null;
+    if(Array.isArray(r))return "#VALUE!";if(r&&r.txt!==undefined)return {txt:r.txt};if(typeof r==="boolean")return r?1:0;return redondea(r);}
+  catch(e){if(e&&e.calc){evalua.extra=e.extra||null;return e.calc;}throw e;}
+}
+function refsDe(form){return (String(form).toUpperCase().match(/\$?[A-G]\$?[1-9]\d*/g)||[]).map(function(x){return x.replace(/\$/g,"");});}
+/* copia una fórmula desplazando solo lo que no lleva $ */
+function desplaza(form,df,dc){
+  return form.replace(/(\$?)([A-Ga-g])(\$?)([1-9]\d*)/g,function(m,dc1,c,df1,f,pos,str){
+    var antes=str.charAt(pos-1); if(/[A-Za-zÀ-ÿ]/.test(antes))return m;
+    var col=dc1?c.toUpperCase():COLS[COLS.indexOf(c.toUpperCase())+dc], fila=df1?f:(+f+df);
+    return dc1+col+df1+fila;});
+}
+function numTxt(n){return String(redondea(n)).replace(".",",");}
+function eur(n){return redondea(n).toFixed(2).replace(".",",")+" €";}
+function pct(n){return (redondea(n)*100).toFixed(2).replace(".",",")+" %";}
+
+var PRODUCTOS=[["Agua","1","20","24"],["Zumo de naranja","1,5","15","18"],["Refresco de cola","1,2","22","24"],["Batido de cacao","1","10","12"],
+ ["Bocadillo de tortilla","2,5","14","15"],["Bocadillo de jamón","2,5","12","15"],["Sándwich vegetal","2","6","10"],["Manzana","0,5","18","25"],
+ ["Galletas","0,8","16","20"],["Barrita de cereales","0,7","11","20"]];
+function ventas(){
+  var c={A1:"Producto",B1:"Precio de venta",C1:"Unidades vendidas",D1:"Ingresos",E1:"% del total",C12:"Total"};
+  PRODUCTOS.forEach(function(p,i){var f=i+2;c["A"+f]=p[0];c["B"+f]=p[1];c["C"+f]=p[2];c["D"+f]="=B"+f+"*C"+f;});
+  return c;
+}
+function existencias(){
+  var c={A1:"Producto",B1:"Existencias",C1:"Vendidas",D1:"Quedan",E1:"Estado"};
+  PRODUCTOS.forEach(function(p,i){var f=i+2;c["A"+f]=p[0];c["B"+f]=p[3];c["C"+f]=p[2];c["D"+f]="=B"+f+"-C"+f;});
+  return c;
+}
+/* formato de presentación por columna en cada hoja */
+var FMT_VENTAS={B:"eur",D:"eur",E:"pct"}, FMT_EXIS={};
+
+/* ===== estado ===== */
+var S={
+  p1:{sel:null,rec:null,done:{},msg:"",ok:false},
+  p2:{cel:ventas(),a:"D12",ed:null,edVal:"",hecho:false,msg:"",ok:false},
+  p3:{cel:null,a:"E2",b:"E2",ed:null,edVal:"",tarea:0,arr:false,msg:"",ok:false},
+  p4:{cel:null,a:"D14",ed:null,edVal:"",hechas:{},msg:"",ok:false},
+  p5:{cel:existencias(),a:"E2",b:"E2",ed:null,edVal:"",tarea:0,arr:false,msg:"",ok:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+function conTotal(){var c=ventas();c.D12="=SUMA(D2:D11)";return c;}
+
+var MENUS=["Fitxer","Edita","Visualitza","Insereix","Format","Estils","Full","Dades","Eines","Finestra","Ajuda"];
+function mostrarValor(v,fmt){
+  if(typeof v==="string")return {t:v,c:"err"};
+  if(v&&v.txt!==undefined){var c=v.txt==="RECOMPRAR"?"rec":(v.txt==="SUFICIENTE"?"suf":"");return {t:v.txt,c:c};}
+  return {t:fmt==="eur"?eur(v):(fmt==="pct"?pct(v):numTxt(v)),c:"num"};
+}
+function calc(op){
+  var cel=op.cel, a=op.a||"A1", b=op.b||a, sel=rango(a,b), filas=op.filas||12, fmt=op.fmt||{};
+  var anchos=op.anchos||[150,110,130,100,100,60,40];
+  var refsAct=[]; if(cel[a]&&String(cel[a]).charAt(0)==="="&&!op.ed)refsAct=refsDe(cel[a]);
+  var h='<div class="calc">';
+  h+='<div class="c-tit"><span>Kiosco_FPB.ods — LibreOffice Calc</span><span>— ▢ ✕</span></div>';
+  h+='<div class="c-menu">'+MENUS.map(function(m){return '<span>'+m+'</span>';}).join("")+'</div>';
+  h+='<div class="c-tool"><i>💾</i><i>↶</i><i>↷</i><i>🖌</i><i style="font-weight:700">N</i><i>€</i><i>%</i><i>Σ</i></div>';
+  var barra=op.ed===a?(op.edVal||""):(cel[a]||"");
+  h+='<div class="c-form"><span class="c-nom">'+esc(txtRango(a,b))+'</span><span class="c-fx">ƒx Σ =</span><span class="c-barra">'+esc(barra)+'</span></div>';
+  h+='<div class="c-area"><table><colgroup><col style="width:30px">'+anchos.map(function(w){return '<col style="width:'+w+'px">';}).join("")+'</colgroup><tr><th class="esq"></th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join("")+'</tr>';
+  for(var f=1;f<=filas;f++){
+    h+='<tr><th>'+f+'</th>';
+    COLS.forEach(function(c){
+      var r=c+f, v=cel[r]!==undefined?cel[r]:"", cls=[], mostrar=v;
+      if(f===1&&v)cls.push("cab");
+      else if(op.etiquetas&&op.etiquetas.indexOf(r)>=0)cls.push("etq");
+      else if(String(v).charAt(0)==="="){var mv=mostrarValor(evalua(v,cel,r),fmt[c]);mostrar=mv.t;if(mv.c)cls.push(mv.c);}
+      else if(esNum(v)){cls.push("num");if(fmt[c])mostrar=mostrarValor(valNum(v),fmt[c]).t;}
+      if(sel.length>1&&sel.indexOf(r)>=0)cls.push("rng");
+      if(r===a)cls.push("act");
+      var k=refsAct.indexOf(r); if(k>=0)cls.push(["ref1","ref2","ref3"][Math.min(k,2)]);
+      var dentro=op.ed===r?'<input type="text" id="celdaEd" value="'+esc(op.edVal||"")+'" autocomplete="off">':esc(mostrar);
+      if(op.asa&&r===sel[sel.length-1])dentro+='<span class="asa" data-asa="1" title="Controlador de relleno"></span>';
+      h+='<td data-c="'+r+'" class="'+cls.join(" ")+'">'+dentro+'</td>';
+    });
+    h+='</tr>';
+  }
+  h+='</table></div>';
+  var full=op.full||"Ventas";
+  h+='<div class="c-tabs">'+["Productos","Compras","Ventas","Resumen"].map(function(n){return '<span class="c-tab'+(n===full?" act":"")+'">'+n+'</span>';}).join("")+'</div>';
+  h+='<div class="c-estat"><span>Full '+(["Productos","Compras","Ventas","Resumen"].indexOf(full)+1)+' de 4</span><span>100 %</span></div>';
+  return h+'</div>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* ===== PRÁCTICA ===== */
+var REFS=[["rel","B2","Cambia la columna y la fila al copiar (relativa)."],["abs","$B$2","No cambia nunca al copiar (absoluta)."],["colfija","$B2","La columna queda fija; la fila cambia (mixta)."],["filafija","B$2","La fila queda fija; la columna cambia (mixta)."]];
+var ORDEN_R=["abs","filafija","rel","colfija"];
+
+var PRACTICA=[
+ {t:"1. Tipos de referencia",ayuda:"El símbolo <code>$</code> fija lo que va justo detrás. Pulsa una <b>referencia</b> y después <b>qué le pasa al copiarla</b>.",
+  html:function(){
+    var r=S.p1;
+    var h='<div class="chips">'+REFS.map(function(x){return '<button class="chip'+(r.done[x[0]]?" vis":"")+(r.sel===x[0]?" sel":"")+'" data-act="p1-nom" data-v="'+x[0]+'">'+(r.done[x[0]]?"✔ ":"")+x[1]+'</button>';}).join("")+'</div>';
+    h+='<div class="recs">'+ORDEN_R.map(function(id){var x=REFS.filter(function(y){return y[0]===id;})[0];return '<button class="rec'+(r.done[id]?" vis":"")+'" data-act="p1-rec" data-v="'+id+'">'+(r.done[id]?'<b>✔ <code>'+x[1]+'</code></b>':"")+x[2]+'</button>';}).join("")+'</div>';
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return Object.keys(S.p1.done).length===REFS.length;}},
+ {t:"2. La función SUMA",ayuda:"En <b>D12</b>, calcula el <b>total de ingresos</b> con la función <code>SUMA</code> y el rango de los ingresos (<b>D2:D11</b>). Escribe la fórmula y pulsa <b>Intro</b>.",
+  html:function(){
+    var r=S.p2;
+    return calc({cel:r.cel,a:r.a,ed:r.ed,edVal:r.edVal,fmt:FMT_VENTAS,etiquetas:["C12"]})+msg(r.msg,r.ok);
+  },ok:function(){return S.p2.hecho;}},
+ {t:"3. La referencia absoluta",ayuda:"Queremos saber qué <b>parte del total</b> aporta cada producto: ingresos del producto ÷ total. Un compañero escribió <code>=D2/D12</code> en E2 y la copió hacia abajo…",
+  html:function(){
+    var r=S.p3;
+    if(!r.cel){r.cel=conTotal();for(var f=2;f<=11;f++)r.cel["E"+f]=desplaza("=D2/D12",f-2,0);}
+    var tareas=["Mira E3: sale <b>#DIV/0!</b>. Pulsa E3 y mira su fórmula en la barra de fórmules.","Corrige la fórmula de <b>E2</b> para que el total quede fijo: escribe <code>=D2/$D$12</code>.","Copia la fórmula corregida hasta <b>E11</b> con el controlador de relleno."];
+    var h=r.tarea<3?'<div class="tarea">👉 '+(r.tarea+1)+' de 3: '+tareas[r.tarea]+'</div>':'';
+    if(r.arr)h+='<div class="msg info" style="margin-top:0">✋ Estás arrastrando. Ahora pulsa la celda <b>hasta donde</b> quieres copiar.</div>';
+    h+=calc({cel:r.cel,a:r.a,b:r.b,ed:r.ed,edVal:r.edVal,fmt:FMT_VENTAS,etiquetas:["C12"],asa:r.tarea===2});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p3.tarea>=3;}},
+ {t:"4. Media, máximo y mínimo",ayuda:"Completa el resumen de los ingresos (<b>D2:D11</b>) con las funciones en valenciano: <code>MITJANA</code> (media), <code>MÀX</code> (mayor) y <code>MÍN</code> (menor).",
+  html:function(){
+    var r=S.p4;
+    if(!r.cel){r.cel=conTotal();r.cel.C14="Media";r.cel.C15="Mayor";r.cel.C16="Menor";}
+    var h='<div class="msg info" style="margin-top:0">'+[["D14","Media"],["D15","Mayor"],["D16","Menor"]].map(function(x){return (r.hechas[x[0]]?"✔ ":"⬜ ")+"<b>"+x[0]+"</b> "+x[1];}).join(" · ")+'</div>';
+    h+=calc({cel:r.cel,a:r.a,ed:r.ed,edVal:r.edVal,fmt:FMT_VENTAS,etiquetas:["C12","C14","C15","C16"],filas:16});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return Object.keys(S.p4.hechas).length===3;}},
+ {t:"5. La función SI",ayuda:"Si quedan <b>menos de 5</b> unidades hay que <b>RECOMPRAR</b>; si no, hay <b>SUFICIENTE</b>. Escribe en <b>E2</b>: <code>=SI(D2&lt;5;\"RECOMPRAR\";\"SUFICIENTE\")</code> y cópiala hasta <b>E11</b>.",
+  html:function(){
+    var r=S.p5;
+    if(r.arr)var aviso='<div class="msg info" style="margin-top:0">✋ Estás arrastrando. Ahora pulsa la celda <b>hasta donde</b> quieres copiar.</div>';
+    var h=(aviso||"")+calc({cel:r.cel,a:r.a,b:r.b,ed:r.ed,edVal:r.edVal,fmt:FMT_EXIS,asa:r.tarea===1,full:"Ventas",filas:11,anchos:[160,100,90,90,130,60,40]});
+    if(r.tarea>=2)h+=bloqueFinPractica(); else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p5.tarea>=2;},ultimo:true}
+];
+function bloqueFinPractica(){
+  return msg("✔ <b>¡Perfecto!</b> La función <code>SI</code> decide por nosotros: hay que recomprar los productos con menos de 5 unidades.",true)+
+    '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
+    '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha</b> (Parte 2). Después montarás la hoja <b>Resumen</b> en tu <b>Calc de verdad</b> (Parte 3).</div>';
+}
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[3]);}).join("");};}
+function okSec(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["En E2 tienes =D2/$D$12 y la copias a E3. ¿Qué fórmula queda?",["=D3/$D$13","=D3/$D$12","=D2/$D$12"],1,"D2 es relativa y cambia a D3; $D$12 es absoluta y se queda igual."],
+        ["¿Qué atajo cambia el tipo de referencia en LibreOffice Calc?",["Mayús + F4","Ctrl + Z","F1"],0,"En Calc es Mayús + F4 (en Excel es F4)."],
+        ["¿Cuándo usamos una referencia absoluta?",["Cuando todas las fórmulas deben usar siempre la misma celda","Cuando la fórmula es muy larga","Nunca"],0,"Por ejemplo, el total o un porcentaje común."]];
+var F2=[["¿Qué función suma un rango?",["SUMA","COMPTA","MÍN"],0,"=SUMA(D2:D11) suma todos los valores del rango."],
+        ["¿Qué función calcula la media en nuestro Calc?",["PROMEDIO","MITJANA","MEDIA"],1,"En Calc en valenciano, la media es MITJANA."],
+        ["¿Qué hace =COMPTA(D2:D11)?",["Suma los valores","Cuenta cuántas celdas tienen números","Busca el mayor"],1,"COMPTA cuenta las celdas que contienen números."]];
+var F3=[["¿Qué función devuelve el valor mayor?",["MÍN","MÀX","SUMA"],1,"MÀX devuelve el mayor; MÍN, el menor."],
+        ["¿Qué significa D2:D11?",["Las celdas D2 y D11 solamente","Todas las celdas desde D2 hasta D11","La división de D2 entre D11"],1,"Los dos puntos indican un rango."]];
+var F4=[["¿Qué mostrará =SI(A1<5;\"POCO\";\"BIEN\") si A1 contiene 3?",["POCO","BIEN","3"],0,"3 es menor que 5: se cumple la condición."],
+        ["¿Con qué se separan las partes de la función SI?",["Con punto y coma (;)","Con comas (,)","Con espacios"],0,"En nuestro Calc los argumentos se separan con punto y coma."]];
+var F5=[["Copias =D2/D12 hacia abajo y sale #DIV/0!. ¿Por qué?",["Porque D12 pasa a D13, que está vacía","Porque los ingresos son negativos","Porque falta guardar"],0,"Al ser relativa, la referencia al total se desplaza a una celda vacía: división entre cero."],
+        ["¿Cómo lo arreglas?",["Escribiendo =D2/$D$12","Borrando la columna","Escribiendo los números a mano"],0,"Con $D$12 todas las fórmulas dividen entre el total."]];
+var LISTAS={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5};
+
+var FICHA=[
+ {t:"1. Las referencias",ayuda:"Relativas y absolutas.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. SUMA, MITJANA y COMPTA",ayuda:"Las funciones en valenciano.",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. MÀX, MÍN y rangos",ayuda:"Dos preguntas más.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. La función SI",ayuda:"Decidir con una condición.",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Errores al copiar",ayuda:"El error del compañero.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Distinguir referencias relativas, absolutas y mixtas.</li><li>Fijar una celda con $ (Mayús + F4).</li><li>Usar SUMA, MITJANA, MÀX, MÍN y COMPTA.</li><li>Tomar decisiones con la función SI.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.06_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado el Calc virtual (Parte 1). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> haz la <b>Parte 3</b> en tu Calc y sube a Aules este PDF y tu archivo <b>Kiosco_FPB_Nombre.ods</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){var n=PASOS.length;if(paso===n-1)return "¡Último paso!";if(paso===0)return "¡Vamos allá!";return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas · S04.06":"🧮 Calc virtual · S04.06";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+  var ed=$("celdaEd"); if(ed){ed.focus(); var v=ed.value; ed.value=""; ed.value=v;}
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== comprobaciones ===== */
+function unir1(){
+  var r=S.p1; if(!r.sel||!r.rec)return;
+  var x=REFS.filter(function(y){return y[0]===r.sel;})[0];
+  if(r.sel===r.rec){r.done[r.sel]=true;intento("ref_"+r.sel,true);r.msg="✔ <b>"+elogio(semilla(r.sel))+"</b> <code>"+x[1]+"</code>: "+x[2];r.ok=true;}
+  else{intento("ref_"+r.sel,false);error("referencias");r.msg="¡Casi! Fíjate en dónde está el <code>$</code> en <code>"+x[1]+"</code>: fija lo que va justo detrás. ¡Prueba otra vez!";r.ok=false;}
+  r.sel=null;r.rec=null;
+}
+function explicaError(v){
+  var extra=evalua.extra;
+  if(v==="#NAME?")return "<b>#NAME?</b>: Calc no reconoce el nombre de la función."+(extra?" "+extra:" Revisa cómo se escribe.");
+  if(v==="Err:522")return "<b>Err:522</b>: la fórmula usa su propia celda.";
+  if(v==="Err:508"||v==="Err:501")return "<b>"+v+"</b>: "+(extra||"revisa los paréntesis.");
+  if(v==="#VALUE!")return "<b>#VALUE!</b>: la fórmula mezcla texto con números.";
+  if(v==="#DIV/0!")return "<b>#DIV/0!</b>: la fórmula divide entre cero o entre una celda vacía.";
+  return "La fórmula da <b>"+v+"</b>. Revísala en la barra de fórmules.";
+}
+function revisa(raw,cel,celda,obj,necesita){
+  raw=String(raw||"").trim();
+  if(!raw)return {ok:false,m:"Escribe la fórmula en <b>"+celda+"</b>."};
+  if(raw.charAt(0)!=="=")return {ok:false,m:"Falta el signo <b>=</b> al principio: sin él, Calc lo toma como texto."};
+  var v=evalua(raw,cel,celda);
+  if(typeof v==="string")return {ok:false,m:explicaError(v)};
+  if(v&&v.txt!==undefined)return {ok:false,m:"La fórmula devuelve un texto («"+esc(v.txt)+"»)."};
+  if(Math.abs(v-obj)>1e-6)return {ok:false,v:v,m:null};
+  if(necesita&&!necesita.test(raw.toUpperCase()))return {ok:false,m:"El resultado es correcto, pero en esta tarea hay que usar la función que se pide."};
+  return {ok:true,v:v};
+}
+function confirmar(st,dir){
+  if(!st.ed)return null;
+  var celda=st.ed, v=(st.edVal||"").trim();
+  if(v==="")delete st.cel[celda]; else st.cel[celda]=v;
+  st.ed=null;
+  var x=partir(celda);
+  if(dir==="abajo")st.a=ref(x.c,Math.min(x.f+1,16)); else if(dir==="derecha")st.a=ref(Math.min(x.c+1,6),x.f);
+  if(st.b!==undefined)st.b=st.a;
+  return celda;
+}
+function restaura(st,celda,base){if(base[celda]!==undefined)st.cel[celda]=base[celda];else delete st.cel[celda];}
+function despuesConfirmar(celda){
+  if(!celda)return;
+  if(paso===1){var r=S.p2;
+    if(celda!=="D12"){restaura(r,celda,ventas());r.msg="El total va en <b>D12</b>. He dejado <b>"+celda+"</b> como estaba.";r.ok=false;return;}
+    var res=revisa(r.cel.D12,r.cel,"D12",185.4,/SUMA\(/);
+    if(!res.ok){intento("suma",false);error("funciones");
+      r.msg=res.m||("Da <b>"+eur(res.v)+"</b>, pero el total es <b>185,40 €</b>. ¿Has incluido todo el rango <b>D2:D11</b>?");r.ok=false;r.a="D12";return;}
+    intento("suma",true);r.hecho=true;r.a="D12";r.msg="✔ <b>¡Muy bien!</b> <code>"+esc(r.cel.D12)+"</code>: los ingresos totales son <b>185,40 €</b>. Una sola función suma los diez productos.";r.ok=true;return;}
+  if(paso===2){var p=S.p3;
+    if(p.tarea!==1){restaura(p,celda,conTotal());p.msg="Primero sigue la tarea indicada.";p.ok=false;return;}
+    if(celda!=="E2"){var base=conTotal();for(var f=2;f<=11;f++)base["E"+f]=desplaza("=D2/D12",f-2,0);restaura(p,celda,base);p.msg="La fórmula que hay que corregir está en <b>E2</b>.";p.ok=false;return;}
+    var raw=String(p.cel.E2||"").toUpperCase().replace(/\s/g,"");
+    var res2=revisa(p.cel.E2,p.cel,"E2",20/185.4);
+    if(!res2.ok){intento("absoluta",false);error("referencias");p.msg=res2.m||"El resultado no es el porcentaje del agua (10,79 %). Divide los ingresos del agua (<b>D2</b>) entre el total (<b>D12</b>).";p.ok=false;p.a="E2";return;}
+    if(raw.indexOf("$D$12")<0){intento("absoluta",false);error("referencias");p.msg=raw.indexOf("D$12")>=0?"<code>D$12</code> también funcionaría al copiar hacia abajo, pero aquí practicamos la referencia <b>absoluta</b> completa: <code>$D$12</code>.":"El resultado de E2 es correcto, pero al copiarla volverá a fallar. Fija el total con <code>$D$12</code> (puedes pulsar <b>Mayús + F4</b>).";p.ok=false;p.a="E2";return;}
+    intento("absoluta",true);p.tarea=2;p.a="E2";p.b="E2";p.msg="✔ <b>¡Bien!</b> <code>=D2/$D$12</code>: el total queda fijo. Ahora cópiala hasta E11.";p.ok=true;return;}
+  if(paso===3){var q=S.p4, obj={D14:[18.54,"MITJANA","la media"],D15:[35,"MÀX","el mayor"],D16:[7.7,"MÍN","el menor"]}[celda];
+    if(!obj){var b4=conTotal();b4.C14="Media";b4.C15="Mayor";b4.C16="Menor";restaura(q,celda,b4);q.msg="Las fórmulas van en <b>D14</b>, <b>D15</b> y <b>D16</b>. He dejado <b>"+celda+"</b> como estaba.";q.ok=false;return;}
+    var res3=revisa(q.cel[celda],q.cel,celda,obj[0],new RegExp(obj[1]+"\\("));
+    if(!res3.ok){intento("fn_"+celda,false);error("funciones");delete q.hechas[celda];
+      q.msg=res3.m||("En <b>"+celda+"</b> va "+obj[2]+" de los ingresos: <code>="+obj[1]+"(D2:D11)</code>. Tu fórmula da <b>"+eur(res3.v)+"</b>.");q.ok=false;q.a=celda;return;}
+    intento("fn_"+celda,true);q.hechas[celda]=true;
+    q.msg="✔ <b>"+elogio(semilla(celda))+"</b> "+obj[2].charAt(0).toUpperCase()+obj[2].slice(1)+": <b>"+eur(obj[0])+"</b>."+(Object.keys(q.hechas).length===3?" ¡Resumen completo!":"");q.ok=true;return;}
+  if(paso===4){var w=S.p5;
+    if(w.tarea!==0||celda!=="E2"){restaura(w,celda,existencias());w.msg="La fórmula va en <b>E2</b>.";w.ok=false;return;}
+    var raw4=String(w.cel.E2||"").trim();
+    if(raw4.charAt(0)!=="="){w.msg="Falta el signo <b>=</b>.";w.ok=false;return;}
+    var v=evalua(raw4,w.cel,"E2");
+    if(typeof v==="string"){intento("si",false);error("si");w.msg=explicaError(v)+(v==="Err:508"?"":" Recuerda: <code>=SI(D2&lt;5;\"RECOMPRAR\";\"SUFICIENTE\")</code>, con los textos entre comillas.");w.ok=false;w.a="E2";return;}
+    var t=(v&&v.txt!==undefined)?v.txt.toUpperCase():null;
+    if(t!=="RECOMPRAR"){intento("si",false);error("si");w.msg=t==="SUFICIENTE"?"Quedan <b>4</b> aguas: es menos de 5, así que debería salir <b>RECOMPRAR</b>. Revisa la condición (<code>D2&lt;5</code>) y el orden de los textos.":"El agua debería mostrar <b>RECOMPRAR</b>. Revisa la fórmula.";w.ok=false;w.a="E2";return;}
+    /* comprobación con un valor de 7: debe dar SUFICIENTE */
+    var prueba=JSON.parse(JSON.stringify(w.cel));prueba.B2="27";var v2=evalua(raw4,prueba,"E2");
+    if(!(v2&&v2.txt&&v2.txt.toUpperCase()==="SUFICIENTE")){intento("si",false);error("si");w.msg="Con 4 unidades sale RECOMPRAR, pero si quedaran 7 también saldría RECOMPRAR. El segundo texto debe ser <b>SUFICIENTE</b>.";w.ok=false;w.a="E2";return;}
+    intento("si",true);w.tarea=1;w.a="E2";w.b="E2";w.msg="✔ <b>¡Bien!</b> Quedan 4 aguas → <b>RECOMPRAR</b>. Ahora copia la fórmula hasta E11.";w.ok=true;}
+}
+function rellenar(st,destino,col,clave){
+  var sel=rango(st.a,st.b); st.arr=false;
+  if(sel.length!==1||sel[0]!==col+"2"){st.msg="Selecciona solo <b>"+col+"2</b> antes de arrastrar.";st.ok=false;error("copiar");intento(clave,false);return false;}
+  var d=partir(destino);
+  if(COLS[d.c]!==col){st.msg="Arrastra hacia abajo por la columna <b>"+col+"</b>.";st.ok=false;error("copiar");intento(clave,false);return false;}
+  if(d.f<11){st.msg="Has llegado hasta <b>"+destino+"</b>: arrastra hasta <b>"+col+"11</b>.";st.ok=false;error("copiar");intento(clave,false);return false;}
+  if(d.f>11){st.msg="Te has pasado: los productos terminan en la fila 11.";st.ok=false;error("copiar");intento(clave,false);return false;}
+  for(var f=3;f<=11;f++)st.cel[col+f]=desplaza(st.cel[col+"2"],f-2,0);
+  intento(clave,true);return true;
+}
+
+/* ===== eventos ===== */
+function stEdit(){return [null,S.p2,S.p3,S.p4,S.p5][paso]||null;}
+function puedeEscribir(){if(paso===2)return S.p3.tarea===1;if(paso===4)return S.p5.tarea===0;return paso===1||paso===3;}
+var ULT={r:"",t:0};
+function alClic(e){
+  var t=e.target;
+  if(MODO==="practica"){
+    if(t.closest("[data-asa]")){var sa=stEdit();sa.arr=true;sa.msg="";render();return;}
+    var td=t.closest("td[data-c]");
+    if(td&&!t.closest("#celdaEd")){
+      var r=td.getAttribute("data-c"), st=stEdit();
+      /* doble clic sobre la celda activa: editar su contenido, como en Calc */
+      var ahoraMs=Date.now(), doble=ULT.r===r&&ahoraMs-ULT.t<450; ULT={r:r,t:ahoraMs};
+      if(doble&&st&&!st.ed&&!st.arr&&st.a===r&&puedeEscribir()){st.ed=r;st.edVal=st.cel[r]||"";if(st.b!==undefined)st.b=r;render();return;}
+      if(st&&st.ed){var c0=confirmar(st,null);despuesConfirmar(c0);}
+      if(paso===2){var p=S.p3;
+        if(p.arr){if(rellenar(p,r,"E","copiar_abs")){p.tarea=3;p.a="E5";p.b="E5";p.msg="✔ <b>¡Genial!</b> Mira <b>E5</b>: <code>"+esc(p.cel.E5)+"</code>. <b>D5</b> ha cambiado, pero <b>$D$12</b> sigue apuntando al total. El bocadillo de tortilla aporta el <b>18,88 %</b> de los ingresos.";p.ok=true;
+          upd(function(o){o.practica.absoluta=p.cel.E2;});}render();return;}
+        p.a=r;p.b=r;
+        if(p.tarea===0&&r==="E3"){intento("ver_error",true);p.tarea=1;p.a="E2";p.b="E2";p.msg="¿Lo ves? En E3 la fórmula es <code>"+esc(p.cel.E3)+"</code>: al copiarla, <b>D12</b> ha pasado a <b>D13</b>, que está vacía. ¡División entre cero! Ahora corrige <b>E2</b>.";p.ok=false;}
+        render();return;}
+      if(paso===4){var w=S.p5;
+        if(w.arr){if(rellenar(w,r,"E","copiar_si")){w.tarea=2;w.a="E9";w.b="E9";
+          upd(function(o){o.practica={ok:true,t:ahora(),suma:S.p2.cel.D12,absoluta:S.p3.cel.E2,si:w.cel.E2};});}render();return;}
+        w.a=r;w.b=r;render();return;}
+      if(st){st.a=r;if(st.b!==undefined)st.b=r;render();return;}
+    }
+  }
+  var b=t.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act");
+  if(act==="p1-nom"){var r1=S.p1,v1=b.getAttribute("data-v");if(r1.done[v1]){r1.msg="✔ Ya la tienes unida.";r1.ok=true;}else{r1.sel=v1;r1.msg=r1.rec?"":"👆 Ahora pulsa qué le pasa al copiarla.";r1.ok=false;unir1();}}
+  else if(act==="p1-rec"){var r1b=S.p1,v1b=b.getAttribute("data-v");if(r1b.done[v1b]){r1b.msg="✔ Esa ya está unida.";r1b.ok=true;}else{r1b.rec=v1b;if(!r1b.sel){r1b.msg="👆 Ahora pulsa la referencia.";r1b.ok=false;}else unir1();}}
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v"),corr=LISTAS[sec][i][2];
+    if(vv!==corr)error(sec);
+    intento(sec+i,vv===corr);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+  }
+  else if(act==="descargar"){descargaPDF();return;}
+  render();
+}
+/* Mayús + F4 dentro de la celda: cambia el tipo de la referencia que hay justo antes del cursor */
+function cicloRef(inp){
+  var pos=inp.selectionStart, txt=inp.value, antes=txt.slice(0,pos), m=/(\$?)([A-Ga-g])(\$?)(\d+)$/.exec(antes);
+  if(!m)return;
+  var c=m[2].toUpperCase(), f=m[4], estado=(m[1]?"$":"")+"C"+(m[3]?"$":"")+"F", sig={"CF":"$C$F","$C$F":"C$F","C$F":"$CF","$CF":"CF"}[estado];
+  var nuevo=sig.replace("C",c).replace("F",f);
+  inp.value=antes.slice(0,antes.length-m[0].length)+nuevo+txt.slice(pos);
+  var np=antes.length-m[0].length+nuevo.length; inp.setSelectionRange(np,np);
+  var st=stEdit(); if(st)st.edVal=inp.value; var b=document.querySelector(".c-barra"); if(b)b.textContent=inp.value;
+}
+function alTecla(e){
+  if(MODO!=="practica")return;
+  var st=stEdit(); if(!st||!puedeEscribir())return;
+  if(e.target.id==="celdaEd"){
+    if(e.key==="F4"&&e.shiftKey){e.preventDefault();cicloRef(e.target);return;}
+    if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();st.edVal=e.target.value;var c=confirmar(st,e.key==="Enter"?"abajo":"derecha");despuesConfirmar(c);render();}
+    else if(e.key==="Escape"){st.ed=null;render();}
+    return;
+  }
+  if(e.target.tagName==="INPUT"||e.ctrlKey||e.altKey||e.metaKey)return;
+  if(e.key==="F2"||e.key==="Backspace"||e.key==="Delete"){e.preventDefault();st.ed=st.a;st.edVal=e.key==="F2"?(st.cel[st.a]||""):"";if(st.b!==undefined)st.b=st.a;render();return;}
+  if(e.key&&e.key.length===1){e.preventDefault();st.ed=st.a;st.edVal=e.key;if(st.b!==undefined)st.b=st.a;render();}
+}
+function alEscribir(e){
+  if(e.target.id==="celdaEd"){var st=stEdit();if(st)st.edVal=e.target.value;var b=document.querySelector(".c-barra");if(b)b.textContent=e.target.value;return;}
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value;upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.06_Resultado_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","›":">","✔":"[x]","✖":"[ ]","−":"-","×":"x","÷":"/"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.06 · Fórmulas que se copian solas",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el Calc virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);
+  if(pr.ok){t("Total de ingresos (D12): "+pr.suma,11,false,2,true);t("Porcentaje con referencia absoluta (E2): "+pr.absoluta,11,false,2,true);t("Función SI (E2): "+pr.si,11,false,2,true);}
+  t("Fallos con las referencias: "+(o.err.referencias||0),10,false,2,true);
+  t("Fórmulas con funciones revisadas con errores: "+(o.err.funciones||0),10,false,2,true);
+  t("Fallos con la función SI: "+(o.err.si||0),10,false,2,true);
+  t("Fallos al copiar fórmulas: "+(o.err.copiar||0),10,false,2,true);
+  t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Las referencias",F1);
+  sec("f2","SUMA, MITJANA y COMPTA",F2);
+  sec("f3","MÀX, MÍN y rangos",F3);
+  sec("f4","La función SI",F4);
+  sec("f5","Errores al copiar",F5);
+  t("3. Práctica en Calc",12,true);
+  t("Entrega en Aules el archivo Kiosco_FPB_Nombre.ods con la hoja Resumen, el porcentaje de cada producto y la columna de reposición.",11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(){
+  var o=cargar(),f=nombrePDF(o.alumno);
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  document.addEventListener("keydown",alTecla);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>

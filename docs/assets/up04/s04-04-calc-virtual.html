@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calc virtual · S04.04</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:980px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-direction:column;gap:10px}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:17px;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:#ff8a00;background:#fff3e0;font-weight:700}
+.recs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (max-width:760px){.recs{grid-template-columns:repeat(2,1fr)}}
+.rec{font:inherit;font-size:20px;font-family:Consolas,Menlo,monospace;text-align:center;border:2px solid #b9ad9f;background:#fff;border-radius:12px;padding:14px 6px;cursor:pointer;color:var(--texto)}
+.rec.vis{border-color:var(--ok);background:var(--okbg)}
+.rec b{display:block;color:var(--ok);font-size:14px;font-family:system-ui,sans-serif}
+.tarea{font-size:20px;font-weight:700;background:#fff3e0;border:2px solid #ff8a00;border-radius:10px;padding:8px 14px;margin:8px 0}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+
+/* ===== Ventana de Calc simulada ===== */
+.calc{border:2px solid #9e9e9e;border-radius:8px;overflow:hidden;background:#fff;font-size:14px;line-height:1.3;position:relative;user-select:none;margin-top:6px}
+.c-tit{background:#3c3c3c;color:#fff;padding:6px 10px;font-size:14px;display:flex;justify-content:space-between}
+.c-menu{display:flex;flex-wrap:wrap;gap:2px;background:#f3f3f3;border-bottom:1px solid #ddd;padding:3px 4px}
+.c-menu span{padding:3px 8px;border-radius:4px}
+.c-menu span[data-menu]{cursor:pointer}
+.c-menu span[data-menu]:hover,.c-menu span.abierto{background:#d6e4f5}
+.c-tool{display:flex;gap:5px;background:#f9f9f9;border-bottom:1px solid #ddd;padding:5px 8px;color:#555;flex-wrap:wrap;position:relative}
+.c-tool i{font-style:normal;border:1px solid #ccc;border-radius:4px;padding:1px 8px;background:#fff;min-width:28px;text-align:center}
+.c-tool i[data-b]{cursor:pointer}
+.c-tool i[data-b]:hover{background:#d6e4f5}
+.c-tool i.on{background:#cfe0f7;border-color:#1e6fd9}
+.c-tool .sep{border:0;background:none;padding:0;min-width:6px}
+.c-form{display:flex;gap:6px;align-items:center;padding:4px 6px;border-bottom:1px solid #ddd;background:#fafafa}
+.c-nom{width:90px;border:1px solid #bbb;background:#fff;padding:2px 6px;font-family:Consolas,Menlo,monospace}
+.c-fx{color:#555;font-style:italic}
+.c-barra{flex:1;border:1px solid #bbb;background:#fff;padding:2px 6px;min-height:22px;font-family:Consolas,Menlo,monospace;white-space:nowrap;overflow:hidden}
+.c-area table{border-collapse:collapse;table-layout:fixed;width:100%}
+.c-area th{background:#efefef;border:1px solid #d0d0d0;font-weight:400;color:#444;font-size:12px;height:20px}
+.c-area th.esq{width:30px}
+.c-area td{border:1px solid #e9e9e9;height:24px;padding:0 4px;white-space:nowrap;overflow:hidden;font-size:14px;cursor:cell}
+.c-area td.num{text-align:right}
+.c-area td.neg{font-weight:700}
+.c-area td.cen{text-align:center}
+.c-area td.vor{border:1px solid #333}
+.c-area td.rng{box-shadow:inset 0 0 0 999px rgba(30,111,217,.16)}
+.c-area td.act{outline:2px solid #1e6fd9;outline-offset:-2px}
+.c-tabs{display:flex;align-items:flex-end;gap:2px;background:#ececec;border-top:1px solid #ccc;padding:4px 6px 0}
+.c-tab{background:#dcdcdc;border:1px solid #bdbdbd;border-bottom:0;padding:4px 12px;border-radius:5px 5px 0 0;font-size:14px}
+.c-tab[data-full]{cursor:pointer}
+.c-tab.act{background:#fff;font-weight:700}
+.c-estat{background:#f3f3f3;border-top:1px solid #ccc;padding:3px 10px;color:#555;font-size:13px;display:flex;justify-content:space-between}
+.clonando td{cursor:copy}
+.desp{position:absolute;background:#fff;border:1px solid #9e9e9e;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:5;min-width:200px;padding:4px 0;font-size:15px}
+.desp div{padding:6px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:18px}
+.desp div:hover{background:#d6e4f5}
+.desp small{color:#777}
+.paleta{position:absolute;z-index:5;background:#fff;border:1px solid #999;box-shadow:0 4px 14px rgba(0,0,0,.25);padding:8px;display:grid;grid-template-columns:repeat(4,30px);gap:6px}
+.paleta span{width:30px;height:24px;border:1px solid #888;cursor:pointer;border-radius:3px}
+.vores{position:absolute;z-index:5;background:#fff;border:1px solid #999;box-shadow:0 4px 14px rgba(0,0,0,.25);padding:8px;display:grid;grid-template-columns:repeat(4,44px);gap:6px}
+.vores span{width:44px;height:36px;cursor:pointer;border:1px solid #bbb;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#fff}
+.vores span:hover{background:#d6e4f5}
+.vores svg{width:28px;height:28px}
+.dialeg{position:absolute;left:50%;top:56px;transform:translateX(-50%);width:min(94%,560px);background:#f7f7f7;border:1px solid #888;box-shadow:0 6px 22px rgba(0,0,0,.35);z-index:6;border-radius:6px;overflow:hidden;font-size:15px}
+.dialeg .dt{background:#3c3c3c;color:#fff;padding:6px 10px}
+.dialeg .dc{padding:12px}
+.dialeg .db{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.dialeg .db button{font:inherit;font-size:15px;padding:6px 16px;border:1px solid #888;border-radius:4px;background:#fff;cursor:pointer}
+.dialeg .db button.p{background:#1e6fd9;color:#fff;border-color:#1556a8}
+.pest{display:flex;gap:2px;border-bottom:1px solid #aaa;margin-bottom:8px;flex-wrap:wrap}
+.pest span{padding:4px 10px;border:1px solid #bbb;border-bottom:0;border-radius:4px 4px 0 0;background:#e9e9e9;font-size:14px}
+.pest span.act{background:#fff;font-weight:700}
+.llista{border:1px solid #999;background:#fff;max-height:310px;overflow:auto}
+.llista div{padding:4px 10px;cursor:pointer}
+.llista div:hover{background:#eef4fc}
+.llista div.sel{background:#1e6fd9;color:#fff}
+.mostra{margin-top:8px;font-size:14px;color:#444}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🧮 Calc virtual</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0404-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.04_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== hoja ===== */
+var COLS=["A","B","C","D","E","F","G"];
+function partir(r){var m=/^([A-Z])(\d+)$/.exec(r);return {c:COLS.indexOf(m[1]),f:+m[2]};}
+function ref(c,f){return COLS[c]+f;}
+function rango(a,b){var x=partir(a),y=partir(b),r=[];for(var f=Math.min(x.f,y.f);f<=Math.max(x.f,y.f);f++)for(var c=Math.min(x.c,y.c);c<=Math.max(x.c,y.c);c++)r.push(ref(c,f));return r;}
+function txtRango(a,b){var r=rango(a,b);return r.length===1?r[0]:r[0]+":"+r[r.length-1];}
+function esNum(v){return /^-?\d+(,\d+)?$/.test(String(v).trim());}
+function valNum(v){return parseFloat(String(v).trim().replace(",","."));}
+function moneda(v){var n=valNum(v);return n.toFixed(2).replace(".",",")+" €";}
+
+var PRODUCTOS=[["Agua","Bebida","1","24","8410001000011","0,4"],["Zumo de naranja","Bebida","1,5","18","8410001000028","0,8"],["Refresco de cola","Bebida","1,2","24","0480001000035","0,6"],
+ ["Batido de cacao","Bebida","1","12","8410001000042","0,5"],["Bocadillo de tortilla","Bocadillo","2,5","15","KIO-005","1,2"],["Bocadillo de jamón","Bocadillo","2,5","15","KIO-006","1,3"],
+ ["Sándwich vegetal","Bocadillo","2","10","KIO-007","1"],["Manzana","Fruta","0,5","25","KIO-008","0,25"],["Galletas","Snack","0,8","20","8410001000097","0,4"],["Barrita de cereales","Snack","0,7","20","0480001000103","0,35"]];
+function hojaProductos(){
+  var c={A1:"Nº",B1:"Producto",C1:"Categoría",D1:"Precio de venta",E1:"Existencias",F1:"Código",G1:"Precio de compra"};
+  PRODUCTOS.forEach(function(p,i){var f=i+2;c["A"+f]=String(i+1);c["B"+f]=p[0];c["C"+f]=p[1];c["D"+f]=p[2];c["E"+f]=p[3];c["F"+f]=p[4];c["G"+f]=p[5];});
+  return c;
+}
+function hojaCompras(){var c={A1:"Producto",B1:"Unidades",C1:"Precio de compra",D1:"Coste"};PRODUCTOS.forEach(function(p,i){c["A"+(i+2)]=p[0];c["B"+(i+2)]=p[3];c["C"+(i+2)]=p[5];});return c;}
+var TXT={F:true}; /* columnas de texto */
+
+/* estilos: por hoja y celda → {mon, neg, fons, cen, vor} */
+var S={
+  p1:{sel:null,rec:null,done:{},msg:"",ok:false},
+  p2:{a:"A1",b:"A1",tarea:0,menu:null,dialeg:false,cat:null,est:{},msg:"",ok:false},
+  p3:{a:"A1",b:"A1",est:{},paleta:false,msg:"",ok:false},
+  p4:{a:"A1",b:"A1",est:{},vores:false,msg:"",ok:false},
+  p5:{full:"Productos",a:"A1",b:"A1",clon:null,ini:null,est:{Productos:{},Compras:{}},msg:"",ok:false,hecho:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+var MENUS=["Fitxer","Edita","Visualitza","Insereix","Format","Estils","Full","Dades","Eines","Finestra","Ajuda"];
+function ponerEst(est,refs,clave,valor){refs.forEach(function(r){(est[r]=est[r]||{})[clave]=valor;});}
+/* estilo base que arrastran los pasos: moneda (paso 2), encabezados (3), bordes (4) */
+function estBase(hasta){
+  var e={};
+  if(hasta>=2){ponerEst(e,rango("D2","D11"),"mon",true);ponerEst(e,rango("G2","G11"),"mon",true);}
+  if(hasta>=3){var cab=rango("A1","G1");ponerEst(e,cab,"neg",true);ponerEst(e,cab,"fons","#fbd5ae");ponerEst(e,cab,"cen",true);}
+  if(hasta>=4)ponerEst(e,rango("A1","G11"),"vor",true);
+  return e;
+}
+function mezclar(a,b){var r={};[a,b].forEach(function(x){Object.keys(x).forEach(function(k){r[k]=Object.assign({},r[k]||{},x[k]);});});return r;}
+function calc(op){
+  var cel=op.cel, est=op.est||{}, a=op.a||"A1", b=op.b||a, sel=rango(a,b), filas=op.filas||11;
+  var anchos=op.anchos||[34,150,95,120,90,120,120];
+  var h='<div class="calc'+(op.clon?" clonando":"")+'"'+(op.dialeg?' style="min-height:560px"':'')+'>';
+  h+='<div class="c-tit"><span>Kiosco_FPB.ods — LibreOffice Calc</span><span>— ▢ ✕</span></div>';
+  h+='<div class="c-menu">'+MENUS.map(function(m){return '<span'+(op.menus&&op.menus.indexOf(m)>=0?' data-menu="'+m+'"':"")+(op.menu===m?' class="abierto"':"")+'>'+m+'</span>';}).join("")+'</div>';
+  if(op.desp)h+=op.desp;
+  h+='<div class="c-tool"><i>💾</i><i>↶</i><i>↷</i><i class="sep"></i>'+
+     '<i data-b="clon" title="Clona el format"'+(op.clon?' class="on"':"")+'>🖌</i><i class="sep"></i>'+
+     '<i data-b="neg" title="Negreta" style="font-weight:700">N</i><i style="font-style:italic">I</i><i style="text-decoration:underline">S</i><i class="sep"></i>'+
+     '<i data-b="cen" title="Centra horitzontalment">≡</i><i data-b="fons" title="Color de fons">🎨</i><i data-b="vores" title="Vores">▦</i><i class="sep"></i>'+
+     '<i data-b="eur" title="Format de moneda">€</i><i>%</i><i>0.0</i>'+
+     (op.paleta?'<div class="paleta" style="left:330px;top:30px">'+["#ffffff","#fbd5ae","#ff3b30","#ffeb3b","#b3e5fc","#c8e6c9","#e1bee7","#9e9e9e"].map(function(c){return '<span data-color="'+c+'" style="background:'+c+'" title="'+c+'"></span>';}).join("")+'</div>':"")+
+     (op.vores?'<div class="vores" style="left:360px;top:30px">'+[["sense","M4 4h20v20H4z","#ccc"],["exterior","M4 4h20v20H4z","#222"],["totes","M4 4h20v20H4zM14 4v20M4 14h20","#222"],["baix","M4 24h20","#222"]].map(function(v){return '<span data-vora="'+v[0]+'"><svg viewBox="0 0 28 28"><path d="'+v[1]+'" fill="none" stroke="'+v[2]+'" stroke-width="2"/></svg></span>';}).join("")+'</div>':"")+
+     '</div>';
+  var actv=cel[a]||"";
+  h+='<div class="c-form"><span class="c-nom">'+esc(txtRango(a,b))+'</span><span class="c-fx">ƒx Σ =</span><span class="c-barra">'+esc(actv)+'</span></div>';
+  h+='<div class="c-area"><table><colgroup><col style="width:30px">'+anchos.map(function(w){return '<col style="width:'+w+'px">';}).join("")+'</colgroup><tr><th class="esq"></th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join("")+'</tr>';
+  for(var f=1;f<=filas;f++){
+    h+='<tr><th>'+f+'</th>';
+    COLS.forEach(function(c){
+      var r=c+f, v=cel[r]!==undefined?cel[r]:"", e=est[r]||{}, cls=[], st="", mostrar=v;
+      if(e.mon&&esNum(v))mostrar=moneda(v);
+      if((esNum(v)||e.mon&&esNum(v))&&!(op.txtCols&&op.txtCols[c]))cls.push("num");
+      if(e.neg)cls.push("neg"); if(e.cen)cls.push("cen"); if(e.vor)cls.push("vor");
+      if(e.fons)st=' style="background:'+e.fons+'"';
+      if(sel.length>1&&sel.indexOf(r)>=0)cls.push("rng");
+      if(r===a)cls.push("act");
+      h+='<td data-c="'+r+'" class="'+cls.join(" ")+'"'+st+'>'+esc(mostrar)+'</td>';
+    });
+    h+='</tr>';
+  }
+  h+='</table></div>';
+  var full=op.full||"Productos";
+  h+='<div class="c-tabs">'+["Productos","Compras","Ventas","Resumen"].map(function(n){return '<span class="c-tab'+(n===full?" act":"")+'"'+(op.tabs&&n!=="Ventas"&&n!=="Resumen"?' data-full="'+n+'"':"")+'>'+n+'</span>';}).join("")+'</div>';
+  h+='<div class="c-estat"><span>Full '+(full==="Productos"?1:2)+' de 4</span><span>100 %</span></div>';
+  if(op.dialeg)h+=op.dialeg;
+  return h+'</div>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+function igualRango(st,a,b){return txtRango(st.a,st.b)===txtRango(a,b);}
+
+/* ===== PRÁCTICA ===== */
+var FORMATOS=[["numero","Número","24"],["decimal","Número con 2 decimales","1,50"],["moneda","Moneda","1,50 €"],["porc","Porcentaje","10 %"],["fecha","Fecha","20/11/2026"]];
+var ORDEN_F=["moneda","fecha","numero","porc","decimal"];
+
+var PRACTICA=[
+ {t:"1. Contenido y formato",ayuda:"El <b>contenido</b> es el dato que se guarda. El <b>formato</b> es cómo se ve. Une cada <b>formato</b> con su <b>aspecto</b>.",
+  html:function(){
+    var r=S.p1;
+    var h='<div class="chips">'+FORMATOS.map(function(x){return '<button class="chip'+(r.done[x[0]]?" vis":"")+(r.sel===x[0]?" sel":"")+'" data-act="p1-nom" data-v="'+x[0]+'">'+(r.done[x[0]]?"✔ ":"")+x[1]+'</button>';}).join("")+'</div>';
+    h+='<div class="recs">'+ORDEN_F.map(function(id){var x=FORMATOS.filter(function(y){return y[0]===id;})[0];return '<button class="rec'+(r.done[id]?" vis":"")+'" data-act="p1-rec" data-v="'+id+'">'+(r.done[id]?'<b>✔ '+x[1]+'</b>':"")+esc(x[2])+'</button>';}).join("")+'</div>';
+    h+=msg(r.msg,r.ok);
+    if(Object.keys(r.done).length===FORMATOS.length)h+='<div class="msg info">💡 Si una celda guarda <b>1,5</b> y le das formato de moneda, se ve <b>1,50 €</b>, pero en la <b>barra de fórmules</b> sigue apareciendo <b>1,5</b>: el valor no cambia.</div>';
+    return h;
+  },ok:function(){return Object.keys(S.p1.done).length===FORMATOS.length;}},
+ {t:"2. Los precios en euros",ayuda:"Selecciona un rango pulsando la primera celda y <b>Mayús + clic</b> en la última.",
+  html:function(){
+    var r=S.p2, tareas=["Precios de venta: selecciona <b>D2:D11</b> y aplica <b>Format › Cel·les › Nombres › Moneda</b>.","Precios de compra: selecciona <b>G2:G11</b> y pulsa el botón <b>€</b> de la barra de herramientas."];
+    var h=r.tarea<2?'<div class="tarea">👉 '+(r.tarea+1)+' de 2: '+tareas[r.tarea]+'</div>':'';
+    var dlg="";
+    if(r.dialeg){
+      var cats=["Tots","Definit per l'usuari","Nombre","Percentatge","Moneda","Data","Hora","Científic","Fracció","Valor booleà","Text"];
+      var mostra={"Nombre":"1","Percentatge":"100 %","Moneda":"1,00 €","Data":"31/12/1899","Hora":"00:00:00","Científic":"1E+00","Text":"1"}[r.cat]||"1";
+      dlg='<div class="dialeg"><div class="dt">Formata les cel·les</div><div class="dc"><div class="pest"><span class="act">Nombres</span><span>Tipus de lletra</span><span>Alineació</span><span>Vores</span><span>Fons</span></div>'+
+        '<b>Categoria</b><div class="llista">'+cats.map(function(c){return '<div data-cat="'+c+'"'+(r.cat===c?' class="sel"':"")+'>'+c+'</div>';}).join("")+'</div>'+
+        '<div class="mostra">Mostra: <b>'+esc(mostra)+'</b></div>'+
+        '<div class="db"><button data-act="p2-cancel">Cancel·la</button><button class="p" data-act="p2-ok">D\'acord</button></div></div></div>';
+    }
+    h+=calc({cel:hojaProductos(),est:r.est,a:r.a,b:r.b,txtCols:TXT,menus:r.dialeg?null:["Format"],menu:r.menu,desp:r.menu==="Format"?'<div class="desp" style="left:268px;top:58px"><div data-op="cel">Cel·les… <small>Ctrl+1</small></div><div data-op="files">Files <small>▸</small></div><div data-op="columnes">Columnes <small>▸</small></div></div>':"",dialeg:dlg});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){return S.p2.tarea>=2;}},
+ {t:"3. Encabezados destacados",ayuda:"Selecciona los encabezados <b>A1:G1</b> y destácalos: <b>negrita</b> (N), <b>color de fondo</b> (🎨) y <b>centrado</b> (≡).",
+  html:function(){
+    var r=S.p3, cab=rango("A1","G1"), e=mezclar(estBase(2),r.est);
+    var hecho=function(k){return cab.every(function(x){return e[x]&&e[x][k];});};
+    var h='<div class="msg info" style="margin-top:0">'+[["neg","Negrita"],["fons","Color de fondo suave"],["cen","Centrado"]].map(function(x){return (hecho(x[0])?"✔ ":"⬜ ")+"<b>"+x[1]+"</b>";}).join(" · ")+'</div>';
+    h+=calc({cel:hojaProductos(),est:e,a:r.a,b:r.b,txtCols:TXT,paleta:r.paleta});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){var e=mezclar(estBase(2),S.p3.est);return rango("A1","G1").every(function(x){return e[x]&&e[x].neg&&e[x].cen&&e[x].fons&&e[x].fons!=="#ffffff";});}},
+ {t:"4. Bordes sencillos",ayuda:"Selecciona toda la tabla (<b>A1:G11</b>) y ponle <b>todos los bordes</b> con el botón ▦.",
+  html:function(){
+    var r=S.p4;
+    var h=calc({cel:hojaProductos(),est:mezclar(estBase(3),r.est),a:r.a,b:r.b,txtCols:TXT,vores:r.vores});
+    return h+msg(r.msg,r.ok);
+  },ok:function(){var e=S.p4.est;return rango("A1","G11").every(function(x){return e[x]&&e[x].vor;});}},
+ {t:"5. Clona el format",ayuda:"Los encabezados de la hoja <b>Compras</b> deben verse igual. 1) En <b>Productos</b>, pulsa <b>A1</b>. 2) Pulsa el pincel <b>🖌</b> (<b>Clona el format</b>). 3) Ve a la hoja <b>Compras</b>. 4) Pulsa <b>A1</b> y después <b>D1</b>.",
+  html:function(){
+    var r=S.p5, enProd=r.full==="Productos";
+    var h=calc({cel:enProd?hojaProductos():hojaCompras(),est:enProd?estBase(4):r.est.Compras,a:r.a,b:r.b,txtCols:enProd?TXT:null,tabs:true,full:r.full,clon:!!r.clon,anchos:enProd?null:[150,90,130,90,90,90,90]});
+    if(r.hecho)h+=bloqueFinPractica(); else h+=msg(r.msg,r.ok);
+    return h;
+  },ok:function(){return S.p5.hecho;},ultimo:true}
+];
+function bloqueFinPractica(){
+  return msg("✔ <b>¡Perfecto!</b> Con <b>Clona el format</b> los encabezados de Compras tienen el mismo aspecto que los de Productos, sin escribir nada.",true)+
+    '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
+    '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha</b> (Parte 2). Después darás formato a tu archivo en tu <b>Calc de verdad</b> (Parte 3).</div>';
+}
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+o+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[3]);}).join("");};}
+function okSec(sec,lista){return function(){var r=cargar().ficha[sec]||{};return lista.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+
+var F1=[["Una celda contiene 1,5 y le das formato de moneda. ¿Qué valor guarda?",["1,5: solo cambia cómo se ve","El texto «1,50 €»","0"],0,"El formato cambia el aspecto, no el valor. Por eso los cálculos siguen funcionando."],
+        ["¿Dónde puedes ver el valor real de una celda?",["En la barra de fórmules","En la pestaña de la hoja","En el título de la ventana"],0,"La barra de fórmules muestra lo que realmente está guardado."]];
+var F2=[["¿Qué formato pones a los precios del kiosco?",["Moneda","Data","Percentatge"],0,"Con Moneda se ven con dos decimales y el símbolo €."],
+        ["Escribes 1,5 y aparece 31/12/1899 12:00. ¿Qué ha pasado?",["La celda tiene formato de fecha: hay que cambiarlo a Nombre o Moneda","Calc está roto","Has escrito mal el número"],0,"Calc cuenta los días desde el 30/12/1899: 1,5 días después es el 31/12/1899 a las 12:00."],
+        ["¿Qué atajo abre Format › Cel·les?",["Ctrl + 1","Ctrl + Z","Ctrl + S"],0,"Ctrl + 1 abre la ventana con todas las opciones de formato."]];
+var F3=[["¿Cómo debe ser una tabla?",["Clara antes que llamativa","Con muchos colores","Con letras de todos los tamaños"],0,"Lo importante es que se entienda a la primera."],
+        ["¿Cuántos colores conviene usar?",["Pocos y con un significado","Uno distinto en cada celda","Ninguno nunca"],0,"Pocos colores ayudan a leer; demasiados distraen."],
+        ["¿Es buena idea combinar celdas dentro de una lista de datos?",["Sí, siempre","No: dificulta ordenar y filtrar la lista","Solo los viernes"],1,"Combinar puede servir para un título, pero no dentro de la lista."]];
+var F4=[["¿Para qué sirve Clona el format (el pincel)?",["Para copiar el aspecto de una celda sin copiar su contenido","Para borrar la celda","Para dibujar"],0,"Copia la negrita, los colores, los bordes y el formato numérico."],
+        ["Después de pulsar el pincel, ¿qué haces?",["Selecciono las celdas que quiero que se vean igual","Escribo un número","Guardo el archivo"],0,"El formato se aplica a las celdas que selecciones después."]];
+var F5=[["¿Cómo destacamos los encabezados?",["Con negrita y un fondo suave","Con letra muy pequeña","Escribiéndolos en otra hoja"],0,"Así se distinguen enseguida de los datos."],
+        ["Quieres que se vea una línea entre todas las filas y columnas de la tabla. ¿Qué bordes eliges?",["Sin bordes","Todos los bordes","Solo el borde de abajo"],1,"Todos los bordes separan cada celda y la tabla se lee mejor."]];
+var LISTAS={f1:F1,f2:F2,f3:F3,f4:F4,f5:F5};
+
+var FICHA=[
+ {t:"1. Contenido y formato",ayuda:"Dos preguntas para empezar.",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Formatos numéricos",ayuda:"Moneda, fecha y un atajo útil.",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. Una tabla clara",ayuda:"Tres reglas de presentación.",html:mk("f3",F3),ok:okSec("f3",F3)},
+ {t:"4. Clona el format",ayuda:"El pincel que ahorra trabajo.",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Encabezados y bordes",ayuda:"Dos preguntas más.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Distinguir el contenido de una celda de su formato.</li><li>Dar formato de moneda a los precios.</li><li>Destacar los encabezados.</li><li>Poner bordes a una tabla.</li><li>Copiar el formato con Clona el format.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.04_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado el Calc virtual (Parte 1). Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> haz la <b>Parte 3</b> en tu Calc y sube a Aules este PDF y tu archivo <b>Kiosco_FPB_Nombre.ods</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){var n=PASOS.length;if(paso===n-1)return "¡Último paso!";if(paso===0)return "¡Vamos allá!";return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas · S04.04":"🧮 Calc virtual · S04.04";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso])confeti();
+  prevOk[paso]=ok;
+}
+function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones de cada paso ===== */
+function unir1(){
+  var r=S.p1; if(!r.sel||!r.rec)return;
+  var x=FORMATOS.filter(function(y){return y[0]===r.sel;})[0];
+  if(r.sel===r.rec){r.done[r.sel]=true;intento("fmt_"+r.sel,true);r.msg="✔ <b>"+elogio(semilla(r.sel))+"</b> "+x[1]+": <b>"+esc(x[2])+"</b>.";r.ok=true;}
+  else{intento("fmt_"+r.sel,false);error("formatos");r.msg="¡Casi! Ese aspecto no corresponde a <b>"+x[1].toLowerCase()+"</b>. ¡Prueba otra vez!";r.ok=false;}
+  r.sel=null;r.rec=null;
+}
+function comprobarSelMoneda(r){
+  var obj=r.tarea===0?["D2","D11"]:["G2","G11"], col=obj[0].charAt(0);
+  if(igualRango(r,obj[0],obj[1])||igualRango(r,col+"1",obj[1]))return true;
+  var sel=rango(r.a,r.b);
+  r.msg=sel.length===1?"Solo has seleccionado <b>"+sel[0]+"</b>. Selecciona todos los precios: pulsa <b>"+obj[0]+"</b> y <b>Mayús + clic</b> en <b>"+obj[1]+"</b>.":"Has seleccionado <b>"+txtRango(r.a,r.b)+"</b>. Los precios están en <b>"+obj[0]+":"+obj[1]+"</b>.";
+  r.ok=false;error("moneda");intento("sel_mon"+r.tarea,false);return false;
+}
+function aplicarMoneda(r){
+  var obj=r.tarea===0?["D2","D11"]:["G2","G11"];
+  ponerEst(r.est,rango(obj[0],obj[1]),"mon",true);
+  r.msg=r.tarea===0?"✔ <b>¡Muy bien!</b> Los precios de venta se ven en euros: <b>1,00 €</b>, <b>1,50 €</b>… Pulsa <b>D2</b> y mira la barra de fórmules: sigue guardando <b>1</b>.":"✔ <b>¡Genial!</b> El botón <b>€</b> hace lo mismo en un solo clic.";
+  r.ok=true;r.tarea++;r.a="A1";r.b="A1";
+}
+function aceptar2(){
+  var r=S.p2;
+  if(!r.cat){r.msg="Elige una <b>Categoria</b>.";r.ok=false;return;}
+  if(r.cat!=="Moneda"){intento("cat_moneda",false);error("moneda");
+    r.msg={"Percentatge":"Con <b>Percentatge</b> el precio 1 se vería como <b>100 %</b>.","Data":"Con <b>Data</b> el precio 1 se vería como <b>31/12/1899</b>: ¡una fecha!","Text":"Con <b>Text</b> ya no se podría calcular con los precios.","Nombre":"<b>Nombre</b> no añade el símbolo €. Busca <b>Moneda</b>."}[r.cat]||"Esa categoría no sirve para precios. Busca <b>Moneda</b>.";r.ok=false;return;}
+  intento("cat_moneda",true);r.dialeg=false;r.cat=null;aplicarMoneda(r);
+}
+function boton(b){
+  if(paso===1){var r2=S.p2;
+    if(b==="eur"){if(r2.tarea===0){r2.msg="El botón € también sirve, pero en esta tarea practica la ventana: <b>Format › Cel·les</b>.";r2.ok=false;return;}
+      if(r2.tarea===1&&comprobarSelMoneda(r2)){intento("eur",true);aplicarMoneda(r2);}return;}
+    r2.msg="En este paso trabajamos el formato de moneda.";r2.ok=false;return;}
+  if(paso===2){var r3=S.p3, cab=rango("A1","G1");
+    if(b==="fons"){r3.paleta=!r3.paleta;r3.msg="";return;}
+    if(b!=="neg"&&b!=="cen"){r3.msg="Para los encabezados usa <b>N</b>, <b>🎨</b> y <b>≡</b>.";r3.ok=false;return;}
+    if(!igualRango(r3,"A1","G1")){intento("cab_sel",false);error("encabezados");r3.msg="Primero selecciona los encabezados: pulsa <b>A1</b> y <b>Mayús + clic</b> en <b>G1</b>.";r3.ok=false;return;}
+    ponerEst(r3.est,cab,b,true);r3.msg=b==="neg"?"✔ <b>Negrita</b> aplicada.":"✔ Encabezados <b>centrados</b>.";r3.ok=true;return;}
+  if(paso===3){var r4=S.p4; if(b==="vores"){r4.vores=!r4.vores;r4.msg="";return;} r4.msg="Para los bordes usa el botón <b>▦</b>.";r4.ok=false;return;}
+  if(paso===4){var r5=S.p5;
+    if(b!=="clon"){r5.msg="En este paso usamos el pincel <b>🖌</b> (Clona el format).";r5.ok=false;return;}
+    if(r5.full!=="Productos"){r5.msg="Primero vuelve a <b>Productos</b> y pulsa la celda que tiene el formato que quieres copiar (<b>A1</b>).";r5.ok=false;return;}
+    r5.clon=r5.a;r5.ini=null;
+    r5.msg=r5.a==="A1"?"🖌 Formato de <b>A1</b> copiado. Ahora ve a la hoja <b>Compras</b>.":"🖌 Has copiado el formato de <b>"+r5.a+"</b>, que no es un encabezado. Pulsa <b>A1</b> y vuelve a pulsar el pincel.";
+    r5.ok=r5.a==="A1";if(r5.a!=="A1"){r5.clon=null;error("clonar");intento("clonar",false);}return;}
+}
+function color3(c){
+  var r=S.p3; r.paleta=false;
+  if(!igualRango(r,"A1","G1")){intento("cab_sel",false);error("encabezados");r.msg="Primero selecciona los encabezados <b>A1:G1</b>.";r.ok=false;return;}
+  if(c==="#ffffff"){r.msg="El blanco no destaca nada. Elige un color <b>suave</b>.";r.ok=false;return;}
+  if(c==="#ff3b30"||c==="#9e9e9e"){intento("color",false);error("encabezados");r.msg="Ese color es demasiado fuerte u oscuro: cuesta leer el texto. Elige un color <b>suave</b>.";r.ok=false;return;}
+  intento("color",true);ponerEst(r.est,rango("A1","G1"),"fons",c);r.msg="✔ <b>Color de fondo</b> aplicado: suave y fácil de leer.";r.ok=true;
+}
+function vora4(v){
+  var r=S.p4; r.vores=false;
+  if(!igualRango(r,"A1","G11")){intento("vor_sel",false);error("bordes");r.msg="Primero selecciona toda la tabla: pulsa <b>A1</b> y <b>Mayús + clic</b> en <b>G11</b>.";r.ok=false;return;}
+  if(v!=="totes"){intento("vores",false);error("bordes");r.msg={sense:"Así la tabla se queda <b>sin bordes</b>.",exterior:"Con el borde <b>exterior</b> solo se ve el marco: las filas no se separan.",baix:"El borde de <b>abajo</b> solo subraya la última fila."}[v]+" Elige <b>todos los bordes</b>.";r.ok=false;return;}
+  intento("vores",true);ponerEst(r.est,rango("A1","G11"),"vor",true);r.msg="✔ <b>¡Perfecto!</b> Todos los bordes: cada dato queda en su casilla y la tabla se lee mejor.";r.ok=true;
+}
+function clicCelda(r,shift){
+  if(paso===1){var s2=S.p2;if(shift)s2.b=r;else{s2.a=r;s2.b=r;}s2.msg="";return;}
+  if(paso===2){var s3=S.p3;if(shift)s3.b=r;else{s3.a=r;s3.b=r;}s3.paleta=false;s3.msg="";return;}
+  if(paso===3){var s4=S.p4;if(shift)s4.b=r;else{s4.a=r;s4.b=r;}s4.vores=false;s4.msg="";return;}
+  if(paso===4){var s5=S.p5;
+    if(s5.clon&&s5.full==="Compras"){
+      if(!s5.ini){s5.ini=r;s5.a=r;s5.b=r;s5.msg="Ahora pulsa la última celda: <b>D1</b>.";s5.ok=true;return;}
+      var fin=r;s5.a=s5.ini;s5.b=fin;
+      if(txtRango(s5.ini,fin)!=="A1:D1"){intento("clonar_dest",false);error("clonar");s5.msg="Has aplicado el formato a <b>"+txtRango(s5.ini,fin)+"</b>. Los encabezados de Compras están en <b>A1:D1</b>. Vuelve a Productos y repite.";s5.ok=false;s5.clon=null;s5.ini=null;return;}
+      intento("clonar_dest",true);var e=estBase(4).A1;rango("A1","D1").forEach(function(x){s5.est.Compras[x]={neg:e.neg,fons:e.fons,cen:e.cen,vor:true};});
+      s5.clon=null;s5.ini=null;s5.hecho=true;upd(function(o){o.practica={ok:true,t:ahora()};});return;}
+    if(shift)s5.b=r;else{s5.a=r;s5.b=r;}s5.msg="";return;}
+}
+
+/* ===== eventos ===== */
+function alClic(e){
+  var t=e.target;
+  if(MODO==="practica"){
+    var m=t.closest("[data-menu]"); if(m&&paso===1){var r2=S.p2;
+      if(r2.tarea!==0){r2.msg="En esta tarea usa el botón <b>€</b>.";r2.ok=false;render();return;}
+      if(!comprobarSelMoneda(r2)){render();return;}
+      r2.menu=r2.menu?null:"Format";r2.msg="";render();return;}
+    var od=t.closest("[data-op]"); if(od&&paso===1){var r2b=S.p2;r2b.menu=null;if(od.getAttribute("data-op")==="cel"){r2b.dialeg=true;}else{r2b.msg="Busca <b>Cel·les…</b>";r2b.ok=false;}render();return;}
+    var ct=t.closest("[data-cat]"); if(ct){S.p2.cat=ct.getAttribute("data-cat");render();return;}
+    var bt=t.closest("[data-b]"); if(bt){boton(bt.getAttribute("data-b"));render();return;}
+    var col=t.closest("[data-color]"); if(col){color3(col.getAttribute("data-color"));render();return;}
+    var vo=t.closest("[data-vora]"); if(vo){vora4(vo.getAttribute("data-vora"));render();return;}
+    var tb=t.closest("[data-full]"); if(tb&&paso===4){var s5=S.p5;s5.full=tb.getAttribute("data-full");s5.a="A1";s5.b="A1";s5.ini=null;
+      s5.msg=s5.clon&&s5.full==="Compras"?"🖌 Estás en <b>Compras</b> con el pincel activo. Pulsa <b>A1</b> y después <b>D1</b>.":"";s5.ok=true;render();return;}
+    var td=t.closest("td[data-c]"); if(td){clicCelda(td.getAttribute("data-c"),e.shiftKey);render();return;}
+  }
+  var b=t.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act");
+  if(act==="p1-nom"){var r1=S.p1,v1=b.getAttribute("data-v");if(r1.done[v1]){r1.msg="✔ Ya lo tienes unido.";r1.ok=true;}else{r1.sel=v1;r1.msg=r1.rec?"":"👆 Ahora pulsa su aspecto.";r1.ok=false;unir1();}}
+  else if(act==="p1-rec"){var r1b=S.p1,v1b=b.getAttribute("data-v");if(r1b.done[v1b]){r1b.msg="✔ Ese aspecto ya está unido.";r1b.ok=true;}else{r1b.rec=v1b;if(!r1b.sel){r1b.msg="👆 Ahora pulsa el formato.";r1b.ok=false;}else unir1();}}
+  else if(act==="p2-cancel"){S.p2.dialeg=false;S.p2.cat=null;S.p2.msg="Has cancelado. Vuelve a <b>Format › Cel·les</b>.";S.p2.ok=false;}
+  else if(act==="p2-ok")aceptar2();
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=b.getAttribute("data-i"),vv=+b.getAttribute("data-v"),corr=LISTAS[sec][i][2];
+    if(vv!==corr)error(sec);
+    intento(sec+i,vv===corr);
+    upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+  }
+  else if(act==="descargar"){descargaPDF();return;}
+  render();
+}
+function alEscribir(e){
+  if(e.target.id!=="inNombre")return;
+  var v=e.target.value;upd(function(o){o.alumno=v;});
+  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.04_Resultado_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+function alTecla(e){
+  if(MODO==="practica"&&paso===1&&(e.ctrlKey||e.metaKey)&&e.key==="1"){e.preventDefault();var r=S.p2;if(r.tarea===0&&comprobarSelMoneda(r)){r.dialeg=true;r.msg="";}render();}
+}
+
+/* ===== PDF de resultado ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","›":">","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.04 · Que se entienda",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con el Calc virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);
+  t("Fallos al relacionar formatos: "+(o.err.formatos||0),10,false,2,true);
+  t("Fallos con el formato de moneda: "+(o.err.moneda||0),10,false,2,true);
+  t("Fallos al destacar los encabezados: "+(o.err.encabezados||0),10,false,2,true);
+  t("Fallos con los bordes: "+(o.err.bordes||0),10,false,2,true);
+  t("Fallos con Clona el format: "+(o.err.clonar||0),10,false,2,true);
+  t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){var v=(F[id]||{})[i];t("- "+q[0]+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);});
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Contenido y formato",F1);
+  sec("f2","Formatos numéricos",F2);
+  sec("f3","Una tabla clara",F3);
+  sec("f4","Clona el format",F4);
+  sec("f5","Encabezados y bordes",F5);
+  t("3. Práctica en Calc",12,true);
+  t("Entrega en Aules el archivo Kiosco_FPB_Nombre.ods con la hoja Productos con formato y la hoja Compras preparada.",11,false,2,true);
+  t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(){
+  var o=cargar(),f=nombrePDF(o.alumno);
+  if(!f)return;
+  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  document.addEventListener("keydown",alTecla);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+init();
+})();
+</script>
+</body>
+</html>
