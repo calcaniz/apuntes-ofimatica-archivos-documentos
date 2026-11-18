@@ -55,31 +55,40 @@ extra_css:
 nav:
   - Inicio: index.md
   - UP01:
-      - 1. Introducción (10/09/2026): up01/01-index.md
-      - 2. Sesión 1 (11/09/2026): up01/02-sesion-1.md
-      - 3. Sesión 2 (16/09/2026): up01/03-sesion-2.md
-      - 4. Sesión 3 (17/09/2026): up01/04-sesion-3.md
-      - 5. Sesión 4 (18/09/2026): up01/05-sesion-4.md
-      - 6. Sesión 5 (23/09/2026): up01/06-sesion-5.md
-      - 7. Sesión 6 (24/09/2026): up01/07-sesion-6.md
-      - 8. Sesión 7 (25/09/2026): up01/08-sesion-7.md
-      - 9. Sesión 8 (30/09/2026): up01/09-sesion-8.md
-      - 10. Sesión 9 (01/10/2026): up01/10-sesion-9.md
-      - 11. Sesión 10 (02/10/2026): up01/11-sesion-10.md
+      - 1. Introducción: up01/01-index.md
+      - 2. Archivos, carpetas y extensiones: up01/02-archivos-carpetas.md
+      - 3. Operaciones con archivos: up01/03-operaciones-archivos.md
+      - 4. S01.01: up01/s01-01.md
+      - 5. Guardar y abrir documentos: up01/04-guardar-abrir.md
+      - 6. Seguridad, integridad y confidencialidad: up01/05-seguridad.md
+      - 7. S01.02: up01/s01-02.md
+      - 8. El procesador de textos Writer: up01/06-writer.md
+      - 9. Escribir y corregir textos: up01/07-escribir-corregir.md
+      - 10. S01.03: up01/s01-03.md
+      - 11. Formato del texto: up01/08-formato-texto.md
+      - 12. S01.04: up01/s01-04.md
+      - 13. Configurar la página: up01/09-configurar-pagina.md
+      - 14. Insertar imágenes: up01/10-imagenes.md
+      - 15. S01.05: up01/s01-05.md
+      - 16. Crear tablas: up01/11-tablas.md
+      - 17. S01.06: up01/s01-06.md
+      - 18. Resumen y preguntas finales: up01/12-resumen.md
   - UP02:
-      - 1. Introducción (09/10/2026): up02/01-index.md
-      - 2. Sesión 1 (09/10/2026): up02/02-sesion-1.md
-      - 3. Sesión 2 (14/10/2026): up02/03-sesion-2.md
-      - 4. Sesión 3 (15/10/2026): up02/04-sesion-3.md
-      - 5. Sesión 4 (16/10/2026): up02/05-sesion-4.md
-      - 6. Sesión 5 (21/10/2026): up02/06-sesion-5.md
-      - 7. Sesión 6 (22/10/2026): up02/07-sesion-6.md
-      - 9. Sesión 8 (04/11/2026): up02/09-sesion-8.md
-      - 10. Sesión 9 (05/11/2026): up02/10-sesion-9.md
-      - 11. Sesión 10 (06/11/2026): up02/11-sesion-10.md
-      - 12. Sesión 11 (04/11/2026): up02/12-sesion-11.md
-      - 12. Sesión 12 (05/11/2026): up02/13-sesion-12.md
-      - 12. Sesión 13 (06/11/2026): up02/14-sesion-13.md
+      - 1. Introducción: up02/01-index.md
+      - 2. Modificar la estructura de una tabla: up02/02-estructura-tablas.md
+      - 3. S02.01: up02/s02-01.md
+      - 4. Dar formato a una tabla: up02/03-formato-tablas.md
+      - 5. S02.02: up02/s02-02.md
+      - 6. Colocar imágenes: up02/04-imagenes.md
+      - 7. S02.03: up02/s02-03.md
+      - 8. Revisar y corregir un documento: up02/05-revisar-corregir.md
+      - 9. Plantillas: up02/06-plantillas.md
+      - 10. S02.04: up02/s02-04.md
+      - 11. Un documento completo: up02/07-documento-completo.md
+      - 12. Preparar la impresión: up02/08-preparar-impresion.md
+      - 13. Imprimir, exportar a PDF y conservar: up02/09-imprimir-pdf.md
+      - 14. S02.05: up02/s02-05.md
+      - 15. Resumen y preguntas finales: up02/10-resumen.md
   - UP03:
       - 1. Introducción: up03/01-introduccion.md
       - 2. Equipos de reproducción de documentos: up03/02-equipos-reproduccion.md
