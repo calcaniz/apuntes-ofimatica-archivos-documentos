@@ -780,7 +780,7 @@ var FONTS=[["Liberation Serif","'Liberation Serif','Times New Roman',Georgia,ser
 var SIZES=[10,11,12,14,16,18,20,24,28,36];
 var PARS=TXT.map(function(t){return t.split(" ").map(function(w){return {t:w,f:"Liberation Serif",s:12,b:false,i:false,u:false};});});
 var SEL=null, ARRS=null;
-var S={u:nuevoUnir(),m:["","","","",""],ok:[false,false,false,false,false],c5:false};
+var S={u:nuevoUnir(),m:["","","","",""],ok:[false,false,false,false,false],c5:false,lista:null};
 function famCss(n){return (FONTS.filter(function(f){return f[0]===n;})[0]||FONTS[0])[1];}
 function ext2(o,p){for(var k in p)o[k]=p[k];return o;}
 function cmp(a,b){return a.p!==b.p?a.p-b.p:a.w-b.w;}
@@ -804,14 +804,20 @@ function tool2(zonas){
   var z=function(id){return zonas?zonaAttr({zonas:true},id):"";};
   var f=comun("f"), s=comun("s"), b=comun("b")===true, it=comun("i")===true, u=comun("u")===true;
   return '<div class="w-tool"><span class="w-cb" style="min-width:128px">Estil per defecte ▾</span>'+
-    '<span class="'+z("font").slice(1)+'" style="border-radius:4px;padding:2px"><select class="w-cb" data-ctl="font" title="Nom del tipus de lletra" style="min-width:150px"'+(zonas?' disabled style="pointer-events:none;min-width:150px"':"")+'><option value=""'+(f?"":" selected")+'></option>'+FONTS.map(function(x){return '<option'+(f===x[0]?" selected":"")+'>'+x[0]+'</option>';}).join("")+'</select></span>'+
-    '<span class="'+z("mida").slice(1)+'" style="border-radius:4px;padding:2px"><select class="w-cb" data-ctl="size" title="Mida del tipus de lletra"'+(zonas?' disabled style="pointer-events:none"':"")+'><option value=""'+(s?"":" selected")+'></option>'+SIZES.map(function(x){return '<option value="'+x+'"'+(s===x?" selected":"")+'>'+x+' pt</option>';}).join("")+'</select></span>'+
+    '<span class="w-cb'+z("font")+'" data-tb="lfont" title="Nom del tipus de lletra" style="min-width:150px;cursor:pointer'+(S.lista==="font"?";border-color:#1e6fd9":"")+'"><span'+(f?' style="font-family:'+famCss(f)+'"':"")+'>'+(f||"&nbsp;")+'</span> ▾</span>'+
+    '<span class="w-cb'+z("mida")+'" data-tb="lsize" title="Mida de la lletra" style="min-width:70px;cursor:pointer'+(S.lista==="size"?";border-color:#1e6fd9":"")+'">'+(s?s+" pt":"&nbsp;")+' ▾</span>'+
     '<button class="w-b big'+(b?" on":"")+z("negreta")+'" data-tb="negreta" title="Negreta (Ctrl+B)">N</button>'+
     '<button class="w-b big'+(it?" on":"")+z("cursiva")+'" data-tb="cursiva" title="Cursiva (Ctrl+I)" style="font-style:italic;font-weight:400">C</button>'+
     '<button class="w-b big'+(u?" on":"")+z("subratllat")+'" data-tb="subratllat" title="Subratllat (Ctrl+U)" style="text-decoration:underline;font-weight:400">S</button></div>';
 }
 function nPal(){return PARS.reduce(function(a,p){return a+p.length;},0);}
-function ventana(zonas){return writer({titulo:DOCNOM,tool2:tool2(zonas),pagina:pagina(),paraules:nPal(),mod:!zonas});}
+function llista(){
+  if(!S.lista)return "";
+  var f=comun("f"),sz=comun("s");
+  var items=S.lista==="font"?FONTS.map(function(x){return ["font:"+x[0],'<span style="font-family:'+famCss(x[0])+'">'+(f===x[0]?"✔ ":"")+x[0]+'</span>'];}):SIZES.map(function(x){return ["size:"+x,(sz===x?"✔ ":"")+x+" pt"];});
+  return despHTML(items,S.lista==="font"?150:310,140,null).replace(/data-mi="/g,'data-act="llista" data-v="');
+}
+function ventana(zonas){var h=writer({titulo:DOCNOM,tool2:tool2(zonas),pagina:pagina(),paraules:nPal(),mod:!zonas});return S.lista?h.replace(/<\/div>$/,llista()+"</div>"):h;}
 function hint(){return '<div id="hint" class="msg info" style="'+(S.hint?"":"display:none")+'">'+(S.hint||"")+'</div>';}
 
 /* selección con el ratón */
@@ -881,10 +887,11 @@ function objetivoPaso(i){
 function pasoFmt(t,ayuda,extra){
   return ext2({t:t,ayuda:ayuda,
     onDown:abajo,onMove:mueve,onUp:arriba,onDbl:dobleW,
-    onTb:function(k){if(k==="negreta")aplicar("b");else if(k==="cursiva")aplicar("i");else if(k==="subratllat")aplicar("u");},
-    onInput:function(e){var c=e.target.getAttribute("data-ctl");if(e.type!=="change"||!c)return false;var v=e.target.value;if(!v)return false;if(c==="font")aplicar("f",v);else aplicar("s",+v);return true;},
+    onTb:function(k){if(k==="lfont"||k==="lsize"){var l=k==="lfont"?"font":"size";S.lista=S.lista===l?null:l;return;}S.lista=null;if(k==="negreta")aplicar("b");else if(k==="cursiva")aplicar("i");else if(k==="subratllat")aplicar("u");},
+    onAct:function(a,b){if(a!=="llista")return;var v=b.getAttribute("data-v").split(":");S.lista=null;if(v[0]==="font")aplicar("f",v[1]);else aplicar("s",+v[1]);},
+    onClic:function(e,t){if(S.lista&&!t.closest(".desp")){S.lista=null;return true;}return false;},
     onKey:function(e){var k=e.key.toLowerCase();if(!(e.ctrlKey||e.metaKey))return false;if(k==="b"){e.preventDefault();aplicar("b");return true;}if(k==="i"){e.preventDefault();aplicar("i");return true;}if(k==="u"){e.preventDefault();aplicar("u");return true;}return false;},
-    entrar:function(){SEL=null;S.hint="";},
+    entrar:function(){SEL=null;S.hint="";S.lista=null;},
     html:function(){var i=paso,g=objetivoPaso(i),ok=g.every(function(x){return x[1];});return ventana(false)+hint()+objetivo(g)+(ok&&this.ultimo?msg(S.m[i],true)+bloqueFinPractica():msg(S.m[i],S.ok[i]));},
     ok:function(){return objetivoPaso(paso).every(function(x){return x[1];});}},extra||{});
 }
