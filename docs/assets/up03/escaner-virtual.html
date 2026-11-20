@@ -125,10 +125,30 @@ function cargar(){
 }
 function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
 function upd(fn){var o=cargar();fn(o);guardar(o);}
+
+/* ===== registro de tiempo activo y fallos por paso ===== */
+var ULTACT=Date.now(),BUF={},NBUF=0;
+function regO(o){o.reg=o.reg||{};["practica","ficha"].forEach(function(m){var r=o.reg[m]=o.reg[m]||{};r.t=r.t||{};r.f=r.f||{};r.ok=r.ok||{};r.ini=r.ini||"";});return o.reg;}
+function regFallo(){var pp=paso;upd(function(o){var r=regO(o)[MODO];r.f[pp]=(r.f[pp]||0)+1;});}
+function regOk(){var pp=paso;upd(function(o){var r=regO(o)[MODO];if(!r.ok[pp])r.ok[pp]=ahora();});}
+function actividad(){ULTACT=Date.now();}
+function volcarTiempo(){if(!NBUF)return;var b=BUF;BUF={};NBUF=0;upd(function(o){var r=regO(o)[MODO];if(!r.ini)r.ini=ahora();for(var k in b)r.t[k]=(r.t[k]||0)+b[k];});}
+function tic(){if(document.hidden||Date.now()-ULTACT>120000)return;BUF[paso]=(BUF[paso]||0)+1;NBUF++;if(NBUF>=5)volcarTiempo();}
+function mmss(x){x=Math.round(x||0);var m=Math.floor(x/60),s=x%60;return m+" min "+(s<10?"0":"")+s+" s";}
+function recorrido(t,lista,modo,o){
+  var r=regO(o)[modo],tt=0,ft=0;
+  lista.forEach(function(p,k){tt+=r.t[k]||0;ft+=r.f[k]||0;});
+  t("Inicio: "+(r.ini||"-")+" · Tiempo activo: "+mmss(tt)+" · Fallos: "+ft,10);
+  lista.forEach(function(p,k){if(p.ultimo&&modo==="ficha")return;t(String(p.t).replace(/<[^>]*>/g,""),11,true,2,true);t("Tiempo: "+mmss(r.t[k])+" · Fallos: "+(r.f[k]||0)+" · "+(r.ok[k]?"Completado a las "+r.ok[k].slice(-5):"Sin completar"),10,false,4,true);});
+}
+function arrancarRegistro(){
+  ["mousedown","keydown","mousemove","wheel","touchstart"].forEach(function(t){document.addEventListener(t,actividad,{passive:true});});
+  setInterval(tic,1000);window.addEventListener("pagehide",volcarTiempo);document.addEventListener("visibilitychange",volcarTiempo);
+}
 function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
 function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
 function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S03.04_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
-function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});regFallo();}
 
 /* ===== feedback positivo ===== */
 var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
@@ -412,10 +432,10 @@ function render(){
   $("sig").hidden=!!p.ultimo;
   $("sig").disabled=!ok;
   $("sig").className="btn pri"+(ok?" listo":"");
-  if(ok&&!prevOk[paso])confeti();
+  if(ok&&!prevOk[paso]){confeti();regOk();}
   prevOk[paso]=ok;
 }
-function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+function pasoNav(d){volcarTiempo();paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
 
 /* ===== acciones ===== */
 function alClicParte(id){
@@ -570,6 +590,8 @@ function informePractica(o){
   t("- Al colocar el documento: "+(o.err.coloca||0),11,false,2,true);
   t("- Al guardar el archivo: "+(o.err.guarda||0),11,false,2,true);
   t("");
+  t("Recorrido paso a paso",12,true);recorrido(t,PRACTICA,"practica",o);t("");
+  t("El tiempo activo solo cuenta mientras la ventana está visible y se está usando.",9);
   t("Código de comprobación: "+hash(canon.join("|")),9,true);
   return L;
 }
@@ -600,10 +622,11 @@ function informe(o){
   sec("f3","Calidad de los escaneos",F3,true);
   sec("f4","Incidencias",F4);
   sec("f5","Seguridad y privacidad",F5);
+  t("Tiempo en la ficha",12,true);recorrido(t,FICHA,"ficha",o);t("");
   t("Código de comprobación: "+hash(canon.join("|")),9,true);
   return L;
 }
-function descargaPDF(tipo){
+function descargaPDF(tipo){volcarTiempo();
   var o=cargar(),f=nombrePDF(o.alumno,tipo);
   if(!f)return;
   var lineas=tipo==="Practica"?informePractica(o):informe(o);
@@ -621,6 +644,7 @@ function init(){
   if(!stoOk)$("avisoSto").hidden=false;
   render();
 }
+arrancarRegistro();
 init();
 })();
 </script>

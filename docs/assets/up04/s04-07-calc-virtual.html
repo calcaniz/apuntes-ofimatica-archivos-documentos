@@ -150,10 +150,30 @@ function cargar(){
 }
 function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
 function upd(fn){var o=cargar();fn(o);guardar(o);}
+
+/* ===== registro de tiempo activo y fallos por paso ===== */
+var ULTACT=Date.now(),BUF={},NBUF=0;
+function regO(o){o.reg=o.reg||{};["practica","ficha"].forEach(function(m){var r=o.reg[m]=o.reg[m]||{};r.t=r.t||{};r.f=r.f||{};r.ok=r.ok||{};r.ini=r.ini||"";});return o.reg;}
+function regFallo(){var pp=paso;upd(function(o){var r=regO(o)[MODO];r.f[pp]=(r.f[pp]||0)+1;});}
+function regOk(){var pp=paso;upd(function(o){var r=regO(o)[MODO];if(!r.ok[pp])r.ok[pp]=ahora();});}
+function actividad(){ULTACT=Date.now();}
+function volcarTiempo(){if(!NBUF)return;var b=BUF;BUF={};NBUF=0;upd(function(o){var r=regO(o)[MODO];if(!r.ini)r.ini=ahora();for(var k in b)r.t[k]=(r.t[k]||0)+b[k];});}
+function tic(){if(document.hidden||Date.now()-ULTACT>120000)return;BUF[paso]=(BUF[paso]||0)+1;NBUF++;if(NBUF>=5)volcarTiempo();}
+function mmss(x){x=Math.round(x||0);var m=Math.floor(x/60),s=x%60;return m+" min "+(s<10?"0":"")+s+" s";}
+function recorrido(t,lista,modo,o){
+  var r=regO(o)[modo],tt=0,ft=0;
+  lista.forEach(function(p,k){tt+=r.t[k]||0;ft+=r.f[k]||0;});
+  t("Inicio: "+(r.ini||"-")+" · Tiempo activo: "+mmss(tt)+" · Fallos: "+ft,10);
+  lista.forEach(function(p,k){if(p.ultimo&&modo==="ficha")return;t(String(p.t).replace(/<[^>]*>/g,""),11,true,2,true);t("Tiempo: "+mmss(r.t[k])+" · Fallos: "+(r.f[k]||0)+" · "+(r.ok[k]?"Completado a las "+r.ok[k].slice(-5):"Sin completar"),10,false,4,true);});
+}
+function arrancarRegistro(){
+  ["mousedown","keydown","mousemove","wheel","touchstart"].forEach(function(t){document.addEventListener(t,actividad,{passive:true});});
+  setInterval(tic,1000);window.addEventListener("pagehide",volcarTiempo);document.addEventListener("visibilitychange",volcarTiempo);
+}
 function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
 function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
-function nombrePDF(a){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.07_Resultado_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
-function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});}
+function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S04.07_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});regFallo();}
 
 /* ===== feedback positivo ===== */
 var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
@@ -324,6 +344,12 @@ var DECISIONES=[
 ];
 var DATOS=[["El beneficio es de 72,25 €.",true],["Me gusta más el bocadillo de tortilla.",false],["8 productos están casi agotados y sobran manzanas y barritas.",true],["El logotipo es naranja.",false]];
 function bloqueFinPractica(){
+  var o=cargar(), f=nombrePDF(o.alumno,"Practica");
+  return bloqueFinPractica0()+'<div class="aprendido"><b>Descarga el informe de la práctica</b><p style="margin:6px 0 4px">Escribe tu nombre y apellidos:</p><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">'+
+    '<p style="margin:10px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S04.07_Practica_Nombre_Apellido.pdf")+'</div>'+
+    '<button class="btn pri grande" id="btnDescarga" data-act="descargar-p"'+(f?"":" disabled")+'>⬇️ Descargar el informe de la práctica</button></div>';
+}
+function bloqueFinPractica0(){
   return msg("✔ <b>¡Decisión justificada con datos!</b> Una hoja de cálculo no decide por nosotros, pero nos da la información para decidir mejor.",true)+
     '<p class="grande-ok">🎉</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</div>'+
     '<div class="msg info"><b>Ahora:</b> pasa a la <b>ficha de repaso</b> (Parte 2) y después termina tu proyecto en tu <b>Calc de verdad</b> (Parte 3).</div>';
@@ -399,10 +425,10 @@ function render(){
   $("sig").hidden=!!p.ultimo;
   $("sig").disabled=!ok;
   $("sig").className="btn pri"+(ok?" listo":"");
-  if(ok&&!prevOk[paso])confeti();
+  if(ok&&!prevOk[paso]){confeti();regOk();}
   prevOk[paso]=ok;
 }
-function pasoNav(d){paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+function pasoNav(d){volcarTiempo();paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
 
 /* ===== acciones ===== */
 function aceptar1(){
@@ -467,6 +493,7 @@ function alClic(e){
     intento(sec+i,vv===corr);
     upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
   }
+  else if(act==="descargar-p"){descargaPDF("Practica");return;}
   else if(act==="descargar"){descargaPDF();return;}
   render();
 }
@@ -475,7 +502,7 @@ function alEscribir(e){
   if(e.target.id==="pNom"){S.p4.nombre=e.target.value;return;}
   if(e.target.id!=="inNombre")return;
   var v=e.target.value;upd(function(o){o.alumno=v;});
-  var f=nombrePDF(v);$("nomPdf").textContent=f||"S04.07_Resultado_Nombre_Apellido.pdf";
+  var tp=MODO==="ficha"?"Resultado":"Practica";var f=nombrePDF(v,tp);$("nomPdf").textContent=f||"S04.07_"+tp+"_Nombre_Apellido.pdf";
   var bt=$("btnDescarga");if(bt)bt.disabled=!f;
 }
 function alCambio(e){
@@ -573,13 +600,27 @@ function informe(o){
   t("3. Práctica en Calc",12,true);
   t("Entrega en Aules Kiosco_FPB_Nombre.ods (con formato condicional, revisado y con la decisión escrita en Resumen) y Kiosco_FPB_Nombre.pdf.",11,false,2,true);
   t("");
+  t("Tiempo en la ficha",12,true);recorrido(t,FICHA,"ficha",o);t("");
   t("Código de comprobación: "+hash(canon.join("|")),9,true);
   return L;
 }
-function descargaPDF(){
-  var o=cargar(),f=nombrePDF(o.alumno);
+function informePractica(o){
+  var L=[],canon=[],pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S04.07 · ¿Abrimos el kiosco?",15,true);
+  t("Informe de la práctica virtual (Parte 1)",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha del informe: "+ahora(),11);
+  t("Estado: "+(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA"),11,true);t("");
+  t("Recorrido paso a paso",12,true);recorrido(t,PRACTICA,"practica",o);t("");
+  t("El tiempo activo solo cuenta mientras la ventana está visible y se está usando.",9);
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(tipo){volcarTiempo();
+  var o=cargar(),f=nombrePDF(o.alumno,tipo);
   if(!f)return;
-  var blob=new Blob([construyePDF(informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var blob=new Blob([construyePDF(tipo==="Practica"?informePractica(o):informe(o))],{type:"application/pdf"}),url=URL.createObjectURL(blob);
   var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
   if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
@@ -594,6 +635,7 @@ function init(){
   if(!stoOk)$("avisoSto").hidden=false;
   render();
 }
+arrancarRegistro();
 init();
 })();
 </script>
