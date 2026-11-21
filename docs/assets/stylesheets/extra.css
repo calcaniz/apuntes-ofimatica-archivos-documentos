@@ -1,9 +1,111 @@
+/* =========================================================
+   PALETA ALCAPROFE
+   Marino #0B1120 · Naranja #FF9944 · Crema #FDF0E3
+   ========================================================= */
 :root {
-  --color-principal: #ff9944;
-  --color-secundario: #81501c;
-  --color-principal-light: #fdf4e9;
-  --color-descriptivo: white;
+  --ap-marino: #0b1120;
+  --ap-marino-claro: #1a2338;
+  --ap-naranja: #ff9944;
+  --ap-naranja-oscuro: #b45309;
+  --ap-crema: #fdf0e3;
+
+  /* Variables propias de los apuntes */
+  --color-principal: var(--ap-naranja);
+  --color-principal-light: var(--ap-crema);
+  --color-secundario: var(--ap-marino);
+  --color-descriptivo: var(--ap-marino);
+  --color-descriptivo-fondo: var(--ap-crema);
+
+  /* Cabeceras de tabla (table-bg-principal): marino en claro */
+  --tabla-cab-fondo: var(--ap-marino);
+  --tabla-cab-texto: var(--ap-crema);
+  --tabla-cab-linea: var(--ap-naranja);
 }
+
+/* Modo claro: cabecera marina, acentos en naranja oscuro legible */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--ap-marino);
+  --md-primary-fg-color--light: var(--ap-marino-claro);
+  --md-primary-fg-color--dark: #05080f;
+  --md-primary-bg-color: var(--ap-crema);
+  --md-primary-bg-color--light: rgba(253, 240, 227, 0.7);
+  --md-accent-fg-color: var(--ap-naranja-oscuro);
+  --md-accent-fg-color--transparent: rgba(180, 83, 9, 0.1);
+  --md-accent-bg-color: #ffffff;
+  --md-typeset-a-color: var(--ap-naranja-oscuro);
+}
+
+/* Modo oscuro: el azul marino del canal */
+[data-md-color-scheme="slate"] {
+  --md-hue: 222;
+  --md-default-bg-color: var(--ap-marino);
+  --md-default-fg-color: rgba(253, 240, 227, 0.87);
+  --md-default-fg-color--light: rgba(253, 240, 227, 0.6);
+  --md-default-fg-color--lighter: rgba(253, 240, 227, 0.32);
+  --md-default-fg-color--lightest: rgba(253, 240, 227, 0.12);
+  --md-code-bg-color: #121a2c;
+  --md-footer-bg-color: #070b15;
+  --md-footer-bg-color--dark: #04070d;
+  --md-primary-fg-color: var(--ap-marino-claro);
+  --md-primary-fg-color--light: #253050;
+  --md-primary-fg-color--dark: #121a2c;
+  --md-primary-bg-color: var(--ap-crema);
+  --md-primary-bg-color--light: rgba(253, 240, 227, 0.7);
+  --md-accent-fg-color: var(--ap-naranja);
+  --md-accent-fg-color--transparent: rgba(255, 153, 68, 0.1);
+  --md-accent-bg-color: var(--ap-marino);
+  --md-typeset-a-color: var(--ap-naranja);
+
+  --color-principal-light: var(--ap-marino-claro);
+  --color-descriptivo: var(--ap-crema);
+  --color-descriptivo-fondo: var(--ap-marino-claro);
+
+  /* En oscuro la cabecera sigue naranja para destacar sobre el marino */
+  --tabla-cab-fondo: var(--ap-naranja);
+  --tabla-cab-texto: var(--ap-marino);
+  --tabla-cab-linea: transparent;
+}
+
+/* Texto marino sobre fondo normal: en oscuro pasa a naranja */
+[data-md-color-scheme="slate"] .md-typeset td.table-cl-secundario:not(.table-bg-principal),
+[data-md-color-scheme="slate"] .md-typeset th.table-cl-secundario:not(.table-bg-principal) {
+  color: var(--ap-naranja) !important;
+}
+
+/* El código en línea de las celdas con color hereda el color de la clase */
+.md-typeset td.table-cl-secundario code,
+.md-typeset td.table-cl-principal code {
+  color: inherit;
+  font-weight: 700;
+}
+.md-typeset td.table-cl-secundario code {
+  background-color: rgba(11, 17, 32, 0.07);
+}
+[data-md-color-scheme="slate"] .md-typeset td.table-cl-secundario code {
+  background-color: rgba(255, 153, 68, 0.12);
+}
+
+/* Pestañas: la activa subrayada en naranja, como en el banner */
+.md-tabs__item--active .md-tabs__link,
+.md-tabs__link--active {
+  color: var(--ap-naranja);
+  box-shadow: inset 0 -3px 0 var(--ap-naranja);
+  padding-bottom: 0.2rem;
+}
+.md-tabs__link:hover { color: var(--ap-naranja); }
+
+/* Tipografía de la marca en títulos */
+.md-header__title,
+.md-tabs__link,
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-family: "Montserrat", var(--md-text-font-family), sans-serif;
+}
+.md-typeset h1 { font-weight: 800; color: var(--md-default-fg-color); }
+.md-typeset h2 { font-weight: 700; }
+.md-typeset h3 { font-weight: 600; }
+.md-header__title { font-weight: 700; }
 
 .md-typeset p {
   text-align: justify;
@@ -16,7 +118,10 @@
 }
 
 .md-typeset__scrollwrap:has(.table-bg-principal) td.table-bg-principal,
-.md-typeset__scrollwrap:has(.table-bg-principal) th.table-bg-principal { background-color: var(--color-principal); }
+.md-typeset__scrollwrap:has(.table-bg-principal) th.table-bg-principal { background-color: var(--tabla-cab-fondo); }
+.md-typeset__scrollwrap:has(.table-bg-principal) td.table-bg-principal.table-cl-secundario,
+.md-typeset__scrollwrap:has(.table-bg-principal) th.table-bg-principal.table-cl-secundario { color: var(--tabla-cab-texto); }
+.md-typeset__scrollwrap:has(.table-bg-principal) thead th.table-bg-principal { box-shadow: inset 0 -3px 0 var(--tabla-cab-linea); }
 .md-typeset__scrollwrap:has(.table-bg-secundario) td.table-bg-secundario,
 .md-typeset__scrollwrap:has(.table-bg-secundario) th.table-bg-secundario { background-color: var(--color-secundario); }
 
@@ -70,9 +175,9 @@
 /* Bloque para resultados de aprendizaje */
 .md-typeset .admonition.bloque-descriptivo {
   padding: 0.7rem 0.9rem;
-  background-color: var(--color-principal);
+  background-color: var(--color-descriptivo-fondo);
   border: 0;
-  border-left: 4px solid var(--color-secundario);
+  border-left: 4px solid var(--color-principal);
   border-radius: 0;
   box-shadow: none;
   color: var(--color-descriptivo);
@@ -83,7 +188,7 @@
   margin: 0 0 0.25rem;
   padding: 0;
   background-color: transparent;
-  color: var(--color-secundario);
+  color: var(--color-descriptivo);
   font-weight: 700;
 }
 
@@ -260,5 +365,59 @@
 
   @bottom-right {
     content: none;
+  }
+}
+
+
+/* =========================================================
+   PDF CON EL ESTILO DEL CENTRO
+   La versión imprimible (mkdocs-upNN.yml) hereda este CSS:
+   al imprimir, y en la página imprimible, se restaura el
+   naranja original y se anula la marca AlcaProfe.
+   ========================================================= */
+@media print {
+  [data-md-color-scheme] {
+    --md-primary-fg-color: #ff9800;
+    --md-primary-fg-color--light: #ffa724;
+    --md-primary-fg-color--dark: #fa9000;
+    --md-primary-bg-color: #000000de;
+    --md-primary-bg-color--light: #0000008a;
+    --md-accent-fg-color: #64dd17;
+    --md-accent-fg-color--transparent: #64dd171a;
+    --md-accent-bg-color: #000000de;
+    --md-typeset-a-color: var(--md-primary-fg-color);
+
+    --color-principal: #ff9944;
+    --color-principal-light: #fdf4e9;
+    --color-secundario: #81501c;
+    --color-descriptivo: white;
+    --color-descriptivo-fondo: #ff9944;
+
+    --tabla-cab-fondo: #ff9944;
+    --tabla-cab-texto: #81501c;
+    --tabla-cab-linea: transparent;
+  }
+
+  .md-typeset h1,
+  .md-typeset h2,
+  .md-typeset h3 {
+    font-family: var(--md-text-font-family), sans-serif;
+  }
+  .md-typeset h1 { font-weight: 300; color: var(--md-default-fg-color--light); }
+  .md-typeset h2 { font-weight: 300; }
+  .md-typeset h3 { font-weight: 400; }
+
+  .md-typeset .admonition.bloque-descriptivo {
+    border-left-color: var(--color-secundario);
+  }
+  .md-typeset .admonition.bloque-descriptivo > .admonition-title {
+    color: var(--color-secundario);
+  }
+
+  .md-typeset td.table-cl-secundario code,
+  .md-typeset td.table-cl-principal code {
+    color: var(--md-code-fg-color);
+    background-color: var(--md-code-bg-color);
+    font-weight: inherit;
   }
 }

@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de la impresora</title>
+<style>
+:root{
+  --principal:#ff9944; --secundario:#81501c; --claro:#fdf4e9; --borde:#d9c9b6;
+  --ok:#2e7d32; --okbg:#e8f5e9; --ko:#c62828; --kobg:#fdecea; --texto:#2b2118; --gris:#6b6258;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#fff;font-size:19px;line-height:1.45;overflow-x:hidden}
+.app{max-width:900px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--secundario);color:#fff;padding:12px 16px}
+header h1{font-size:19px;margin:0 0 8px;font-weight:700}
+.prog{display:flex;align-items:center;gap:10px;font-size:16px}
+.barra-prog{flex:1;height:12px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--principal);border-radius:99px;transition:width .3s}
+.estrellas{font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;white-space:nowrap}
+.aviso-sto{background:#fff3cd;border-bottom:1px solid #e0b100;color:#5a4300;padding:6px 14px;font-size:15px}
+.card{flex:1;padding:18px 16px}
+.card h2{font-size:26px;margin:0 0 6px;color:var(--secundario)}
+.ayuda{font-size:19px;margin:0 0 16px;background:var(--claro);border-left:6px solid var(--principal);padding:10px 14px;border-radius:6px}
+.btn{font:inherit;font-size:20px;min-height:54px;padding:10px 22px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;color:var(--texto)}
+.btn:hover{background:#f8f1e8}
+.btn.pri{background:var(--principal);border-color:var(--secundario);color:#2b1a05;font-weight:700}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.grande{font-size:22px;padding:14px 28px}
+.op{font:inherit;font-size:19px;min-height:52px;padding:8px 16px;border-radius:12px;border:2px solid #b9ad9f;background:#fff;cursor:pointer;text-align:left;color:var(--texto)}
+.op:hover{background:#f8f1e8}
+.op.sel{border-color:var(--secundario);background:var(--claro);font-weight:700}
+.op.bien{border-color:var(--ok);background:var(--okbg);font-weight:700}
+.op.mal{border-color:var(--ko);background:var(--kobg)}
+.op.quitada{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.opciones{display:flex;flex-wrap:wrap;gap:10px}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:2px solid var(--borde);background:#faf7f3;position:sticky;bottom:0}
+@keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#sig.listo:not(:disabled){animation:pulso 1.2s ease-in-out infinite}
+.conf{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:cae 2.4s ease-in forwards}
+@keyframes cae{to{transform:translateY(115vh) rotate(420deg)}}
+@media (prefers-reduced-motion:reduce){#sig.listo:not(:disabled){animation:none}.conf{display:none}}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:19px}
+.msg.ok{background:var(--okbg);color:#1b5e20;border:2px solid var(--ok)}
+.msg.ko{background:var(--kobg);color:#8e1b1b;border:2px solid var(--ko)}
+.msg.info{background:var(--claro);border:2px solid var(--borde)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:700px){.dos{grid-template-columns:1fr}}
+.maq{background:#f4f1ec;border:2px solid var(--borde);border-radius:14px;padding:8px}
+.maq svg{width:100%;height:auto;display:block}
+.parte{cursor:pointer}
+.parte:hover{filter:brightness(1.08)}
+.parte.vis rect,.parte.vis polygon,.parte.vis line,.parte.vis path{stroke:#2e7d32;stroke-width:5}
+.parte.sel rect,.parte.sel polygon,.parte.sel line,.parte.sel path{stroke:#ff8a00;stroke-width:6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font:inherit;font-size:16px;border:2px solid #b9ad9f;background:#fff;border-radius:99px;padding:6px 14px;cursor:pointer;color:var(--texto)}
+.chip.vis{border-color:var(--ok);background:var(--okbg)}
+.chip.sel{border-color:var(--secundario);font-weight:700}
+.cont{font-size:18px;margin:8px 0}
+.pasos-l{list-style:none;margin:0 0 12px;padding:0}
+.pasos-l li{padding:6px 10px;border-radius:8px;margin-bottom:4px;font-size:18px;color:var(--gris)}
+.pasos-l li.act{background:var(--claro);color:var(--texto);font-weight:700;border:2px solid var(--principal)}
+.pasos-l li.hecho{color:var(--ok)}
+.info-parte{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:12px 14px;margin-top:10px}
+.acc{border:2px solid var(--borde);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+.acc.ok{border-color:var(--ok);background:var(--okbg)}
+.acc .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.acc .ft b{font-size:19px}
+.hs{width:120px;height:160px;background:#fff;border:2px solid #999;position:relative;overflow:hidden;display:inline-block;margin:4px;vertical-align:top}
+.hs.grande{width:150px;height:200px}
+.hs .in{position:absolute;left:12px;right:12px;top:14px}
+.hs .tt{display:block;height:12px;background:#222;width:60%;margin:0 auto 10px}
+.hs .ln{display:block;height:6px;background:#333;margin-bottom:8px}
+.hs .ln.s{width:70%}
+.hs.torcida .in{transform:rotate(-9deg);transform-origin:center}
+.hs.borrosa .in{filter:blur(2.4px)}
+.hs.cortada .in{left:-46px;right:-34px}
+.tam{margin:8px 0 2px;font-size:18px}
+.tam-bar{height:14px;background:#e6dfd5;border-radius:99px;overflow:hidden}
+.tam-bar i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.pregunta{border:2px solid var(--borde);border-radius:12px;padding:12px;margin-bottom:12px}
+.pregunta.ok{border-color:var(--ok)}
+.pregunta>b{display:block;margin-bottom:8px;font-size:20px}
+.pregunta .opciones{flex-direction:column}
+.pregunta .op{width:100%}
+.pregunta .fila-img{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.pregunta .fila-img .opciones{flex:1;min-width:220px}
+.nombre-pdf{font-family:Consolas,Menlo,monospace;font-size:20px;background:#f4f4f4;border:2px solid #bbb;border-radius:10px;padding:10px 14px;word-break:break-all;margin:10px 0}
+input[type=text]{font:inherit;font-size:20px;min-height:52px;padding:8px 12px;border:2px solid #b9ad9f;border-radius:10px;width:100%}
+.grande-ok{font-size:64px;text-align:center;margin:0}
+.aprendido{background:var(--claro);border:2px solid var(--borde);border-radius:12px;padding:10px 16px;margin:12px 0}
+.aprendido ul{margin:6px 0 0;padding-left:22px}
+.maq.tiembla{animation:tiembla .35s}
+@keyframes tiembla{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.parpadea{animation:parpadeo 1s steps(2,start) infinite}
+@keyframes parpadeo{to{opacity:.35}}
+.agita{animation:agita .25s ease-in-out 6;transform-box:fill-box;transform-origin:center}
+@keyframes agita{0%,100%{transform:translateX(0)}25%{transform:translateX(-16px)}75%{transform:translateX(16px)}}
+.hoja-sal.sale{animation:sale 1.1s ease-out}
+@keyframes sale{from{transform:translateY(34px);opacity:0}to{transform:translateY(0);opacity:1}}
+.entra{animation:entra .5s ease-out}
+@keyframes entra{from{transform:translateY(60px);opacity:.2}to{transform:translateY(0);opacity:1}}
+.cart-fuera{margin-top:8px;text-align:center;font-size:17px;background:#f1efec;border:2px dashed #8a8278;border-radius:10px;padding:6px}
+.clic{text-align:center;font-size:30px;font-weight:800;color:#2e7d32;letter-spacing:2px}
+.teclas{display:flex;justify-content:center;gap:14px;margin-top:10px}
+.tecla{font:inherit;font-size:24px;font-weight:700;min-width:74px;min-height:62px;border-radius:50%;border:3px solid #222;background:#4a4a4a;color:#fff;cursor:pointer}
+.tecla.ok{min-width:84px;background:#6d6d6d}
+.tecla:active{transform:scale(.95)}
+.pantallaG{font-family:Consolas,monospace;background:#a9dbb2;border:4px solid #3b3b3b;border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:22px;font-weight:700}
+.pantallaG span:last-child{font-size:19px;font-weight:400}
+.lcd-mini{font-family:Consolas,monospace;background:#ffcf73;border:4px solid #3b3b3b;border-radius:8px;padding:8px 12px;min-width:170px;display:flex;flex-direction:column;align-items:center;font-size:17px;font-weight:700}
+.lcd-mini span:last-child{font-size:15px;font-weight:400}
+.hojaG{display:inline-block;width:170px;height:220px;background:#fff;border:2px solid #999;padding:14px 12px;text-align:left;box-shadow:0 2px 8px rgba(0,0,0,.2);position:relative}
+.hojaG .hg-t{font-weight:800;font-size:13px;margin-bottom:10px;text-align:center}
+.hojaG .hg-l{display:block;height:6px;background:#222;margin-bottom:9px}
+.hojaG .hg-l.c{width:65%}
+.hojaG.rayas .hg-t,.hojaG.rayas .hg-l{opacity:.45}
+.hojaG.rayas:after{content:"";position:absolute;top:0;bottom:0;left:38%;width:9px;background:#fff;box-shadow:46px 0 0 #fff}
+.hojaG .hg-barras{display:flex;gap:4px;margin-top:8px}
+.hojaG .hg-barras i{flex:1;height:18px}
+.hojaG .hg-pie{font-size:10px;margin-top:8px;text-align:center}
+.orden-ok{margin:0 0 10px;padding-left:26px;font-size:18px;color:var(--ok);font-weight:700}
+.orden-ok li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="titulo">🖨️ Taller de la impresora</h1>
+    <div class="prog"><span id="pasoTxt"></span><div class="barra-prog"><i id="barra"></i></div><span class="estrellas" id="est" title="Estrellas por acertar a la primera">⭐ 0</span></div>
+  </header>
+  <div class="aviso-sto" id="avisoSto" hidden>Tu navegador no deja guardar datos entre pantallas. No cierres esta página hasta descargar el resultado.</div>
+  <div class="card" id="card"></div>
+  <div class="nav">
+    <button class="btn" id="atras">← Atrás</button>
+    <button class="btn pri" id="sig">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+/* ===== almacenamiento compartido entre la práctica y la ficha ===== */
+var KEY="s0307-ofimatica-v1", mem=null, stoOk=true;
+function cargar(){
+  var o=null;
+  try{var s=localStorage.getItem(KEY);if(s)o=JSON.parse(s);}catch(e){stoOk=false;}
+  if(!o)o=mem||{};
+  o.alumno=o.alumno||""; o.practica=o.practica||{}; o.ficha=o.ficha||{}; o.err=o.err||{}; o.est=o.est||{}; o.fails=o.fails||{};
+  return o;
+}
+function guardar(o){mem=o;try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){stoOk=false;$("avisoSto").hidden=false;}}
+function upd(fn){var o=cargar();fn(o);guardar(o);}
+
+/* ===== registro de tiempo activo y fallos por paso ===== */
+var ULTACT=Date.now(),BUF={},NBUF=0;
+function regO(o){o.reg=o.reg||{};["practica","ficha"].forEach(function(m){var r=o.reg[m]=o.reg[m]||{};r.t=r.t||{};r.f=r.f||{};r.ok=r.ok||{};r.ini=r.ini||"";});return o.reg;}
+function regFallo(){var pp=paso;upd(function(o){var r=regO(o)[MODO];r.f[pp]=(r.f[pp]||0)+1;});}
+function regOk(){var pp=paso;upd(function(o){var r=regO(o)[MODO];if(!r.ok[pp])r.ok[pp]=ahora();});}
+function actividad(){ULTACT=Date.now();}
+function volcarTiempo(){if(!NBUF)return;var b=BUF;BUF={};NBUF=0;upd(function(o){var r=regO(o)[MODO];if(!r.ini)r.ini=ahora();for(var k in b)r.t[k]=(r.t[k]||0)+b[k];});}
+function tic(){if(document.hidden||Date.now()-ULTACT>120000)return;BUF[paso]=(BUF[paso]||0)+1;NBUF++;if(NBUF>=5)volcarTiempo();}
+function mmss(x){x=Math.round(x||0);var m=Math.floor(x/60),s=x%60;return m+" min "+(s<10?"0":"")+s+" s";}
+function recorrido(t,lista,modo,o){
+  var r=regO(o)[modo],tt=0,ft=0;
+  lista.forEach(function(p,k){tt+=r.t[k]||0;ft+=r.f[k]||0;});
+  t("Inicio: "+(r.ini||"-")+" · Tiempo activo: "+mmss(tt)+" · Fallos: "+ft,10);
+  lista.forEach(function(p,k){if(p.ultimo&&modo==="ficha")return;t(String(p.t).replace(/<[^>]*>/g,""),11,true,2,true);t("Tiempo: "+mmss(r.t[k])+" · Fallos: "+(r.f[k]||0)+" · "+(r.ok[k]?"Completado a las "+r.ok[k].slice(-5):"Sin completar"),10,false,4,true);});
+}
+function arrancarRegistro(){
+  ["mousedown","keydown","mousemove","wheel","touchstart"].forEach(function(t){document.addEventListener(t,actividad,{passive:true});});
+  setInterval(tic,1000);window.addEventListener("pagehide",volcarTiempo);document.addEventListener("visibilitychange",volcarTiempo);
+}
+function ahora(){var d=new Date(),z=function(n){return (n<10?"0":"")+n;};return z(d.getDate())+"/"+z(d.getMonth()+1)+"/"+d.getFullYear()+" "+z(d.getHours())+":"+z(d.getMinutes());}
+function norm(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]/g,"");}
+function nombrePDF(a,tipo){var p=a.trim().split(/\s+/).filter(Boolean);return p.length<2?null:"S03.07_"+(tipo||"Resultado")+"_"+norm(p[0])+"_"+norm(p.slice(1).join(""))+".pdf";}
+function error(k){upd(function(o){o.err[k]=(o.err[k]||0)+1;});regFallo();}
+
+/* ===== feedback positivo ===== */
+var ELOGIOS=["¡Muy bien!","¡Genial!","¡Eso es!","¡Perfecto!","¡Buen trabajo!","¡Lo has clavado!","¡Excelente!"];
+var ANIMOS=["¡Casi! Inténtalo otra vez.","¡Sin problema! Prueba de nuevo.","¡Ánimo, tú puedes!","Piénsalo un momento y vuelve a probar."];
+function elogio(seed){return ELOGIOS[Math.abs(seed|0)%ELOGIOS.length];}
+function animo(n){return ANIMOS[Math.abs(n|0)%ANIMOS.length];}
+function semilla(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return Math.abs(h);}
+function intento(clave,ok){upd(function(o){if(ok){if(!o.fails[clave])o.est[clave]=1;}else o.fails[clave]=(o.fails[clave]||0)+1;});}
+function numEst(){return Object.keys(cargar().est).length;}
+function confeti(){
+  try{if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;}catch(e){}
+  var em=["🎉","⭐","✨","🎊","🌟"];
+  for(var i=0;i<22;i++){
+    var d=document.createElement("span");d.className="conf";d.textContent=em[i%em.length];
+    d.style.left=(Math.random()*96)+"vw";d.style.animationDelay=(Math.random()*0.6)+"s";d.style.fontSize=(22+Math.random()*16)+"px";
+    document.body.appendChild(d);(function(x){setTimeout(function(){if(x.parentNode)x.parentNode.removeChild(x);},3200);})(d);
+  }
+}
+
+/* ===== datos ===== */
+var PARTES=[
+ ["panel","Panel de control","Muestra los mensajes de la impresora y tiene los botones para moverte por el menú."],
+ ["salida","Bandeja de salida","Aquí salen las hojas impresas, boca abajo y en orden."],
+ ["tapa","Tapa frontal","Se abre para cambiar el cartucho de tóner o sacar un papel atascado."],
+ ["cartucho","Cartucho de tóner","Contiene el tóner: un polvo muy fino que forma las letras y los dibujos."],
+ ["fusor","Fusor (zona caliente)","Calienta el papel para pegar el tóner. ¡Quema! Nunca se toca."],
+ ["bandeja","Bandeja de papel","Guarda las hojas en blanco. Nunca se llena por encima de la marca de máximo."],
+ ["encendido","Botón de encendido","Enciende y apaga la impresora."],
+ ["conexion","Conexión","El cable une la impresora con el ordenador o con la red."]
+];
+function parte(id){return PARTES.filter(function(p){return p[0]===id;})[0];}
+var ORDEN_REL=["cartucho","encendido","salida","fusor","panel","bandeja","conexion","tapa"];
+function relComprobar(){
+  var r=S.rel; if(!r.name||!r.part)return;
+  if(r.name===r.part){
+    var x=parte(r.name); intento("rel_"+r.name,true);
+    r.done[r.name]=true; r.msg="✔ <b>"+elogio(semilla(r.name))+"</b> "+x[1]+": "+x[2]; r.ok=true; r.name=null; r.part=null;
+  }else{
+    intento("rel_"+r.name,false); r.msg="¡Casi! Ese nombre no es de esa parte. ¡Prueba otra vez, tú puedes!"; r.ok=false; r.part=null; error("relaciona");
+  }
+}
+
+/* estado de la práctica (en memoria) */
+var S={
+  rel:{name:null,part:null,done:{},msg:"",ok:false},
+  av:{q0:null,q1:null},
+  sa:{tapa:false,fuera:false,msg:"",ok:false},
+  nu:{bolsa:true,agitado:false,precinto:true,anim:false,msg:"",ok:false},
+  co:{dentro:false,tapa:true,residuo:null,msg:"",ok:false,clic:false},
+  me:{nivel:0,i:0,j:0,impresa:false,msg:"",ok:false,anim:false}
+};
+var paso=0;
+var MODO=((location.hash||"").toLowerCase()==="#ficha")?"ficha":"practica";
+
+/* ===== dibujo de la impresora =====
+   o: {abierta, cartucho("dentro"|"fuera"), pantalla:{txt, txt2, color}, led, hoja:"rayas"|"prueba"|null, vis, sel, etiquetas, sale} */
+function impresora(o){
+  var vis=o.vis||{}, sel=o.sel||null;
+  function c(p){return "parte"+(vis[p]?" vis":"")+(sel===p?" sel":"");}
+  function t(p){return '<title>'+esc(o.lab?parte(p)[1]:"Parte de la impresora")+'</title>';}
+  var pan=o.pantalla||{txt:"Preparada",txt2:"",color:"verde"};
+  var lcd={verde:"#a9dbb2",ambar:"#ffcf73",rojo:"#ff9c8f"}[pan.color]||"#a9dbb2";
+  var s='<svg viewBox="20 10 520 330" role="img" aria-label="Impresora láser">';
+  /* sombra y cuerpo */
+  s+='<ellipse cx="270" cy="322" rx="235" ry="10" fill="#d8d2c8"/>';
+  s+='<rect x="60" y="60" width="420" height="250" rx="16" fill="#ebe7e1" stroke="#8a8278" stroke-width="3"/>';
+  s+='<rect x="60" y="60" width="420" height="34" rx="16" fill="#dcd6cd" stroke="#8a8278" stroke-width="3"/>';
+  /* bandeja de salida */
+  s+='<g class="'+c("salida")+'" data-p="salida">'+t("salida")+'<path d="M120 62 L360 62 L345 88 L135 88 Z" fill="#b9b2a7" stroke="#6f685f" stroke-width="3"/><rect x="150" y="80" width="180" height="6" rx="3" fill="#7d766c"/></g>';
+  if(o.hoja)s+=hojaSalida(o.hoja,o.sale);
+  /* panel de control */
+  s+='<g class="'+c("panel")+'" data-p="panel">'+t("panel")+'<rect x="358" y="104" width="108" height="86" rx="8" fill="#3b3b3b" stroke="#222" stroke-width="3"/>'+
+     '<rect x="366" y="112" width="92" height="34" rx="3" fill="'+lcd+'" stroke="#1d1d1d" stroke-width="2"'+(o.parpadea?' class="parpadea"':'')+'/>'+
+     '<text x="412" y="127" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Consolas,monospace" fill="#1b1b1b">'+esc(pan.txt)+'</text>'+
+     '<text x="412" y="140" text-anchor="middle" font-size="9" font-family="Consolas,monospace" fill="#1b1b1b">'+esc(pan.txt2||"")+'</text>'+
+     '<circle cx="382" cy="168" r="9" fill="#5a5a5a"/><text x="382" y="172" text-anchor="middle" font-size="10" fill="#fff">◀</text>'+
+     '<circle cx="412" cy="168" r="11" fill="#6d6d6d"/><text x="412" y="172" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">OK</text>'+
+     '<circle cx="442" cy="168" r="9" fill="#5a5a5a"/><text x="442" y="172" text-anchor="middle" font-size="10" fill="#fff">▶</text>'+
+     '<circle cx="456" cy="184" r="3.5" fill="'+(pan.color==="verde"?"#3ddc5b":"#ffab00")+'"/></g>';
+  /* botón de encendido */
+  s+='<g class="'+c("encendido")+'" data-p="encendido">'+t("encendido")+'<circle cx="440" cy="270" r="15" fill="#4a4a4a" stroke="#222" stroke-width="3"/><path d="M440 261 V270 M433 264 A9 9 0 1 0 447 264" stroke="#7CFC8A" stroke-width="2.5" fill="none"/></g>';
+  /* conexión */
+  s+='<g class="'+c("conexion")+'" data-p="conexion">'+t("conexion")+'<path d="M480 225 H512 V300" stroke="#555" stroke-width="6" fill="none"/><rect x="474" y="215" width="14" height="20" rx="2" fill="#cfd6dd" stroke="#555" stroke-width="3"/>'+(o.lab?'<text x="520" y="318" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#333">USB</text>':'')+'</g>';
+  /* bandeja de papel */
+  s+='<g class="'+c("bandeja")+'" data-p="bandeja">'+t("bandeja")+'<rect x="80" y="252" width="270" height="46" rx="5" fill="#d9d3ca" stroke="#8a8278" stroke-width="3"/><rect x="175" y="262" width="80" height="10" rx="5" fill="#9e968b"/><rect x="92" y="282" width="40" height="8" fill="#fff" stroke="#8a8278"/><text x="140" y="290" font-size="9" font-family="sans-serif" fill="#5a534a">A4</text></g>';
+  /* interior y tapa */
+  if(o.abierta){
+    s+='<rect x="80" y="104" width="262" height="136" rx="8" fill="#2f2f30" stroke="#1d1d1d" stroke-width="3"/>';
+    s+='<g class="'+c("fusor")+'" data-p="fusor">'+t("fusor")+'<rect x="94" y="112" width="234" height="16" rx="4" fill="#b8502f" stroke="#6e2a14" stroke-width="2"/>'+
+       '<path d="M190 124 q4 -6 0 -10 M206 124 q4 -6 0 -10 M222 124 q4 -6 0 -10" stroke="#ffd8c2" stroke-width="2" fill="none"/></g>';
+    if(o.cartucho==="dentro"){
+      s+='<g class="'+c("cartucho")+(o.entra?" entra":"")+'" data-p="cartucho">'+t("cartucho")+'<rect x="104" y="142" width="214" height="70" rx="10" fill="#1d1d1f" stroke="#000" stroke-width="2"/>'+
+         '<rect x="186" y="150" width="50" height="14" rx="7" fill="#ff8a1f" stroke="#9a4a00" stroke-width="2"/>'+
+         '<text x="211" y="196" text-anchor="middle" font-size="12" font-weight="700" font-family="sans-serif" fill="#cfcfcf">TÓNER</text></g>';
+    }else{
+      s+='<g class="parte'+(o.marcaHueco?" sel":"")+'" data-p="hueco"><title>Hueco del cartucho</title><rect x="104" y="142" width="214" height="70" rx="10" fill="#3d3d40" stroke="#9e9e9e" stroke-width="2" stroke-dasharray="7 5"/>'+
+         '<text x="211" y="182" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#bdbdbd">hueco del cartucho</text></g>';
+    }
+    /* tapa abierta, abatida hacia delante */
+    s+='<g class="'+c("tapa")+'" data-p="tapa">'+t("tapa")+'<path d="M80 240 L342 240 L362 262 L60 262 Z" fill="#cfc9c0" stroke="#8a8278" stroke-width="3"/><rect x="180" y="248" width="62" height="7" rx="3" fill="#9e968b"/></g>';
+  }else{
+    s+='<g class="'+c("tapa")+'" data-p="tapa">'+t("tapa")+'<rect x="80" y="104" width="262" height="136" rx="8" fill="#e2ddd5" stroke="#8a8278" stroke-width="3"/>'+
+       '<rect x="166" y="112" width="90" height="12" rx="6" fill="#b7afa4"/><text x="211" y="180" text-anchor="middle" font-size="15" font-weight="700" font-family="sans-serif" fill="#a59d92">LaserJet</text></g>';
+  }
+  s+='</svg>';
+  return '<div class="maq'+(o.tiembla?" tiembla":"")+'">'+s+'</div>';
+}
+function hojaSalida(tipo,sale){
+  var y=10;
+  var s='<g class="hoja-sal'+(sale?" sale":"")+'"><rect x="175" y="'+(30+y)+'" width="130" height="52" fill="#fff" stroke="#999" stroke-width="1.5"/>';
+  for(var i=0;i<5;i++)s+='<rect x="186" y="'+(40+y+i*8)+'" width="'+(i===0?60:(i%2?100:90))+'" height="4" fill="'+(tipo==="rayas"?"#9a9a9a":"#222")+'"/>';
+  if(tipo==="rayas")s+='<rect x="220" y="'+(30+y)+'" width="7" height="52" fill="#fff"/><rect x="262" y="'+(30+y)+'" width="5" height="52" fill="#fff"/>';
+  return s+'</g>';
+}
+/* hoja grande: "rayas" (tóner gastado) o "prueba" (página de prueba nítida) */
+function hojaGrande(tipo){
+  var h='<div class="hojaG '+tipo+'"><div class="hg-t">'+(tipo==="prueba"?"PÁGINA DE PRUEBA":"Pedido de material")+'</div>';
+  for(var i=0;i<7;i++)h+='<i class="hg-l'+(i%3===2?" c":"")+'"></i>';
+  if(tipo==="prueba")h+='<div class="hg-barras"><i style="background:#000"></i><i style="background:#555"></i><i style="background:#999"></i><i style="background:#ccc"></i></div><div class="hg-pie">Tóner: 100 % · Calidad: correcta</div>';
+  return h+'</div>';
+}
+/* cartucho nuevo, en grande */
+function cartuchoNuevo(n){
+  var s='<svg viewBox="0 0 420 210" role="img" aria-label="Cartucho de tóner nuevo">';
+  s+='<g class="'+(n.anim?"agita":"")+'">';
+  s+='<rect x="40" y="40" width="340" height="110" rx="16" fill="#1d1d1f" stroke="#000" stroke-width="3"/>';
+  s+='<rect x="175" y="52" width="70" height="20" rx="10" fill="#555" stroke="#222" stroke-width="2"/>';
+  s+='<text x="210" y="112" text-anchor="middle" font-size="18" font-weight="700" font-family="sans-serif" fill="#d0d0d0">TÓNER NEGRO</text>';
+  s+='<g class="parte" data-p="tambor"><title>Tambor (rodillo verde)</title><rect x="70" y="146" width="280" height="18" rx="9" fill="#2e8b57" stroke="#14532d" stroke-width="2"/></g>';
+  if(n.precinto)s+='<g class="parte" data-p="lengueta"><title>Precinto naranja</title><path d="M380 70 L410 70 L410 120 L380 120 Z" fill="#ff8a1f" stroke="#9a4a00" stroke-width="3"/><path d="M380 80 H40" stroke="#ff8a1f" stroke-width="5" stroke-dasharray="10 6"/><text x="395" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="#5a2a00">⇢</text></g>';
+  s+='</g>';
+  if(n.bolsa)s+='<g class="parte" data-p="bolsa"><title>Bolsa protectora</title><rect x="20" y="20" width="390" height="170" rx="22" fill="rgba(170,190,205,.55)" stroke="#6d8596" stroke-width="3"/><text x="215" y="185" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#2f4a5c">bolsa protectora · pulsa para abrir</text></g>';
+  return '<div class="maq" style="max-width:520px;margin:0 auto 10px">'+s+'</div>';
+}
+function opB(act,data,txt,sel){
+  var at="";for(var k in data)at+=' data-'+k+'="'+esc(data[k])+'"';
+  return '<button class="op'+(sel?" sel":"")+'" data-act="'+act+'"'+at+'>'+txt+'</button>';
+}
+function lista(items,act){
+  return '<ul class="pasos-l">'+items.map(function(t,i){return '<li class="'+(i<act?"hecho":(i===act?"act":""))+'">'+(i<act?"✔ ":(i+1)+". ")+t+'</li>';}).join("")+'</ul>';
+}
+function msg(m,ok){return m?'<div class="msg '+(ok?"ok":"ko")+'">'+m+'</div>':"";}
+
+/* ===== menú del panel ===== */
+var MENU=[
+ {n:"Consumibles",sub:["Nivel de tóner","Volver"]},
+ {n:"Informes",sub:["Página de prueba","Página de consumibles","Volver"]},
+ {n:"Bandejas",sub:["Tamaño bandeja 1","Volver"]},
+ {n:"Configuración",sub:["Idioma","Volver"]}
+];
+function pantallaMenu(){
+  var m=S.me;
+  if(m.impresa)return {txt:"Preparada",txt2:"Página impresa",color:"verde"};
+  if(m.nivel===0)return {txt:"Preparada",txt2:"OK = Menú",color:"verde"};
+  if(m.nivel===1)return {txt:"MENÚ",txt2:"◀ "+MENU[m.i].n+" ▶",color:"verde"};
+  return {txt:MENU[m.i].n.toUpperCase(),txt2:"◀ "+MENU[m.i].sub[m.j]+" ▶",color:"verde"};
+}
+
+/* ===== PRÁCTICA ===== */
+var PRACTICA=[
+ {t:"1. Une cada nombre con su parte",
+  ayuda:"<b>1.</b> Pulsa un nombre. <b>2.</b> Pulsa esa parte en el dibujo. Si aciertas, se queda en verde. La tapa está abierta para que veas el interior.",
+  html:function(){
+    var r=S.rel, hechas=ORDEN_REL.filter(function(id){return r.done[id];}), n=hechas.length;
+    var h='<div class="dos"><div>'+impresora({abierta:true,cartucho:"dentro",vis:r.done,sel:r.part,lab:false})+'</div><div>';
+    h+='<p class="cont"><b>Llevas '+n+' de 8</b></p>';
+    h+='<div class="chips">'+ORDEN_REL.filter(function(id){return !r.done[id];}).map(function(id){
+      return '<button class="chip'+(r.name===id?" sel":"")+'" data-act="rel-name" data-p="'+id+'">'+parte(id)[1]+'</button>';}).join("")+'</div>';
+    if(n)h+='<p class="cont">Ya unidas:</p><div class="chips">'+hechas.map(function(id){return '<span class="chip vis">✔ '+parte(id)[1]+'</span>';}).join("")+'</div>';
+    h+=msg(r.msg,r.ok);
+    if(n===8)h+=msg("🎉 ¡Muy bien! Has unido las 8 partes. Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return Object.keys(S.rel.done).length===8;}},
+
+ {t:"2. Lee el aviso",
+  ayuda:"Has imprimido un pedido de material y ha salido raro. Mira la hoja y <b>lee la pantalla</b> de la impresora antes de hacer nada.",
+  html:function(){
+    var a=S.av;
+    var h='<div class="dos"><div>'+impresora({abierta:false,pantalla:{txt:"TÓNER BAJO",txt2:"Cambie cartucho",color:"ambar"},parpadea:true,hoja:"rayas",lab:true})+
+      '<p class="cont" style="text-align:center"><b>La hoja que ha salido:</b></p><div style="text-align:center">'+hojaGrande("rayas")+'</div></div><div>';
+    h+=pregunta("av",0,"¿Qué te dice la impresora?",["Que no tiene papel","Que queda poco tóner","Que la tapa está abierta"],1,a.q0,null,"La pantalla dice «TÓNER BAJO». Por eso las letras salen claras y con rayas blancas.");
+    if(a.q0===1)h+=pregunta("av",1,"¿Qué haces?",["Seguir imprimiendo aunque salgan rayas","Sacar el cartucho y golpearlo para que salga más tóner","Cambiar el cartucho de tóner por uno nuevo"],2,a.q1,null,"Cuando el tóner se acaba, se cambia el cartucho. Golpearlo puede romperlo y soltar polvo de tóner.");
+    if(a.q0===1&&a.q1===2)h+=msg("🛠️ <b>¡Vamos a cambiarlo!</b> Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return S.av.q0===1&&S.av.q1===2;}},
+
+ {t:"3. Saca el cartucho gastado",
+  ayuda:"Ahora actúa sobre la impresora: <b>pulsa sus partes en el dibujo</b>. Sigue la lista.",
+  html:function(){
+    var a=S.sa, act=!a.tapa?0:(!a.fuera?1:2);
+    var h='<div class="dos"><div>'+impresora({abierta:a.tapa,cartucho:a.fuera?"fuera":"dentro",pantalla:a.tapa?{txt:"TAPA ABIERTA",txt2:"",color:"ambar"}:{txt:"TÓNER BAJO",txt2:"Cambie cartucho",color:"ambar"},lab:true,tiembla:a.tiembla})+
+      (a.fuera?'<div class="cart-fuera">⬛ Cartucho gastado, fuera de la impresora</div>':'')+'</div><div>';
+    h+=lista(["Abre la tapa frontal (pulsa la tapa)","Saca el cartucho gastado (pulsa el cartucho)"],act);
+    h+=msg(a.msg,a.ok);
+    if(a.fuera)h+=msg("🎉 <b>¡Fuera!</b> Cógelo siempre por el asa y no lo pongas boca abajo, para que no caiga tóner. Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){return S.sa.fuera;}},
+
+ {t:"4. Prepara el cartucho nuevo",
+  ayuda:"El cartucho nuevo viene protegido. Pulsa sobre el dibujo y usa los botones, <b>en este orden</b>.",
+  html:function(){
+    var n=S.nu, act=n.bolsa?0:(!n.agitado?1:(n.precinto?2:3));
+    var h=cartuchoNuevo(n);
+    h+=lista(["Sácalo de la bolsa (pulsa la bolsa)","Agítalo suavemente de lado a lado","Quita el precinto naranja (pulsa la lengüeta)"],act);
+    if(act<3)h+='<div class="opciones" style="margin-bottom:6px">'+
+      '<button class="btn" data-act="nu-agitar">🤲 Agitar suavemente de lado a lado</button>'+
+      '<button class="btn" data-act="nu-soplar">💨 Soplar para quitar el polvo</button>'+
+      '<button class="btn" data-act="nu-golpear">🔨 Golpearlo contra la mesa</button></div>';
+    h+=msg(n.msg,n.ok);
+    if(act===3)h+=msg("🎉 <b>¡Cartucho listo!</b> Si se te olvida el precinto, las hojas saldrán <b>en blanco</b>. Pulsa <b>Siguiente</b>.",true);
+    return h;
+  },
+  ok:function(){var n=S.nu;return !n.bolsa&&n.agitado&&!n.precinto;}},
+
+ {t:"5. Coloca el cartucho y cierra",
+  ayuda:"Mete el cartucho nuevo y cierra la tapa. Después decide qué haces con el cartucho gastado.",
+  html:function(){
+    var c=S.co, act=!c.dentro?0:(c.tapa?1:2);
+    var pan=c.tapa?{txt:"TAPA ABIERTA",txt2:"",color:"ambar"}:{txt:"Preparada",txt2:"Tóner 100 %",color:"verde"};
+    var h='<div class="dos"><div>'+impresora({abierta:c.tapa,cartucho:c.dentro?"dentro":"fuera",entra:c.clic,marcaHueco:!c.dentro,pantalla:pan,lab:true})+(c.clic&&c.tapa?'<div class="clic">¡CLIC!</div>':'')+'</div><div>';
+    h+=lista(["Mete el cartucho hasta oír «clic» (pulsa el hueco)","Cierra la tapa (pulsa la tapa)"],act);
+    h+=msg(c.msg,c.ok);
+    if(act===2){
+      h+=pregunta("re",0,"¿Qué haces con el cartucho gastado?",["Lo tiro a la papelera de clase","Lo echo al contenedor amarillo","Lo meto en la caja del nuevo y lo llevo al punto de recogida"],2,c.residuo,null,"Los cartuchos de tóner son residuos especiales: van al punto de recogida del centro o se devuelven al fabricante para reciclarlos.");
+    }
+    if(act===2&&c.residuo===2)h+=msg("🌱 <b>¡Impresora lista y planeta contento!</b> Pulsa <b>Siguiente</b>.",true);
+    return h+'</div></div>';
+  },
+  ok:function(){var c=S.co;return c.dentro&&!c.tapa&&c.residuo===2;}},
+
+ {t:"6. Imprime una página de prueba",
+  ayuda:"Comprueba que todo funciona. Usa los botones del panel: <b>◀ ▶</b> para moverte y <b>OK</b> para entrar. Busca <b>Informes → Página de prueba</b>.",
+  html:function(){
+    var m=S.me, pan=pantallaMenu();
+    var h='<div class="dos"><div>'+impresora({abierta:false,pantalla:pan,hoja:m.impresa?"prueba":null,sale:m.anim,lab:true})+
+      '<div class="teclas"><button class="tecla" data-act="me-izq" aria-label="Anterior">◀</button><button class="tecla ok" data-act="me-ok">OK</button><button class="tecla" data-act="me-der" aria-label="Siguiente">▶</button></div></div><div>';
+    if(!m.impresa){
+      h+='<div class="pantallaG"><span>'+esc(pan.txt)+'</span><span>'+esc(pan.txt2)+'</span></div>';
+      h+=msg(m.msg,m.ok);
+    }else{
+      var o=cargar(), f=nombrePDF(o.alumno,"Practica");
+      h+='<div style="text-align:center">'+hojaGrande("prueba")+'</div>';
+      h+=msg("🎉 <b>¡Perfecta!</b> Letras negras y nítidas, sin rayas. Ya sabes cambiar el tóner.",true);
+      h+='<p class="grande-ok">🏅</p><div class="msg ok"><b>¡Práctica terminada!</b> Has conseguido <b>⭐ '+numEst()+'</b> estrellas. Ahora descarga tu PDF de la práctica.</div>'+
+        '<p style="margin:14px 0 6px"><label for="inNombre"><b>Tu nombre y apellidos:</b></label></p>'+
+        '<input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">'+
+        '<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.07_Practica_Nombre_Apellido.pdf")+'</div>'+
+        '<p><button class="btn pri grande" id="btnDescarga" data-act="descargar-p"'+(f?"":" disabled")+'>⬇️ Descargar PDF de la práctica</button></p>'+
+        '<div class="msg info">Después pasa a la <b>ficha</b> (Parte 2).</div>';
+    }
+    return h+'</div></div>';
+  },
+  ok:function(){return S.me.impresa;},ultimo:true}
+];
+
+/* ===== FICHA ===== */
+function pregunta(sec,i,txt,ops,corr,sel,extra,exp){
+  var hecho=sel!==undefined&&sel!==null&&sel!=="", bien=hecho&&+sel===corr;
+  var fallos=cargar().fails[sec+i]||0, quitar=-1;
+  if(!bien&&fallos>=2){for(var j=0;j<ops.length;j++){if(j!==corr&&!(hecho&&+sel===j)){quitar=j;break;}}}
+  var o='<div class="opciones">'+ops.map(function(t,j){
+    if(j===quitar)return '<button class="op quitada" disabled>'+esc(t)+'</button>';
+    var cls=hecho&&+sel===j?(bien?" bien":" mal"):"";
+    return '<button class="op'+cls+'" data-act="resp" data-sec="'+sec+'" data-i="'+i+'" data-v="'+j+'">'+(hecho&&+sel===j?(bien?"✔ ":"✖ "):"")+esc(t)+'</button>';
+  }).join("")+'</div>';
+  return '<div class="pregunta'+(bien?" ok":"")+'"><b>'+esc(txt)+'</b>'+(extra?'<div class="fila-img">'+extra+o+'</div>':o)+
+    (hecho&&!bien?'<div class="msg ko">'+animo(fallos-1)+'</div>':"")+
+    (quitar>=0?'<div class="msg info">💡 Pista: hemos quitado una opción.</div>':"")+
+    (bien?'<div class="msg ok"><b>'+elogio(semilla(sec+i))+'</b> '+esc(exp||"")+'</div>':"")+'</div>';
+}
+function mk(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.map(function(q,i){return pregunta(sec,i,q[0],q[1],q[2],r[i],q[4]?lcdMini(q[4]):null,q[3]);}).join("");};}
+function okSec(sec,lst){return function(){var r=cargar().ficha[sec]||{};return lst.every(function(q,i){return r[i]!==undefined&&+r[i]===q[2];});};}
+function lcdMini(t){var p=t.split("|");return '<div class="lcd-mini"><span>'+esc(p[0])+'</span><span>'+esc(p[1]||"")+'</span></div>';}
+
+var CONSUM=["Tóner en polvo","Cartuchos de tinta","Papel térmico","Filamento de plástico"];
+var F1=[["Impresora láser",CONSUM,0,"La láser usa tóner: un polvo muy fino que se pega al papel con calor."],
+        ["Impresora de inyección de tinta",CONSUM,1,"Lanza gotas de tinta líquida desde sus cartuchos."],
+        ["Impresora térmica (tiques de la caja)",CONSUM,2,"Usa papel especial que se oscurece con el calor: no necesita tinta."],
+        ["Impresora 3D",CONSUM,3,"Funde un hilo de plástico y crea objetos capa a capa."]];
+var F2=[["¿Qué haces?",["Abrir la bandeja 2 y sacar la hoja despacio, en el sentido del papel","Tirar fuerte de la hoja desde la salida","Apagar y encender muchas veces"],0,"El papel atascado se saca despacio y en el sentido en que avanza: si se rompe, quedan trozos dentro.","ATASCO PAPEL|Bandeja 2"],
+        ["¿Qué haces?",["Poner papel A3","Llenar la bandeja hasta arriba del todo","Poner papel A4 en la bandeja 1 sin pasar la marca de máximo"],2,"La bandeja se llena con el papel que pide y sin pasar la marca de máximo, o se atascará.","CARGUE PAPEL|A4 · Bandeja 1"],
+        ["¿Qué haces?",["Cambiar el tóner","Cerrar bien la tapa frontal","Desenchufar el cable USB"],1,"La impresora no funciona con la tapa abierta: es una medida de seguridad.","TAPA ABIERTA|"],
+        ["¿Qué haces?",["Tener preparado un cartucho nuevo y cambiarlo cuando baje la calidad","Abrir el cartucho para rellenarlo","Llamar a los bomberos"],0,"«Tóner bajo» es un aviso: todavía imprime, pero hay que preparar el recambio.","TÓNER BAJO|Cambie cartucho"]];
+var ORDEN=[["abrir","Abrir la tapa frontal"],["sacar","Sacar el cartucho gastado"],["agitar","Agitar suavemente el nuevo"],["precinto","Quitar el precinto naranja"],["meter","Meter el cartucho hasta el clic"],["cerrar","Cerrar la tapa e imprimir una prueba"]];
+var MEZCLA=[3,0,5,2,4,1];
+var F4=[["Después de cambiar el tóner, las hojas salen en blanco.",["El cartucho nuevo ya venía vacío seguro","Se ha olvidado quitar el precinto del cartucho","Hay que poner más papel"],1,"Si el precinto sigue puesto, el tóner no puede salir: se saca el cartucho, se quita el precinto y se vuelve a meter."],
+        ["Salen manchas negras en todas las hojas.",["Detener la impresión y avisar al profesor","Seguir imprimiendo hasta que se limpie sola","Pasar un dedo por el tambor verde"],0,"Las manchas indican suciedad o un tambor dañado. No se toca el interior: se avisa."],
+        ["Se ha derramado tóner sobre la mesa.",["Soplar para quitarlo","Limpiarlo con agua caliente","No soplar, no tocarlo y avisar al profesor"],2,"El polvo de tóner es muy fino: soplando se respira y con agua caliente se pega. Se avisa."],
+        ["La impresora huele a quemado.",["Apagarla y avisar al profesor","Abrir la tapa y mirar el fusor","Seguir imprimiendo"],0,"Un olor a quemado es peligroso: se apaga y se avisa, sin tocar nada."]];
+var F5=[["¿Por qué no se toca el fusor?",["Porque está muy caliente y quema","Porque se mancha de tinta","Porque es de cristal"],0,"El fusor calienta el papel para pegar el tóner: puede pasar de 180 °C."],
+        ["¿Por qué no se toca el rodillo verde (tambor) del cartucho?",["Porque está caliente","Porque las huellas y la luz lo estropean y salen manchas","Porque da calambre"],1,"El tambor es muy sensible: una huella deja manchas en todas las hojas."],
+        ["¿Dónde va un cartucho de tóner gastado?",["A la papelera","Al contenedor amarillo","Al punto de recogida del centro o de vuelta al fabricante"],2,"Es un residuo especial: se recicla en un punto de recogida."],
+        ["¿Cómo gastamos menos tóner?",["Imprimiendo solo lo necesario y en modo borrador si es un borrador","Imprimiendo siempre en la máxima calidad","Imprimiendo cada hoja dos veces"],0,"Imprimir solo lo necesario ahorra tóner, papel y dinero."]];
+
+var FICHA=[
+ {t:"1. Cada impresora, su consumible",ayuda:"¿Qué consumible usa cada impresora?",html:mk("f1",F1),ok:okSec("f1",F1)},
+ {t:"2. Lee la pantalla",ayuda:"La impresora muestra un mensaje. ¿Qué haces en cada caso?",html:mk("f2",F2),ok:okSec("f2",F2)},
+ {t:"3. Ordena los pasos",ayuda:"Pulsa los pasos para cambiar el tóner <b>en el orden correcto</b>, del primero al último.",
+  html:function(){
+    var r=cargar().ficha.f3||{orden:[]}, hechos=r.orden||[], sig=hechos.length;
+    var h='<ol class="orden-ok">'+hechos.map(function(k){return '<li>✔ '+esc(ORDEN.filter(function(x){return x[0]===k;})[0][1])+'</li>';}).join("")+'</ol>';
+    if(sig<ORDEN.length){
+      h+='<p class="cont"><b>¿Cuál es el paso '+(sig+1)+'?</b></p><div class="opciones" style="flex-direction:column">'+MEZCLA.map(function(k){var x=ORDEN[k];if(hechos.indexOf(x[0])>=0)return "";
+        return '<button class="op" data-act="orden" data-v="'+x[0]+'">'+esc(x[1])+'</button>';}).join("")+'</div>';
+      if(S.ordenMsg)h+=msg(S.ordenMsg,false);
+    }else h+=msg("🎉 <b>¡Orden perfecto!</b> Así se cambia el tóner sin mancharse y sin estropear nada.",true);
+    return h;
+  },
+  ok:function(){var r=cargar().ficha.f3||{};return (r.orden||[]).length===ORDEN.length;}},
+ {t:"4. Si algo falla",ayuda:"¿Qué haces en cada problema?",html:mk("f4",F4),ok:okSec("f4",F4)},
+ {t:"5. Seguridad y medioambiente",ayuda:"Cuatro preguntas importantes.",html:mk("f5",F5),ok:okSec("f5",F5)},
+ {t:"6. ¡Terminado!",ayuda:"Escribe tu nombre y descarga tu resultado.",
+  html:function(){
+    var o=cargar(), f=nombrePDF(o.alumno,"Resultado"), pn=(o.alumno.trim().split(/\s+/)[0]||"");
+    var h='<p class="grande-ok">🏆</p><h3 style="text-align:center;margin:0">¡Enhorabuena'+(pn?", "+esc(pn):"")+'!</h3><p style="text-align:center;margin:4px 0 12px">Has conseguido <b>⭐ '+numEst()+'</b> estrellas.</p>'+
+      '<div class="aprendido"><b>Hoy has aprendido a:</b><ul><li>Reconocer las partes de una impresora láser.</li><li>Leer los mensajes de la pantalla.</li><li>Cambiar el cartucho de tóner paso a paso.</li><li>Trabajar seguro y reciclar los consumibles.</li></ul></div>'+
+      '<label for="inNombre"><b>Tu nombre y apellidos:</b></label><input type="text" id="inNombre" value="'+esc(o.alumno)+'" placeholder="Por ejemplo: Lucía Martí Pons" autocomplete="name">';
+    h+='<p style="margin:14px 0 0"><b>Se guardará como:</b></p><div class="nombre-pdf" id="nomPdf">'+(f?esc(f):"S03.07_Resultado_Nombre_Apellido.pdf")+'</div>';
+    if(!o.practica.ok)h+='<div class="msg info">ℹ️ Todavía no has terminado la práctica con la impresora virtual. Puedes descargar el resultado, pero saldrá como «pendiente».</div>';
+    h+='<p style="margin-top:14px"><button class="btn pri grande" id="btnDescarga" data-act="descargar"'+(f?"":" disabled")+'>⬇️ Descargar mi resultado</button></p>';
+    h+='<div class="msg ok"><b>Después:</b> sube a Aules el <b>PDF de resultado</b>.</div>';
+    return h;
+  },ok:function(){return true;},ultimo:true}
+];
+var PASOS=MODO==="ficha"?FICHA:PRACTICA;
+
+/* ===== pantallas ===== */
+var prevOk={};
+function animoPaso(){
+  var n=PASOS.length;
+  if(paso===n-1)return "¡Último paso!";
+  if(paso===0)return "¡Vamos allá!";
+  return paso/(n-1)<0.5?"¡Vas muy bien!":"¡Casi lo tienes!";
+}
+function render(){
+  var p=PASOS[paso], ok=!!p.ok();
+  $("titulo").textContent=MODO==="ficha"?"📝 Ficha de respuestas":"🖨️ Taller de la impresora";
+  $("pasoTxt").textContent="Paso "+(paso+1)+" de "+PASOS.length+" · "+animoPaso();
+  $("barra").style.width=((paso+1)/PASOS.length*100)+"%";
+  $("est").textContent="⭐ "+numEst();
+  $("card").innerHTML='<h2>'+esc(p.t)+'</h2><div class="ayuda">'+p.ayuda+'</div>'+p.html();
+  $("atras").disabled=paso===0;
+  $("sig").hidden=!!p.ultimo;
+  $("sig").disabled=!ok;
+  $("sig").className="btn pri"+(ok?" listo":"");
+  if(ok&&!prevOk[paso]){confeti();regOk();}
+  prevOk[paso]=ok;
+}
+function pasoNav(d){volcarTiempo();paso=Math.max(0,Math.min(PASOS.length-1,paso+d));render();window.scrollTo(0,0);}
+
+/* ===== acciones ===== */
+function avisoFusor(obj){
+  error("seguridad"); intento("fusor",false);
+  obj.ok=false; obj.msg="🔥 <b>¡Cuidado, quema!</b> El fusor calienta el papel a casi 200 °C. Nunca se toca: espera a que se enfríe y no metas la mano en esa zona.";
+}
+function alClicParte(id){
+  if(MODO!=="practica")return;
+  if(paso===0){
+    var r=S.rel;
+    if(id==="hueco")return;
+    if(r.done[id]){var x=parte(id);r.msg="✔ Ya la tienes unida: <b>"+x[1]+"</b>. "+x[2];r.ok=true;}
+    else{r.part=id;r.msg=r.name?"":"👆 Ahora pulsa el nombre de esa parte.";r.ok=false;relComprobar();}
+  }else if(paso===2){
+    var a=S.sa; a.tiembla=false;
+    if(id==="tapa"&&!a.tapa){a.tapa=true;a.ok=true;a.msg="✔ <b>¡Tapa abierta!</b> ⚠️ Fíjate en la zona roja de arriba: es el <b>fusor</b> y está caliente.";intento("sa_tapa",true);}
+    else if(id==="tapa"&&a.tapa){a.ok=false;a.msg="La tapa ya está abierta. Ahora saca el cartucho.";}
+    else if(id==="fusor")avisoFusor(a);
+    else if(id==="cartucho"&&!a.tapa){a.ok=false;a.tiembla=true;a.msg="✖ No se puede: el cartucho está dentro. <b>Primero abre la tapa frontal.</b>";error("orden");intento("sa_cart",false);}
+    else if(id==="cartucho"){a.fuera=true;a.ok=true;a.msg="✔ <b>¡Bien!</b> Lo has sacado tirando del asa, recto y con suavidad.";intento("sa_cart",true);}
+    else if(id==="panel"){a.ok=false;a.msg="El panel solo muestra el aviso. Para cambiar el cartucho hay que abrir la tapa.";}
+    else{a.ok=false;a.msg="Esa parte no hace falta ahora. Sigue la lista de la derecha.";}
+  }else if(paso===3){
+    var n=S.nu; n.anim=false;
+    if(id==="bolsa"){n.bolsa=false;n.ok=true;n.msg="✔ <b>¡Fuera de la bolsa!</b> Guarda la bolsa y la caja: servirán para devolver el cartucho gastado.";}
+    else if(id==="tambor"){error("seguridad");intento("tambor",false);n.ok=false;n.msg="✖ <b>¡No toques el rodillo verde!</b> Es el tambor: las huellas y la luz lo estropean y saldrían manchas en todas las hojas.";}
+    else if(id==="lengueta"){
+      if(n.bolsa){n.ok=false;n.msg="Primero saca el cartucho de la bolsa.";}
+      else if(!n.agitado){error("orden");intento("nu_orden",false);n.ok=false;n.msg="✖ Todavía no. <b>Primero agítalo</b> de lado a lado: así el tóner se reparte y sale todo. Después se quita el precinto.";}
+      else{n.precinto=false;n.ok=true;n.msg="✔ <b>¡Precinto fuera!</b> Tira siempre recto de la lengüeta, sin prisas.";intento("nu_orden",true);}
+    }
+  }else if(paso===4){
+    var c=S.co; c.clic=false;
+    if(id==="hueco"||id==="cartucho"){
+      if(c.dentro){c.ok=false;c.msg="El cartucho ya está dentro. Ahora cierra la tapa.";}
+      else{c.dentro=true;c.clic=true;c.ok=true;c.msg="✔ <b>¡Clic!</b> El cartucho está bien encajado en sus guías.";}
+    }
+    else if(id==="tapa"){
+      if(!c.tapa){c.ok=false;c.msg="La tapa ya está cerrada.";}
+      else if(!c.dentro){error("orden");intento("co_cerrar",false);c.ok=false;c.msg="✖ Si cierras ahora, la pantalla dirá <b>«FALTA CARTUCHO»</b>. Primero mete el cartucho nuevo.";}
+      else{c.tapa=false;c.ok=true;c.msg="✔ <b>¡Tapa cerrada!</b> La pantalla ya dice «Preparada».";intento("co_cerrar",true);}
+    }
+    else if(id==="fusor")avisoFusor(c);
+  }
+  render();
+}
+function menuTecla(k){
+  var m=S.me; if(m.impresa)return;
+  m.anim=false;
+  if(k==="izq"||k==="der"){
+    var d=k==="der"?1:-1;
+    if(m.nivel===1)m.i=(m.i+d+MENU.length)%MENU.length;
+    else if(m.nivel===2)m.j=(m.j+d+MENU[m.i].sub.length)%MENU[m.i].sub.length;
+    m.msg="";
+  }else{
+    if(m.nivel===0){m.nivel=1;m.i=0;m.msg="";}
+    else if(m.nivel===1){m.nivel=2;m.j=0;m.msg="";}
+    else{
+      var op=MENU[m.i].sub[m.j];
+      if(op==="Volver"){m.nivel=1;m.msg="";}
+      else if(op==="Página de prueba"){m.impresa=true;m.anim=true;finPractica();intento("me_prueba",!S.me.fallos);}
+      else{m.fallos=(m.fallos||0)+1;error("menu");m.ok=false;
+        m.msg=op==="Nivel de tóner"||op==="Página de consumibles"?"Esa opción te dice cuánto tóner queda, pero no prueba cómo imprime. Busca <b>Informes → Página de prueba</b>.":"Esa opción no es la que buscas. Elige <b>Volver</b> y entra en <b>Informes</b>.";}
+    }
+  }
+  render();
+  if(S.me.anim)setTimeout(function(){S.me.anim=false;},1200);
+}
+function finPractica(){
+  upd(function(o){o.practica={ok:true,t:ahora(),rel:Object.keys(S.rel.done)};});
+}
+function alClic(e0){
+  var pt=e0.target.closest(".parte");
+  if(pt&&pt.getAttribute("data-p")){alClicParte(pt.getAttribute("data-p"));return;}
+  var b=e0.target.closest("[data-act]"); if(!b)return;
+  var act=b.getAttribute("data-act"), n=S.nu;
+  if(act==="rel-name"){var rr=S.rel;rr.name=b.getAttribute("data-p");rr.msg=rr.part?"":"👆 Ahora pulsa esa parte en el dibujo.";rr.ok=false;relComprobar();}
+  else if(act==="nu-agitar"){
+    if(n.bolsa){n.ok=false;n.msg="Primero saca el cartucho de la bolsa.";}
+    else if(!n.precinto){n.ok=true;n.msg="Ya está agitado y sin precinto.";}
+    else{n.agitado=true;n.anim=true;n.ok=true;n.msg="✔ <b>¡Así!</b> Cinco o seis vaivenes suaves, sujetándolo por los dos lados, reparten el tóner.";intento("nu_agitar",true);}
+  }
+  else if(act==="nu-soplar"){error("seguridad");intento("nu_soplar",false);n.anim=false;n.ok=false;n.msg="✖ <b>Nunca se sopla.</b> El polvo de tóner es muy fino: saldría volando y lo respirarías.";}
+  else if(act==="nu-golpear"){error("seguridad");intento("nu_golpear",false);n.anim=false;n.ok=false;n.msg="✖ <b>No.</b> Un golpe puede romper el cartucho y derramar el tóner. Se agita con suavidad.";}
+  else if(act==="me-izq"){menuTecla("izq");return;}
+  else if(act==="me-der"){menuTecla("der");return;}
+  else if(act==="me-ok"){menuTecla("ok");return;}
+  else if(act==="orden"){
+    var v=b.getAttribute("data-v"), r3=cargar().ficha.f3||{orden:[]}, sig=(r3.orden||[]).length;
+    if(ORDEN[sig][0]===v){intento("f3_"+sig,true);upd(function(o){var f=o.ficha.f3=o.ficha.f3||{orden:[]};f.orden=f.orden||[];f.orden.push(v);});S.ordenMsg="";}
+    else{intento("f3_"+sig,false);error("f3");S.ordenMsg="¡Casi! Ese paso va más tarde. Piensa: ¿qué hay que hacer antes?";}
+  }
+  else if(act==="resp"){
+    var sec=b.getAttribute("data-sec"),i=+b.getAttribute("data-i"),vv=+b.getAttribute("data-v");
+    if(sec==="av"){
+      var corr=i===0?1:2; if(vv!==corr)error("aviso"); intento("av"+i,vv===corr);
+      if(i===0)S.av.q0=vv; else S.av.q1=vv;
+    }else if(sec==="re"){
+      if(vv!==2)error("residuo"); intento("re0",vv===2); S.co.residuo=vv;
+    }else{
+      var lst={f1:F1,f2:F2,f4:F4,f5:F5}[sec];
+      if(vv!==lst[i][2])error(sec);
+      intento(sec+i,vv===lst[i][2]);
+      upd(function(o){(o.ficha[sec]=o.ficha[sec]||{})[i]=vv;});
+    }
+  }
+  else if(act==="descargar"){descargaPDF("Resultado");return;}
+  else if(act==="descargar-p"){descargaPDF("Practica");return;}
+  render();
+}
+function alEscribir(ev){
+  if(ev.target.id!=="inNombre")return;
+  var v=ev.target.value;upd(function(o){o.alumno=v;});
+  var tp=MODO==="ficha"?"Resultado":"Practica";var f=nombrePDF(v,tp);$("nomPdf").textContent=f||"S03.07_"+tp+"_Nombre_Apellido.pdf";
+  var bt=$("btnDescarga");if(bt)bt.disabled=!f;
+}
+
+/* ===== PDF ===== */
+function cp1252(s){
+  var map={"—":"\x97","–":"\x96","“":"\x93","”":"\x94","‘":"\x91","’":"\x92","•":"\x95","…":"\x85","€":"\x80","→":"->","✔":"[x]","✖":"[ ]","−":"-"};
+  s=String(s).normalize("NFC");var out="";
+  for(var i=0;i<s.length;i++){
+    var ch=s.charAt(i),c=ch.charCodeAt(0);
+    if(map.hasOwnProperty(ch))out+=map[ch];
+    else if(c>=0xD800&&c<=0xDFFF){}
+    else if(c<32)out+=" ";
+    else if(c<127||(c>=160&&c<256))out+=ch;
+    else out+="?";
+  }
+  return out;
+}
+function pdfEsc(s){return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");}
+function envolver(texto,size,sangria){
+  var max=Math.floor(495/(0.53*size))-(sangria||0),pal=cp1252(texto).split(" "),l=[],act="";
+  pal.forEach(function(w){
+    while(w.length>max){if(act){l.push(act);act="";}l.push(w.slice(0,max));w=w.slice(max);}
+    if((act+" "+w).trim().length>max){l.push(act);act=w;}else act=(act?act+" ":"")+w;
+  });
+  l.push(act);return l;
+}
+function construyePDF(lineas){
+  var pags=[[]],y=792,M=50;
+  lineas.forEach(function(L){
+    var size=L.s||11,lh=size*1.4,sang=L.i||0;
+    var partes=L.t===""?[""]:envolver(L.t,size,sang);
+    partes.forEach(function(txt,idx){
+      if(y-lh<M){pags.push([]);y=792;}
+      y-=lh;
+      pags[pags.length-1].push("BT /"+(L.b?"F2":"F1")+" "+size+" Tf "+(M+sang*size*0.53+(idx&&L.h?size*1.2:0)).toFixed(1)+" "+y.toFixed(1)+" Td ("+pdfEsc(txt)+") Tj ET");
+    });
+  });
+  var n=pags.length,total=4+n*2;
+  var lista=[null,"<< /Type /Catalog /Pages 2 0 R >>",null,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+  var kids=[];
+  pags.forEach(function(p,i){
+    var idc=5+i*2,idp=6+i*2,cont=p.join("\n");
+    lista[idc]="<< /Length "+cont.length+" >>\nstream\n"+cont+"\nendstream";
+    lista[idp]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+idc+" 0 R >>";
+    kids.push(idp+" 0 R");
+  });
+  lista[2]="<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>";
+  var pdf="%PDF-1.4\n",offs=[];
+  for(var k=1;k<=total;k++){offs[k]=pdf.length;pdf+=k+" 0 obj\n"+lista[k]+"\nendobj\n";}
+  var xref=pdf.length;
+  pdf+="xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for(var q=1;q<=total;q++)pdf+=("0000000000"+offs[q]).slice(-10)+" 00000 n \n";
+  pdf+="trailer\n<< /Size "+(total+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  var bytes=new Uint8Array(pdf.length);
+  for(var b=0;b<pdf.length;b++)bytes[b]=pdf.charCodeAt(b)&255;
+  return bytes;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ("00000000"+(h>>>0).toString(16)).slice(-8).toUpperCase();}
+function informePractica(o){
+  var L=[],canon=[],pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.07 · Práctica con la impresora virtual",15,true);
+  t("Parte 1 · Mantenimiento de la impresora: cambio del tóner",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);
+  t(pr.ok?"Práctica COMPLETADA el "+pr.t:"Práctica NO COMPLETADA",11,true);t("");
+  t("1. Partes de la impresora que he unido",12,true);
+  var rel=pr.rel||[];
+  PARTES.forEach(function(p){t("- "+p[1]+(rel.indexOf(p[0])>=0?" [x]":" [ ]")+": "+p[2],10,false,2,true);});
+  t("");
+  t("2. Lectura del aviso",12,true);
+  t("- Mensaje: TÓNER BAJO. Decisión: cambiar el cartucho de tóner.",11,false,2,true);t("");
+  t("3. Cartucho gastado",12,true);
+  ["Tapa frontal abierta","Cartucho gastado retirado por el asa"].forEach(function(x){t("- "+x,11,false,2,true);});t("");
+  t("4. Preparación del cartucho nuevo",12,true);
+  ["Sacado de la bolsa protectora","Agitado suavemente de lado a lado","Precinto naranja retirado"].forEach(function(x){t("- "+x,11,false,2,true);});t("");
+  t("5. Colocación y residuo",12,true);
+  ["Cartucho encajado (clic) y tapa cerrada","Cartucho gastado: en su caja, al punto de recogida"].forEach(function(x){t("- "+x,11,false,2,true);});t("");
+  t("6. Comprobación",12,true);
+  t("- Página de prueba impresa desde el panel (Informes -> Página de prueba): correcta",11,false,2,true);t("");
+  t("7. Fallos durante la práctica",12,true);
+  t("- Al unir nombres con partes: "+(o.err.relaciona||0),11,false,2,true);
+  t("- Al leer el aviso: "+(o.err.aviso||0),11,false,2,true);
+  t("- De seguridad (fusor, tambor, soplar o golpear): "+(o.err.seguridad||0),11,false,2,true);
+  t("- De orden de los pasos: "+(o.err.orden||0),11,false,2,true);
+  t("- Con el cartucho gastado: "+(o.err.residuo||0),11,false,2,true);
+  t("- En el menú del panel: "+(o.err.menu||0),11,false,2,true);
+  t("");
+  t("Recorrido paso a paso",12,true);recorrido(t,PRACTICA,"practica",o);t("");
+  t("El tiempo activo solo cuenta mientras la ventana está visible y se está usando.",9);
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function informe(o){
+  var L=[],canon=[],F=o.ficha,pr=o.practica;
+  function t(x,s,b,i,h){L.push({t:x,s:s,b:b,i:i,h:h});canon.push(x);}
+  t("S03.07 · Mantenimiento de la impresora",15,true);
+  t("Resultado de la actividad",11);t("");
+  t("Alumno/a: "+o.alumno.trim(),12,true);
+  t("Fecha: "+ahora(),11);
+  t("Estrellas conseguidas: "+Object.keys(o.est).length,11);t("");
+  t("1. Práctica con la impresora virtual",12,true);
+  t(pr.ok?"COMPLETADA el "+pr.t:"NO COMPLETADA",11);t("");
+  t("2. Ficha de respuestas",12,true);
+  function sec(id,titulo,lst,conPantalla){
+    var ac=0;lst.forEach(function(q,i){var v=(F[id]||{})[i];if(v!==undefined&&+v===q[2])ac++;});
+    t(titulo+" ("+ac+"/"+lst.length+" correctas)",11,true);
+    lst.forEach(function(q,i){
+      var v=(F[id]||{})[i], preg=conPantalla?"Pantalla «"+q[4].replace("|"," · ").replace(/ · $/,"")+"»":q[0];
+      t("- "+preg+" -> "+(v===undefined?"(sin responder)":q[1][v]),11,false,2,true);
+    });
+    t("Intentos fallidos: "+(o.err[id]||0),10);t("");
+  }
+  sec("f1","Consumibles",F1);
+  sec("f2","Mensajes de la pantalla",F2,true);
+  var orden=(F.f3||{}).orden||[];
+  t("Orden del cambio de tóner ("+(orden.length===ORDEN.length?"completo":orden.length+"/"+ORDEN.length)+")",11,true);
+  ORDEN.forEach(function(x,i){t((i+1)+". "+x[1]+(orden.indexOf(x[0])>=0?" [x]":" [ ]"),11,false,2,true);});
+  t("Intentos fallidos: "+(o.err.f3||0),10);t("");
+  sec("f4","Incidencias",F4);
+  sec("f5","Seguridad y medioambiente",F5);
+  t("Tiempo en la ficha",12,true);recorrido(t,FICHA,"ficha",o);t("");
+  t("Código de comprobación: "+hash(canon.join("|")),9,true);
+  return L;
+}
+function descargaPDF(tipo){volcarTiempo();
+  var o=cargar(),f=nombrePDF(o.alumno,tipo);
+  if(!f)return;
+  var lineas=tipo==="Practica"?informePractica(o):informe(o);
+  var blob=new Blob([construyePDF(lineas)],{type:"application/pdf"}),url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=f;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+  if(!$("okDesc")){var d=document.createElement("div");d.id="okDesc";d.className="msg ok";d.innerHTML="✅ <b>Descargado.</b> Búscalo en tu carpeta de Descargas y súbelo a Aules.";$("card").appendChild(d);}
+}
+
+function init(){
+  $("card").addEventListener("click",alClic);
+  $("card").addEventListener("input",alEscribir);
+  $("atras").onclick=function(){pasoNav(-1);};
+  $("sig").onclick=function(){pasoNav(1);};
+  if(!stoOk)$("avisoSto").hidden=false;
+  render();
+}
+arrancarRegistro();
+init();
+})();
+</script>
+</body>
+</html>
